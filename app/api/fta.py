@@ -185,6 +185,7 @@ def get_application(app_id: int, _: str = Depends(officer), session: Session = D
 
 @router.post("/applications/{app_id}/decision", response_model=OfficerDecision)
 def decide(app_id: int, body: DecisionIn, officer_id: str = Depends(officer), session: Session = Depends(get_session)):
+    _require_visible(session, app_id)
     app = session.get(Application, app_id)
     if not app:
         raise HTTPException(404, "application not found")
@@ -208,6 +209,9 @@ def decide(app_id: int, body: DecisionIn, officer_id: str = Depends(officer), se
 
 @router.post("/invoices/{invoice_id}/decision", response_model=InvoiceDecision)
 def decide_invoice(invoice_id: int, body: InvoiceDecisionIn, officer_id: str = Depends(officer), session: Session = Depends(get_session)):
+    _inv = session.get(Invoice, invoice_id)
+    if _inv:
+        _require_visible(session, _inv.application_id)
     """Approve or reject one invoice. The agent's rating is a recommendation; this is the decision."""
     inv = session.get(Invoice, invoice_id)
     if not inv:
@@ -236,9 +240,23 @@ def expire_overdue(as_of: datetime | None = None, officer_id: str = Depends(offi
     return {"expired": expired}
 
 
-def _supplier_stats(session: Session, s: Supplier) -> dict:
-    invs = session.exec(select(Invoice).where(Invoice.supplier_trn == s.trn)).all()
-    reqs = session.exec(select(ConfirmationRequest).where(ConfirmationRequest.supplier_trn == s.trn)).all()
+def _visible_invoices(session: Session, trn: str, visible: set[int]) -> list[Invoice]:
+    """A supplier's invoices in cases the officer can see (see pipeline.officer_visible_ids)."""
+    return list(session.exec(select(Invoice).where(Invoice.supplier_trn == trn, col(Invoice.application_id).in_(visible))).all())
+
+
+def _require_visible(session: Session, app_id: int) -> Application:
+    app = session.get(Application, app_id)
+    if not pipeline.officer_visible(session, app):
+        raise HTTPException(404, "application not found")
+    return app
+
+
+def _supplier_stats(session: Session, s: Supplier, visible: set[int] | None = None) -> dict:
+    visible = pipeline.officer_visible_ids(session) if visible is None else visible
+    invs = _visible_invoices(session, s.trn, visible)
+    inv_ids = [i.id for i in invs]
+    reqs = session.exec(select(ConfirmationRequest).where(col(ConfirmationRequest.invoice_id).in_(inv_ids))).all()
     return {
         **s.model_dump(),
         "application_count": len({i.application_id for i in invs}),
@@ -258,16 +276,20 @@ def list_suppliers(q: str | None = None, emirate: str | None = None, _: str = De
         stmt = stmt.where(or_(col(Supplier.legal_name).icontains(q), col(Supplier.trn).contains(q)))
     if emirate:
         stmt = stmt.where(Supplier.emirate == emirate)
-    return [_supplier_stats(session, s) for s in session.exec(stmt).all()]
+    visible = pipeline.officer_visible_ids(session)
+    # Only suppliers that appear in a case the officer can see; nothing before the first case exists.
+    return [st for s in session.exec(stmt).all() if (st := _supplier_stats(session, s, visible))["invoice_count"]]
 
 
 @router.get("/suppliers/{trn}")
 def get_supplier(trn: str, _: str = Depends(officer), session: Session = Depends(get_session)):
     s = session.get(Supplier, trn)
-    if not s:
+    visible = pipeline.officer_visible_ids(session)
+    invs = _visible_invoices(session, trn, visible) if s else []
+    if not invs:
         raise HTTPException(404, "supplier not found")
-    invs = session.exec(select(Invoice).where(Invoice.supplier_trn == trn)).all()
-    reqs = {r.invoice_id: r for r in session.exec(select(ConfirmationRequest).where(ConfirmationRequest.supplier_trn == trn)).all()}
+    reqs = {r.invoice_id: r for r in session.exec(select(ConfirmationRequest).where(
+        col(ConfirmationRequest.invoice_id).in_([i.id for i in invs]))).all()}
     responses = session.exec(select(SupplierResponse).where(col(SupplierResponse.request_id).in_([r.id for r in reqs.values()]))).all()
     by_req = {r.request_id: r for r in responses}
     apps = {a.id: a for a in session.exec(select(Application).where(col(Application.id).in_({i.application_id for i in invs}))).all()}
@@ -280,7 +302,7 @@ def get_supplier(trn: str, _: str = Depends(officer), session: Session = Depends
                      "request_status": req.status if req else None,
                      "vat_return_period": resp.vat_return_period if resp else None})
     return {
-        **_supplier_stats(session, s),
+        **_supplier_stats(session, s, visible),
         "invoices": rows,
         "declared_vat_periods": sorted({r.vat_return_period for r in responses if r.vat_return_period}),
         "retention_outstanding": round(sum(r.retention_amount or 0 for r in responses), 2),
@@ -347,8 +369,9 @@ def list_documents(_: str = Depends(officer), session: Session = Depends(get_ses
 @router.get("/documents/{doc_id}/file")
 def document_file(doc_id: int, _: str = Depends(officer), session: Session = Depends(get_session)):
     doc = session.get(Document, doc_id)
-    if not doc:
-        raise HTTPException(404, "document not found")
+    linked = session.exec(select(Invoice.application_id).where(Invoice.document_hash == doc.sha256)).all() if doc else []
+    if not doc or (linked and not set(linked) & pipeline.officer_visible_ids(session)):
+        raise HTTPException(404, "document not found")  # same rule as GET /fta/documents
     return FileResponse(doc.path, media_type=doc.content_type, filename=doc.filename)
 
 
@@ -359,6 +382,9 @@ def _need_agent():
 
 @router.post("/invoices/{invoice_id}/compliance")
 def run_compliance(invoice_id: int, _: str = Depends(officer), session: Session = Depends(get_session)):
+    _inv = session.get(Invoice, invoice_id)
+    if _inv:
+        _require_visible(session, _inv.application_id)
     """Ask the compliance agent for a second opinion now (synchronous). Advisory only."""
     _need_agent()
     inv = session.get(Invoice, invoice_id)
@@ -369,6 +395,7 @@ def run_compliance(invoice_id: int, _: str = Depends(officer), session: Session 
 
 @router.post("/applications/{app_id}/summary")
 def run_summary(app_id: int, _: str = Depends(officer), session: Session = Depends(get_session)):
+    _require_visible(session, app_id)
     """Generate the reconciliation agent's decision brief now (synchronous). Advisory only."""
     _need_agent()
     app = session.get(Application, app_id)
