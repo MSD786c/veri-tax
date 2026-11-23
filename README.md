@@ -4,7 +4,36 @@
 
 veri-tax sits between the applicant (a UAE national claiming a VAT refund on building a new residence), the suppliers who issued the tax invoices, and the Federal Tax Authority (FTA). It pulls supplier invoices from Maskan, checks them automatically against the UAE VAT refund rules, asks each supplier to confirm its invoices through an EmaraTax-facing portal, reconciles the answers, and shows the result to FTA officers on a dashboard.
 
-> **Status:** design stage. This README describes the target system. No services have been built yet; see [CHANGELOG.md](CHANGELOG.md) and the [roadmap](#roadmap).
+> **Status:** v0.1 baseline. The verification body API (FastAPI) runs end to end on synthetic data: ingest → rules → supplier confirmation → reconciliation → officer decision. The two user-facing frontends live in **[veri-tax-portals](https://github.com/MSD786c/veri-tax-portals)**. See [Getting started](#getting-started), [CHANGELOG.md](CHANGELOG.md) and the [roadmap](#roadmap).
+
+## Getting started
+
+Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
+
+```bash
+cp .env.example .env        # optional; defaults work for local dev
+uv sync
+uv run uvicorn app.main:app --reload --port 8000
+```
+
+- Interactive API docs: http://localhost:8000/docs
+- On first start the database (SQLite, `veritax.db`) is seeded with 3 synthetic applications and 4 suppliers (`app/seed.py`). Delete `veritax.db` to reseed.
+- Mock auth: supplier endpoints take an `X-Supplier-TRN` header (e.g. `100111111100003`); FTA endpoints take an `X-Officer-Id` header.
+- Tests: `uv run pytest`
+
+| Path | What |
+|------|------|
+| `app/main.py` | FastAPI app, CORS, router wiring |
+| `app/models.py` | Tables and status enums (the [data model](#data-model)) |
+| `app/schemas.py` | Request bodies (API contract) |
+| `app/rules.py` | Versioned rule engine: `TI-*`, `NR-*`, `SC-*` |
+| `app/pipeline.py` | Ingest → rules → confirmation requests → reconcile → application rollup |
+| `app/api/maskan.py` | `POST /maskan/applications` (Maskan ingestion) |
+| `app/api/supplier.py` | `/supplier/*` (EmaraTax supplier portal) |
+| `app/api/fta.py` | `/fta/*` (FTA officer dashboard) |
+| `app/seed.py` | Synthetic fixtures |
+
+Working on the repo: see [CONTRIBUTING.md](CONTRIBUTING.md) for branches (`Suhayl`, `Haaziq`, `Aaron`) and the PR flow.
 
 ---
 
@@ -271,6 +300,8 @@ Core entities, in outline:
 ---
 
 ## Planned repository layout
+
+> **Current layout:** this repo is the verification body (`app/`, flat FastAPI package). The supplier portal and FTA dashboard are in [veri-tax-portals](https://github.com/MSD786c/veri-tax-portals) (`apps/emaratax-portal`, `apps/fta-dashboard`). The tree below is the longer-term target as services split out.
 
 ```
 veri-tax/

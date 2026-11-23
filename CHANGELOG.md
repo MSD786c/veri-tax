@@ -8,6 +8,14 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- **v0.1 verification body API (FastAPI + SQLModel, SQLite by default):**
+  - `POST /maskan/applications` ingests an application and its invoices, runs the rule engine and opens supplier confirmation requests.
+  - Rule engine `2026.11-0`: `TI-01`, `TI-03`, `TI-06`, `TI-07`, `NR-01`, `NR-02`, `NR-04`, `NR-05`, `SC-01`–`SC-05`.
+  - `/supplier/*` for the EmaraTax portal: list requests, view one, respond (the 4 questions plus the declaration), with reconciliation on response.
+  - `/fta/*` for the FTA dashboard: overview, applications, application detail with the audit trail, officer decision, supplier search and detail, rejections, CSV export.
+  - Append-only audit events, synthetic seed data, an end-to-end test and GitHub Actions CI.
+  - `CONTRIBUTING.md` with the branch and PR workflow.
+
 - `README.md` now sets out the full design of the veri-tax verification body:
   - End-to-end flow: Maskan → verification body → supplier portal (EmaraTax) → reconciliation → FTA dashboard, with sequence and component diagrams.
   - Components: Maskan ingestion, OCR and extraction agents, the versioned rule engine, the compliance agent, the supplier request service, the reconciliation agent, the FTA dashboard and the audit log.
