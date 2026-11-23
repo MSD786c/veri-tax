@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./base.css";
 import "./portal.css";
+import "./shell.css";
 
 export const metadata: Metadata = {
   title: "Federal Tax Authority · Verification Portal",

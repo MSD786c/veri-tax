@@ -1,0 +1,65 @@
+/* ───────── app shell: floating capsule rail, pill top bar, banner page headers ─────────
+   Loaded after portal.css. Desktop rules only apply from 1001px up, so the <=1000px
+   drawer, search and dock behaviour from base.css/portal.css stays untouched. */
+
+:root { --rail: 264px; --frame: 16px; --banner: #f6ecd0; --banner-2: #f1e2b8; --pill-tint: rgba(243, 229, 192, .6); }
+
+@media (min-width: 1001px) {
+  :root { --side: calc(var(--rail) + var(--frame) * 2); }
+
+  /* left rail: a floating capsule */
+  .side {
+    inset-block: var(--frame); inset-inline-start: var(--frame); width: var(--rail);
+    padding: 22px 14px 14px; border: 0; border-radius: 34px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .86), rgba(251, 248, 240, .8));
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 0 0 1px rgba(15, 31, 61, .05), 0 36px 56px -38px rgba(15, 31, 61, .45);
+  }
+  .side .brand { padding: 6px 14px 22px; }
+  .side nav a { height: 46px; }
+  .side nav a:not(.on):hover { background: rgba(243, 229, 192, .55); }
+  .side nav a.on { box-shadow: 0 16px 26px -16px rgba(15, 31, 61, .7), inset 0 1px 0 rgba(255, 255, 255, .14); }
+  .side-bottom { border-top: 1px dashed rgba(15, 31, 61, .14); }
+  .side-meta { border: 0; border-radius: 26px; background: var(--banner); padding: 14px 18px; box-shadow: 0 1px 0 rgba(255, 255, 255, .8) inset; }
+  .side-meta b { font-family: var(--display); font-weight: 500; font-size: 1.1rem; letter-spacing: -.01em; }
+
+  /* top bar: one floating pill, aligned with the content column */
+  .top {
+    position: sticky; inset-block-start: var(--frame); z-index: 40;
+    width: calc(100% - 80px); max-width: 1480px; margin: var(--frame) auto 0; padding: 8px 10px;
+    border: 1px solid rgba(15, 31, 61, .06); border-radius: 999px;
+    background: var(--pill-tint); -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .7) inset, 0 24px 40px -32px rgba(15, 31, 61, .4);
+  }
+  .top .search-trigger { height: 44px; border-color: transparent; background: rgba(255, 255, 255, .86); }
+  .top .search-trigger:focus-within { border-color: var(--navy); }
+  .top .user { height: 44px; border-color: transparent; background: rgba(255, 255, 255, .86); }
+  .top .icon-btn.bell { width: 44px; height: 44px; border-color: transparent; background: rgba(255, 255, 255, .86); }
+
+  .content { max-width: 1560px; margin-inline: auto; padding: 26px 40px 130px; }
+}
+
+@media (min-width: 1800px) { :root { --rail: 280px; } }
+
+/* page header: a soft banner card, title and lead on the left, actions on the right */
+.page-h {
+  align-items: center; gap: 18px 24px; padding: 24px 30px; margin-bottom: 26px;
+  border-radius: 36px; border: 1px solid rgba(255, 255, 255, .7);
+  background: linear-gradient(135deg, var(--banner), var(--banner-2));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, .85) inset, 0 28px 44px -36px rgba(120, 90, 20, .5);
+}
+.page-h h1 { font-size: clamp(2.1rem, 3vw, 3.1rem); line-height: 1; margin: 0; }
+.page-h .lead { margin: 8px 0 0; color: #5d5744; max-width: 60ch; }
+.page-h .page-actions { gap: 10px; }
+.page-h .btn.ghost { background: rgba(255, 255, 255, .8); border-color: transparent; }
+.page-h .hello { gap: 20px; }
+.page-h .daytile { box-shadow: 0 14px 24px -16px rgba(15, 31, 61, .5); }
+
+@media (max-width: 1000px) {
+  .top { margin: 10px 12px 0; padding: 6px 8px; border-radius: 999px; background: var(--pill-tint); border: 1px solid rgba(15, 31, 61, .06); }
+  .page-h { padding: 20px 22px; border-radius: 30px; }
+  .page-h h1 { font-size: clamp(1.8rem, 7vw, 2.3rem); }
+}
+
+/* keep the top bar's margin inside the column so the page tint covers the very top edge */
+.main-col { display: flow-root; }
