@@ -72,3 +72,20 @@ def test_hidden_until_document_and_supplier_response_then_shown_as_project(clien
 def test_unknown_project_404(client):
     assert client.get("/fta/projects/NO-SUCH-PERMIT", headers=OFF).status_code == 404
     assert client.get(f"/fta/projects/{quote('X/Y/1', safe='')}", headers=OFF).status_code == 404
+
+
+def test_officer_sees_no_supplier_or_actions_before_a_case_is_visible(client):
+    """Absolutely clear officer view: a freshly ingested claim leaks no supplier, decision, agent or file access."""
+    OFF = {"X-Officer-Id": "o1"}
+    r = client.post("/maskan/applications", json={
+        "maskan_ref": "MSK-CLEAR-1", "applicant_name": "Clear Test", "emirates_id": "784-9", "plot_no": "P-9",
+        "permit_no": "BP/CLEAR-1", "emirate": "Dubai", "completion_date": "2026-09-24", "invoices": [{
+            "supplier_trn": "100123123100003", "supplier_name": "Hidden Supplier LLC", "invoice_no": "HS-1",
+            "invoice_date": "2026-06-01", "taxable_amount": 100, "vat_amount": 5, "total": 105, "description": "Concrete"}]})
+    assert r.status_code == 201
+    app_id = r.json()["id"]
+    assert all(s["trn"] != "100123123100003" for s in client.get("/fta/suppliers", headers=OFF).json())
+    assert client.get("/fta/suppliers/100123123100003", headers=OFF).status_code == 404
+    assert client.post(f"/fta/applications/{app_id}/decision", headers=OFF,
+                       json={"decision": "REJECTED", "approved_amount": 0}).status_code == 404
+    assert client.post(f"/fta/applications/{app_id}/summary", headers=OFF).status_code in (404, 503)
