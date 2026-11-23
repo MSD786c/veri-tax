@@ -88,6 +88,13 @@ def test_upload_link_hardening(client):
     # Maskan applicant documents never show on the shared link, only to officers
     assert "applicant.png" not in [d["document"]["filename"] for d in client.get("/maskan/portal/test-token/documents").json()]
     assert client.get(f"/maskan/portal/test-token/documents/{r.json()['document_id']}/file").status_code == 404
+    # Officers see it once the case is theirs: DRE-501's supplier (still pending in the seed) must answer first
+    assert not any(d["document"]["filename"] == "applicant.png" for d in client.get("/fta/documents", headers=OFF).json())
+    sup = {"X-Supplier-TRN": "100333333300003"}
+    req = next(p["request"]["id"] for p in client.get("/supplier/requests", headers=sup).json() if p["invoice"]["id"] == inv_id)
+    assert client.post(f"/supplier/requests/{req}/respond", headers=sup, json={
+        "issued": True, "particulars_confirmed": True, "consideration_status": "RECEIVED", "vat_return_period": "2026-Q3",
+        "declared_by": "a@b.example", "declaration": True}).status_code == 200
     assert any(d["document"]["filename"] == "applicant.png" for d in client.get("/fta/documents", headers=OFF).json())
 
 

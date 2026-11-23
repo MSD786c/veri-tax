@@ -47,7 +47,7 @@ export default async function Search({ searchParams }: { searchParams: Promise<P
       )}
       {s.length > 0 && (
         <section className="card"><header className="card-h"><h2>Suppliers</h2></header>
-          <ul className="mini-list">{s.map((x) => <li key={x.trn}><Link href={`/entities?open=${x.trn}`}><span><b>{x.legal_name}</b><small className="mono">{x.trn}</small></span><Badge kind={x.state === "active" ? "approved" : x.state === "review" ? "referred" : "rejected"}>{cap(x.state)}</Badge></Link></li>)}</ul></section>
+          <ul className="mini-list">{s.map((x) => <li key={x.trn}><Link href={`/invoices?q=${x.trn}`}><span><b>{x.legal_name}</b><small className="mono">{x.trn}</small></span><Badge kind={x.state === "active" ? "approved" : x.state === "review" ? "referred" : "rejected"}>{cap(x.state)}</Badge></Link></li>)}</ul></section>
       )}
     </Shell>
   );

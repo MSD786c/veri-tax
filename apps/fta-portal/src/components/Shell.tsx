@@ -7,7 +7,7 @@ import { Icon } from "./ui";
 
 const NAV: [string, string, string][] = [
   ["dashboard", "home", "Dashboard"], ["verifications", "shield", "Verifications"], ["applications", "doc", "Applications"],
-  ["invoices", "file", "Invoices"], ["documents", "folder", "Documents"], ["entities", "building", "Entities"], ["reports", "chart", "Reports"], ["audit", "log", "Audit Trail"],
+  ["invoices", "file", "Invoices"], ["documents", "folder", "Documents"], ["projects", "building", "Projects"], ["reports", "chart", "Reports"], ["audit", "log", "Audit Trail"],
 ];
 
 /** Authenticated page chrome: sidebar, top bar, quick-action dock and the flash message. Redirects to /login when signed out. */

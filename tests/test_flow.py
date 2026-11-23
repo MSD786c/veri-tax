@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient  # noqa: E402
 
 from app.main import app  # noqa: E402
 from app.seed import COMPLETION, COMPLETION_QUARTER, SUPPLIERS  # noqa: E402
+from tests.conftest import link_stub_documents  # noqa: E402
 
 SUP = {"X-Supplier-TRN": "100333333300003"}
 OFF = {"X-Officer-Id": "officer-1"}
@@ -55,6 +56,8 @@ def _invoice(no: str, desc: str, taxable: float = 10000, trn: str = "10022222220
 def test_full_flow():
     with TestClient(app) as c:
         assert c.get("/health").json()["status"] == "ok"
+        assert c.get("/fta/applications", headers=OFF).json() == []  # seeded cases have no original documents yet
+        link_stub_documents()
 
         # --- Seeded ratings: every outcome is present -------------------------------------
         inv = _invoices(c)
@@ -139,9 +142,12 @@ def test_supplier_silence_becomes_weak_after_five_business_days():
     with TestClient(app) as c:
         r = c.post("/maskan/applications", json=_new_application("MSK-2026-9001", [_invoice("SIL-1", "Cement supply")]))
         assert r.status_code == 201, r.text
-        row = _invoices(c)[("MSK-2026-9001", "SIL-1")]
-        assert row["invoice"]["status"] == "AWAITING_SUPPLIER" and row["invoice"]["rating"] is None
-        sent, due = row["confirmation_request"]["sent_at"][:10], row["confirmation_request"]["due_at"][:10]
+        link_stub_documents("MSK-2026-9001")
+        assert ("MSK-2026-9001", "SIL-1") not in _invoices(c)  # supplier step still open: not the FTA's yet
+        req = next(p["request"] for p in c.get("/supplier/requests", headers={"X-Supplier-TRN": "100222222200003"}).json()
+                   if p["invoice"]["invoice_no"] == "SIL-1")
+        assert req["status"] == "PENDING"
+        sent, due = req["sent_at"][:10], req["due_at"][:10]
         business_days = sum((date.fromisoformat(sent) + timedelta(days=n)).weekday() < 5
                             for n in range(1, (date.fromisoformat(due) - date.fromisoformat(sent)).days + 1))
         assert business_days == 5
@@ -164,6 +170,7 @@ def test_common_sense_and_invoice_particulars():
         r = c.post("/maskan/applications", json=_new_application(
             "MSK-2026-9002", [over, bare, third, unknown, bad_trn], contract_value=500000))
         assert r.status_code == 201, r.text
+        link_stub_documents("MSK-2026-9002")  # visible: documents linked and some invoices are rated FAIL
         assert any(f.startswith("CS-01") for f in r.json()["flags"])
         inv = _invoices(c)
         res = {no: _results(inv[("MSK-2026-9002", no)]) for no in ("BIG-1", "BARE-1", "THIRD-1", "UNK-1", "TRN-1")}
@@ -179,6 +186,7 @@ def test_analytics_endpoint_responds_to_filters():
     from app.main import app
     with TestClient(app) as c:
         h = {"X-Officer-Id": "T"}
+        link_stub_documents()
         full = c.get("/fta/analytics", headers=h).json()
         assert full["totals"]["invoices"] == sum(full["ratings"].values())
         assert full["monthly"] and sum(m["claimed"] for m in full["monthly"]) == full["totals"]["claimed"]

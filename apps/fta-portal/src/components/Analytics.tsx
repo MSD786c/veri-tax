@@ -79,7 +79,7 @@ export function ReportCharts({ an }: { an: Analytics }) {
         {an.top_suppliers.length ? (
           <ul className="sup-rank">
             {an.top_suppliers.map((s) => (
-              <li key={s.trn}><Link href={`/entities?open=${s.trn}`}>
+              <li key={s.trn}><Link href={`/invoices?q=${s.trn}`}>
                 <span className="sr-name"><b>{s.name}</b><small>{s.invoices} invoice{s.invoices === 1 ? "" : "s"}</small></span>
                 <div className="track two"><i className="claimed" style={{ width: `${Math.round((s.claimed / mx) * 100)}%` }} title={`Claimed ${money(s.claimed)}`} /><i className="rej" style={{ width: `${Math.round((s.rejected / mx) * 100)}%` }} title={`Rejected ${money(s.rejected)}`} /></div>
                 <span className="sr-val">{money(s.rejected)}<small>of {money(s.claimed)}</small></span>

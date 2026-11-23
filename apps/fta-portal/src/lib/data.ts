@@ -1,7 +1,7 @@
 import { apiGet, apiGetOrNull, apiRaw } from "./api";
 import { fdate, nice } from "./format";
 import type {
-  Analytics, ApplicationDetail, ApplicationSummary, AppView, AuditView, FlatInvoice, InvStatus, SupplierDetail, SupplierStat, Tone,
+  Analytics, ApplicationDetail, ApplicationSummary, AppView, AuditView, FlatInvoice, InvStatus, Project, ProjectInvoice, SupplierDetail, SupplierStat, Tone,
 } from "./types";
 
 export const APP_STATUS: Record<string, [string, Tone]> = {
@@ -69,6 +69,10 @@ export const getSupplier = async (trn: string) => {
   const s = await apiGetOrNull<SupplierDetail>(`/fta/suppliers/${encodeURIComponent(trn)}`);
   return s ? enrichSupplier(s) : null;
 };
+
+export const getProjects = () => apiGet<Project[]>("/fta/projects");
+export const getProject = (permit: string) => apiGetOrNull<{ project: Project; invoices: ProjectInvoice[] }>(`/fta/projects/${encodeURIComponent(permit)}`);
+export const ratingStatus = (r: string | null | undefined): InvStatus => RATING[r ?? ""] ?? "pending";
 
 export function getAnalytics(p: Record<string, string>): Promise<Analytics> {
   const u = new URLSearchParams();

@@ -56,7 +56,7 @@ export default async function Verify({ searchParams }: { searchParams: Promise<P
                   <li key={label} className={`done ${ok === "warn" ? "warn" : !ok ? "bad" : ""}`}><span className="ck"><Icon n={ok === true ? "check" : ok === "warn" ? "clock" : "x"} s={14} /></span>{label}</li>
                 ))}
               </ul>
-              {res.supplierTrn && <p className="muted small">Supplier: <Link className="link" href={`/entities?open=${res.supplierTrn}`}>{res.supplierName}</Link></p>}
+              {res.supplierTrn && <p className="muted small">Supplier: <Link className="link" href={`/invoices?q=${res.supplierTrn}`}>{res.supplierName}</Link></p>}
             </>
           ) : (
             <div className="empty"><span className="empty-ic"><Icon n="scan" s={26} /></span><h3>Result appears here</h3><p>Five live checks run: registry, supplier status, duplicate claim, VAT rate and value.</p></div>
