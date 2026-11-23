@@ -28,7 +28,11 @@ pids=()
 cleanup() { echo; echo "Stopping all servers"; kill "${pids[@]}" 2>/dev/null || true; free_port 8000; free_port 3000; free_port 3001; }
 trap cleanup EXIT INT TERM
 
-echo "Backend + Maskan portal on :8000 (local OCR + Gemini, no seed data)"
+echo "On-prem AI: Ollama model veritax-vat:7b"
+curl -s -o /dev/null --max-time 2 http://localhost:11434/api/tags || { (ollama serve >"$LOGS/ollama.log" 2>&1 &); sleep 2; }
+ollama list | grep -q '^veritax-vat:7b' || ollama create veritax-vat:7b -f "$VT/ollama/veritax-vat.Modelfile"
+
+echo "Backend + Maskan portal on :8000 (local OCR + local agents, no seed data)"
 ( cd "$VT" && SEED=0 LOCAL_OCR=1 uv run --env-file .env.demo uvicorn app.main:app --reload --reload-dir app \
     --reload-include "*.html" --port 8000 >"$LOGS/backend.log" 2>&1 ) & pids+=($!)
 
@@ -59,5 +63,5 @@ cat <<EOF
   Ctrl-C to stop everything.
 EOF
 
-open "$UPLOAD" http://localhost:3000 http://localhost:3001 2>/dev/null || true
+[[ -z "${NO_OPEN:-}" ]] && open "$UPLOAD" http://localhost:3000 http://localhost:3001 2>/dev/null || true
 wait

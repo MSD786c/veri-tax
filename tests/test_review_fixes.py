@@ -149,3 +149,21 @@ def test_catalogue_gaps_from_invoice_eval():
     from app import eligibility
     for text in ("Glass balustrade to staircase and balconies", "Earthing and lightning protection system", "Washed sand"):
         assert eligibility.classify(text).verdict == eligibility.Verdict.ELIGIBLE, text
+
+
+def test_local_model_output_is_schema_constrained(monkeypatch):
+    """On-prem run: the 7B model returned bare values, every field defaulted to 0.5 and nothing linked.
+    Local servers get the extraction schema as a grammar so each field is {value, confidence}."""
+    import httpx
+    from app import llm
+    sent = []
+
+    def fake_post(url, json, timeout, headers):
+        sent.append(json)
+        return httpx.Response(200, json={"choices": [{"message": {"content": '{"ok": 1}'}}]})
+    monkeypatch.setattr(llm.httpx, "post", fake_post)
+    monkeypatch.setattr(llm, "LOCAL", True)
+    llm.chat_json("s", "u", schema=documents.EXTRACT_SCHEMA)
+    llm.chat_json("s", "u")
+    assert sent[0]["response_format"]["json_schema"]["schema"]["properties"]["fields"]["required"] == documents.FIELDS
+    assert sent[1]["response_format"] == {"type": "json_object"}

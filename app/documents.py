@@ -147,7 +147,7 @@ def read_invoice(data: bytes, content_type: str) -> dict:
         text = document_text(data, content_type)
         if not text:
             raise ValueError("no text found in the document")
-        return llm.chat_json(EXTRACT_SYSTEM, f"Extract this invoice. Its text, in reading order:\n\n{text}")
+        return llm.chat_json(EXTRACT_SYSTEM, f"Extract this invoice. Its text, in reading order:\n\n{text}", schema=EXTRACT_SCHEMA)
     images = page_images(data, content_type)
     parts: list = [{"type": "text", "text": "Extract this invoice."}] + [llm.image_part(img) for img in images]
     return fix_trn(images, llm.chat_json(EXTRACT_SYSTEM, parts, model=llm.VISION_MODEL))
@@ -170,6 +170,14 @@ def fix_trn(images: list[bytes], raw: dict) -> dict:
     if len(second) == 15:
         raw["fields"]["supplier_trn"] = {"value": second, "confidence": 0.8, "first_reading": value}
     return raw
+
+
+# Shape of EXTRACT_SYSTEM's answer, enforced on local models: every field is {value, confidence}.
+EXTRACT_SCHEMA = {"type": "object", "required": ["document_type", "fields"], "properties": {
+    "document_type": {"enum": ["TAX_INVOICE", "QUOTATION", "PROFORMA", "RECEIPT", "OTHER"]},
+    "fields": {"type": "object", "required": list(FIELDS), "properties": {
+        name: {"type": "object", "required": ["value", "confidence"],
+               "properties": {"value": {}, "confidence": {"type": "number", "minimum": 0, "maximum": 1}}} for name in FIELDS}}}}
 
 
 def _clean(raw: dict) -> tuple[str, dict]:

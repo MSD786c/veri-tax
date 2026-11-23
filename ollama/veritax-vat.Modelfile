@@ -1,0 +1,7 @@
+# veri-tax on-prem model: every agent (extraction, compliance, reconciliation) runs on this, served by Ollama on the host.
+# ponytail: a parameter-tuned Qwen2.5 7B Instruct (deterministic, 8k context for full invoice text). Swap FROM for a
+# LoRA fine-tune (ADAPTER ./veritax-lora.gguf) once labelled invoices exist; the app only knows the name veritax-vat:7b.
+FROM qwen2.5:7b
+PARAMETER temperature 0
+PARAMETER num_ctx 8192
+PARAMETER num_predict 2000
