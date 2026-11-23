@@ -70,6 +70,35 @@ class Decision(StrEnum):
     REJECTED = "REJECTED"
 
 
+class Rating(StrEnum):
+    """The agent's recommendation on one invoice. The FTA officer makes the decision."""
+
+    STRONG = "STRONG"
+    WEAK = "WEAK"
+    FAIL = "FAIL"
+
+
+class InvoiceType(StrEnum):
+    FULL = "FULL"  # Article 59(1) tax invoice, 12 particulars
+    SIMPLIFIED = "SIMPLIFIED"  # Article 59(2) simplified tax invoice, 5 particulars
+
+
+class InvoiceDecisionValue(StrEnum):
+    APPROVED = "APPROVED"
+    REJECTED = "REJECTED"
+
+
+class SupplierStatus(StrEnum):
+    ACTIVE = "ACTIVE"
+    DEREGISTERED = "DEREGISTERED"
+
+
+class TrustTier(StrEnum):
+    TRUSTED = "TRUSTED"
+    STANDARD = "STANDARD"
+    WATCH = "WATCH"
+
+
 class Supplier(SQLModel, table=True):
     trn: str = Field(primary_key=True)
     legal_name: str
@@ -77,6 +106,11 @@ class Supplier(SQLModel, table=True):
     emirate: str = ""
     emaratax_account_id: str | None = None
     risk_flag: bool = False
+    # FTA registry data (mock). registry_verified is False for a TRN first seen on an invoice.
+    registry_verified: bool = False
+    status: SupplierStatus = SupplierStatus.ACTIVE
+    registered_from: date | None = None
+    deregistered_on: date | None = None
 
 
 class Application(SQLModel, table=True):
@@ -87,9 +121,13 @@ class Application(SQLModel, table=True):
     plot_no: str
     emirate: str
     completion_date: date
+    permit_date: date | None = None
+    contract_value: float | None = None
     claim_type: ClaimType = ClaimType.NEW_RESIDENCE
     status: ApplicationStatus = ApplicationStatus.RECEIVED
     submitted_at: datetime = Field(default_factory=now)
+    # Application-level common-sense flags for the officer (CS-01), not tied to one invoice.
+    flags: list[str] = Field(default_factory=list, sa_column=Column(JSON))
 
 
 class Invoice(SQLModel, table=True):
@@ -107,8 +145,23 @@ class Invoice(SQLModel, table=True):
     description: str = ""
     document_uri: str | None = None
     document_hash: str | None = None
+    # Article 59 particulars beyond the basics above. Empty means "not captured", never guessed.
+    invoice_type: InvoiceType | None = None
+    supplier_address: str = ""
+    recipient_name: str = ""
+    recipient_address: str = ""
+    supply_date: date | None = None
+    line_items: list[dict[str, Any]] = Field(default_factory=list, sa_column=Column(JSON))
+    for_applicant_statement: bool = False  # third-party invoice states it is for the applicant's use
+    intermediary_no_recovery_confirmed: bool = False  # intermediary confirms it recovers no input VAT
     status: InvoiceStatus = InvoiceStatus.INGESTED
     eligible_vat_amount: float = 0
+    suggested_eligible_vat: float | None = None
+    # Agent recommendation. None while the supplier step is still open.
+    rating: Rating | None = None
+    rating_reasons: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    fix_guidance: list[str] = Field(default_factory=list, sa_column=Column(JSON))
+    officer_decision: InvoiceDecisionValue | None = None
 
 
 class RuleResult(SQLModel, table=True):
@@ -153,6 +206,21 @@ class OfficerDecision(SQLModel, table=True):
     decision: Decision
     approved_amount: float
     comments: str = ""
+    decided_at: datetime = Field(default_factory=now)
+
+
+class InvoiceDecision(SQLModel, table=True):
+    """Officer decision on one invoice. Also the precedent store the agent reads back."""
+
+    id: int | None = Field(default=None, primary_key=True)
+    invoice_id: int = Field(foreign_key="invoice.id", index=True)
+    officer_id: str
+    decision: InvoiceDecisionValue
+    approved_vat_amount: float = 0
+    comment: str = ""
+    agent_rating: Rating | None = None
+    overrode_agent: bool = False
+    signature: str = Field(default="", index=True)  # non-passing rule IDs, e.g. "NR-02|SC-02"
     decided_at: datetime = Field(default_factory=now)
 
 
