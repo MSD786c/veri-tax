@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { decideInvoiceAction } from "@/app/actions";
 import Shell from "@/components/Shell";
+import { ComplianceAdvice, DocumentPanel } from "@/components/review";
 import { guard } from "@/components/states";
 import { Badge, Empty, Icon, PageHead, Pager, RatingBadge, SearchBox, Seg, Timeline } from "@/components/ui";
 import { loadAll } from "@/lib/data";
@@ -78,6 +79,7 @@ export default async function Verifications({ searchParams }: { searchParams: Pr
                 <div><dt>Eligible VAT</dt><dd>{money(v.eligible_vat_amount)}</dd></div><div><dt>Supplier trust</dt><dd>{nice(typeof v.row.supplier_trust === "string" ? v.row.supplier_trust : v.row.supplier_trust.tier)}</dd></div>
               </dl>
               {v.fix_guidance.length > 0 && <><h3 className="sec">How to fix</h3><ul className="fixlist">{v.fix_guidance.map((g) => <li key={g}>{g}</li>)}</ul></>}
+              <DocumentPanel doc={v.row.document} extraction={v.row.extraction} />
               <h3 className="sec">Rule checks</h3>
               <ul className="rules">
                 {v.row.rule_results.map((x) => <li key={x.rule_id}><span className="rid mono">{x.rule_id}</span><Badge kind={x.result === "PASS" ? "approved" : x.result === "FAIL" ? "rejected" : x.result === "UNCERTAIN" ? "referred" : "neutral"}>{nice(x.result)}</Badge></li>)}
@@ -86,6 +88,7 @@ export default async function Verifications({ searchParams }: { searchParams: Pr
                 <><h3 className="sec">Supplier confirmation</h3>
                   <dl className="kv"><div><dt>Issued the invoice</dt><dd>{v.row.supplier_response.issued ? "Yes" : "No"}</dd></div><div><dt>Particulars confirmed</dt><dd>{v.row.supplier_response.particulars_confirmed ? "Yes" : "No"}</dd></div><div><dt>VAT return period</dt><dd>{v.row.supplier_response.vat_return_period ?? "—"}</dd></div><div><dt>Declared by</dt><dd>{v.row.supplier_response.declared_by}</dd></div></dl></>
               ) : v.row.confirmation_request ? <><h3 className="sec">Supplier confirmation</h3><p className="muted">Requested {fdt(v.row.confirmation_request.sent_at)}. Status: {nice(v.row.confirmation_request.status)}.</p></> : null}
+              <ComplianceAdvice invoiceId={v.id} runs={v.row.agent_runs} />
               <h3 className="sec">History</h3>
               <Timeline items={[
                 ...history.map((e) => ({ title: nice(e.action), sub: `by ${e.actor}`, at: fdt(e.at) })),

@@ -320,6 +320,35 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 400; pointer-even
 .login-copy h1, .login-box h2 { letter-spacing: -.045em; line-height: .98; font-weight: 450; }
 .an-grid .an-wide .chart { margin-top: 6px; }
 
+/* ── original documents and advisory agents ── */
+.doc-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: 24px; background: rgba(255, 255, 255, .75); border: 1px solid var(--line); flex-wrap: wrap; }
+.doc-ic { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--sky); color: var(--navy); flex: none; }
+.doc-main { display: grid; gap: 2px; flex: 1; min-width: 160px; } .doc-main b { overflow-wrap: anywhere; } .doc-main small { color: var(--muted); }
+.doc-card + .err.banner, .doc-card + p { margin-top: 10px; }
+.mini-list .doc-open { display: inline-flex; align-items: center; gap: 6px; font-size: .84rem; font-weight: 600; color: var(--gold-d); white-space: nowrap; }
+table.fields { width: 100%; border-collapse: separate; border-spacing: 0 4px; font-size: .86rem; }
+.fields thead th { text-align: start; font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 0 12px 2px; }
+.fields tbody th { text-align: start; font-weight: 500; color: var(--muted); width: 34%; }
+.fields tbody th, .fields td { padding: 8px 12px; background: #f9f6ee; vertical-align: top; }
+.fields td { overflow-wrap: break-word; } .fields .num { text-align: end; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fields tbody tr > :first-child { border-radius: 14px 0 0 14px; } .fields tbody tr > :last-child { border-radius: 0 14px 14px 0; }
+.fields tr.low th, .fields tr.low td { background: var(--sand); color: var(--ink); }
+@media (max-width: 520px) { .fields tbody th, .fields td, .fields thead th { padding-inline: 8px; } }
+.advice { margin-top: 22px; padding: 20px 22px; border-radius: 26px; background: var(--lilac); display: grid; gap: 10px; }
+.advice header { display: grid; gap: 2px; } .advice h4 { font-family: var(--display); font-weight: 500; font-size: 1.3rem; letter-spacing: -.02em; color: var(--navy); margin: 0; }
+.advice header small { color: #5f5c55; font-size: .78rem; }
+.advice p { margin: 0; } .advice .muted { color: #55524b; }
+.advice h5 { margin: 4px 0 0; font-size: .74rem; text-transform: uppercase; letter-spacing: .09em; color: #5f5c55; font-weight: 600; }
+.advice .fixlist { margin: 0; color: var(--ink); }
+.advice form { margin-top: 4px; } .advice .err.banner { margin: 0; overflow-wrap: anywhere; }
+.advice-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.advice-list li { display: grid; grid-template-columns: auto auto minmax(0, 1fr); align-items: start; gap: 10px; padding: 10px 14px; border-radius: 18px; background: rgba(255, 255, 255, .6); }
+.advice-list .mono { padding-top: 4px; font-weight: 600; }
+@media (max-width: 520px) { .advice-list li { grid-template-columns: auto 1fr; } .advice-list li > span:last-child { grid-column: 1 / -1; } }
+.brief-rec { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .brief-rec b { font-family: var(--display); font-weight: 500; font-size: 1.6rem; color: var(--navy); }
+.linked { display: flex; align-items: center; gap: 6px; } .linked + .linked { margin-top: 4px; } .linked .ic { color: var(--muted); }
+.mini-list span.badge { display: inline-flex; } /* base `.mini-list span {display:grid}` stacked the dot above the label */
+
 /* alignment: task cards share one baseline for number, caption and footer */
 .tasks .task { display: flex; flex-direction: column; }
 .tasks .task > b { margin-top: 6px; }

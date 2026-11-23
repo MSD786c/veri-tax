@@ -42,3 +42,27 @@ export async function decideInvoiceAction(formData: FormData) {
   const back = safeBack(String(formData.get("back_to") ?? ""), "/verifications");
   redirect(flash(`${back}?open=${id}`, r.ok ? "Invoice decision saved." : `Not saved: ${r.message}`));
 }
+
+// Advisory agents run synchronously on the API and can take a while. The server's own error text is shown as-is.
+async function runAgent(path: string): Promise<string> {
+  try {
+    const r = await apiPost(path, {}, 120000);
+    return r.ok ? "" : r.message;
+  } catch (e) {
+    return e instanceof Error ? e.message : String(e);
+  }
+}
+
+export async function askComplianceAction(formData: FormData) {
+  if (!(await officerId())) redirect("/login");
+  const id = Number(formData.get("id"));
+  const err = await runAgent(`/fta/invoices/${id}/compliance`);
+  redirect(flash(`/verifications?open=${id}`, err ? `Not run: ${err}` : "Compliance agent answered. Its advice is below."));
+}
+
+export async function decisionBriefAction(formData: FormData) {
+  if (!(await officerId())) redirect("/login");
+  const id = Number(formData.get("id"));
+  const err = await runAgent(`/fta/applications/${id}/summary`);
+  redirect(flash(`/applications?open=${id}`, err ? `Not run: ${err}` : "Decision brief generated. It is advisory only."));
+}

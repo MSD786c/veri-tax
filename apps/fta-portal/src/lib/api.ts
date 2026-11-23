@@ -20,9 +20,9 @@ async function call(path: string, init: RequestInit = {}): Promise<Response> {
   const officer = (await officerId()) ?? "";
   try {
     return await fetch(API_URL + path, {
+      signal: AbortSignal.timeout(15000),
       ...init,
       cache: "no-store",
-      signal: AbortSignal.timeout(15000),
       headers: { "Content-Type": "application/json", "X-Officer-Id": officer, ...init.headers },
     });
   } catch (e) {
@@ -44,8 +44,8 @@ export async function apiGetOrNull<T>(path: string): Promise<T | null> {
   return res.json() as Promise<T>;
 }
 
-export async function apiPost(path: string, body: unknown): Promise<{ ok: boolean; message: string }> {
-  const res = await call(path, { method: "POST", body: JSON.stringify(body) });
+export async function apiPost(path: string, body: unknown, timeoutMs = 15000): Promise<{ ok: boolean; message: string }> {
+  const res = await call(path, { method: "POST", body: JSON.stringify(body), signal: AbortSignal.timeout(timeoutMs) });
   return { ok: res.ok, message: res.ok ? "" : await detail(res) };
 }
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { decideApplicationAction } from "@/app/actions";
 import Shell from "@/components/Shell";
+import { DecisionBrief, fileHref } from "@/components/review";
 import { guard } from "@/components/states";
 import { Badge, Empty, Icon, PageHead, Pager, RatingBadge, SearchBox, Seg, Timeline } from "@/components/ui";
 import { APP_STATUS, loadAll } from "@/lib/data";
@@ -74,6 +75,13 @@ export default async function Applications({ searchParams }: { searchParams: Pro
               <ul className="mini-list">
                 {a.invoices.map((i) => <li key={i.id}><Link href={`/verifications?open=${i.id}`}><span><b>{i.invoice_no}</b><small>{i.supplier_name} · {money(i.vat_amount)}</small></span><RatingBadge s={i.status_ui} /></Link></li>)}
               </ul>
+              {a.invoices.some((i) => i.row.document) && (
+                <><h3 className="sec">Original documents</h3>
+                  <ul className="mini-list">
+                    {a.invoices.filter((i) => i.row.document).map((i) => <li key={i.id}><a href={fileHref(i.row.document!.id)} target="_blank" rel="noopener"><span><b>{i.row.document!.filename}</b><small>{i.invoice_no} · {i.row.extraction ? nice(i.row.extraction.document_type) : nice(i.row.document!.status)}</small></span><span className="doc-open">Open original <Icon n="external" s={14} /></span></a></li>)}
+                  </ul></>
+              )}
+              <DecisionBrief appId={a.id} runs={a.detail.agent_runs} />
               <h3 className="sec">History</h3>
               <Timeline items={history.map((e) => ({ title: nice(e.action), sub: `by ${e.actor}`, at: fdt(e.at) }))} />
               {a.detail.decision ? (

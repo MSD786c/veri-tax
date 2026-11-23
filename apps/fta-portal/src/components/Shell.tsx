@@ -7,14 +7,14 @@ import { Icon } from "./ui";
 
 const NAV: [string, string, string][] = [
   ["dashboard", "home", "Dashboard"], ["verifications", "shield", "Verifications"], ["applications", "doc", "Applications"],
-  ["invoices", "file", "Invoices"], ["entities", "building", "Entities"], ["reports", "chart", "Reports"], ["audit", "log", "Audit Trail"],
+  ["invoices", "file", "Invoices"], ["documents", "folder", "Documents"], ["entities", "building", "Entities"], ["reports", "chart", "Reports"], ["audit", "log", "Audit Trail"],
 ];
 
 /** Authenticated page chrome: sidebar, top bar, quick-action dock and the flash message. Redirects to /login when signed out. */
 export default async function Shell({ route, children, msg, skeleton = false }: { route: string; children: ReactNode; msg?: string; skeleton?: boolean }) {
   const officer = await officerId();
   if (!officer) redirect("/login");
-  const failed = msg?.startsWith("Not saved");
+  const failed = msg?.startsWith("Not saved") || msg?.startsWith("Not run");
   return (
     <div className={`app${skeleton ? " is-skel" : ""}`}>
       {/* Streaming swaps the real page in with a tiny inline script. Without JavaScript the page stays in a hidden
