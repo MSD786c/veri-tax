@@ -53,6 +53,15 @@ class SupplierResponseIn(BaseModel):
         return self
 
 
+class BulkResponseItem(SupplierResponseIn):
+    request_id: int
+
+
+class BulkResponseIn(BaseModel):
+    """Several responses in one call (bulk confirm or CSV upload). All are saved or none."""
+    items: list[BulkResponseItem] = Field(min_length=1, max_length=500)
+
+
 class DecisionIn(BaseModel):
     decision: Decision
     approved_amount: float = Field(ge=0)

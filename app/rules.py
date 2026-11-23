@@ -25,6 +25,32 @@ PERIOD_RE = re.compile(r"^(\d{4}-Q[1-4]|[A-Z][a-z]{2}-\d{4})$")  # 2026-Q2 or Ap
 # ponytail: keyword list, replace with the compliance agent for real eligibility calls
 EXCLUDED_KEYWORDS = ("furniture", "sofa", "appliance", "television", "tv ", "refrigerator", "washing machine")
 
+# Human-readable rule catalog (README "Verification rules"), served at GET /meta/rules so the
+# portals can label rule IDs. `implemented` marks the rules this ruleset actually runs.
+RULE_CATALOG: dict[str, dict] = {
+    "TI-01": {"group": "Tax invoice validity", "title": "Document is a tax invoice", "description": "Titled \"Tax Invoice\", not a quotation, proforma or receipt.", "implemented": True},
+    "TI-02": {"group": "Tax invoice validity", "title": "Supplier name, address and TRN shown", "description": "The invoice shows the supplier's name, address and TRN.", "implemented": False},
+    "TI-03": {"group": "Tax invoice validity", "title": "Supplier TRN valid", "description": "The supplier TRN is valid (15 digits, starting 100) and was active on the invoice date.", "implemented": True},
+    "TI-04": {"group": "Tax invoice validity", "title": "Invoice number and date shown", "description": "The invoice shows its number and date of issue.", "implemented": False},
+    "TI-05": {"group": "Tax invoice validity", "title": "Goods or services described", "description": "The invoice describes the goods or services supplied.", "implemented": False},
+    "TI-06": {"group": "Tax invoice validity", "title": "Amounts shown in AED", "description": "Taxable amount, VAT rate, VAT amount and total are shown in AED.", "implemented": True},
+    "TI-07": {"group": "Tax invoice validity", "title": "Arithmetic adds up", "description": "Taxable × 5% = VAT and taxable + VAT = total, within AED 0.05.", "implemented": True},
+    "TI-08": {"group": "Tax invoice validity", "title": "Recipient is the applicant", "description": "Addressed to the applicant, or states it is for the applicant's use with the plot or address.", "implemented": False},
+    "NR-01": {"group": "Refund eligibility", "title": "Plot matches application", "description": "The plot number or address on the invoice matches the application.", "implemented": True},
+    "NR-02": {"group": "Refund eligibility", "title": "Eligible goods or services", "description": "Building works or materials, not excluded items such as furniture or appliances.", "implemented": True},
+    "NR-03": {"group": "Refund eligibility", "title": "Within construction period", "description": "Invoice dated within the construction period, before completion (except retention).", "implemented": False},
+    "NR-04": {"group": "Refund eligibility", "title": "Claimed within 12 months", "description": "Claim lodged within 12 months of the residence's completion date.", "implemented": True},
+    "NR-05": {"group": "Refund eligibility", "title": "Not claimed elsewhere", "description": "The invoice has not been claimed in another application.", "implemented": True},
+    "NR-06": {"group": "Refund eligibility", "title": "Intermediary not recovering VAT", "description": "Where an intermediary is the recipient, it is not recovering input VAT.", "implemented": False},
+    "NR-07": {"group": "Refund eligibility", "title": "Retention invoice rules", "description": "Retention invoices only in a retention claim, with proof of payment.", "implemented": False},
+    "SC-01": {"group": "Supplier confirmation", "title": "Supplier issued the invoice", "description": "The supplier confirms it issued the invoice.", "implemented": True},
+    "SC-02": {"group": "Supplier confirmation", "title": "Particulars match", "description": "Confirmed number, date, amounts and VAT match the submitted data.", "implemented": True},
+    "SC-03": {"group": "Supplier confirmation", "title": "Consideration received or retention", "description": "Consideration received, or retention with amount and release date.", "implemented": True},
+    "SC-04": {"group": "Supplier confirmation", "title": "VAT return period named", "description": "The supplier names the VAT return period it declared the output VAT in.", "implemented": True},
+    "SC-05": {"group": "Supplier confirmation", "title": "Period consistent with invoice", "description": "The declared period does not end before the invoice date.", "implemented": True},
+    "SC-06": {"group": "Supplier confirmation", "title": "Return filed", "description": "The declared period's VAT return has been filed (needs FTA data access).", "implemented": False},
+}
+
 Check = tuple[str, RuleOutcome, dict]
 P, F, U, NA = RuleOutcome.PASS, RuleOutcome.FAIL, RuleOutcome.UNCERTAIN, RuleOutcome.NOT_APPLICABLE
 
