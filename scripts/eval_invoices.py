@@ -20,6 +20,7 @@ import os
 import re
 import sys
 import tempfile
+import time
 from collections import Counter
 from pathlib import Path
 
@@ -69,17 +70,17 @@ def field_ok(name: str, got, want) -> bool:
     return norm_text(got) == norm_text(want)
 
 
-def read(data: bytes) -> dict:
-    """Model reading, cached by file hash."""
+def read(data: bytes, fresh: bool = False) -> dict:
+    """Model reading, cached by file hash (--fresh ignores the cache, e.g. for a live demo)."""
     cache = OUT / "cache" / documents.PROMPT_VERSION / f"{hashlib.sha256(data).hexdigest()}.json"
-    if cache.exists():
+    if cache.exists() and not fresh:
         raw = json.loads(cache.read_text())
     else:
         raw = get_agent().extract_invoice(data, "application/pdf")
         cache.parent.mkdir(parents=True, exist_ok=True)
         cache.write_text(json.dumps(raw))
     fixed = cache.with_suffix(".trn.json")  # second TRN look for readings cached before it existed
-    if fixed.exists():
+    if fixed.exists() and not fresh:
         return json.loads(fixed.read_text())
     try:
         raw = documents.fix_trn(documents.page_images(data, "application/pdf"), raw)
@@ -118,6 +119,7 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int)
     ap.add_argument("--files", help="comma-separated file names")
+    ap.add_argument("--fresh", action="store_true", help="re-read every PDF instead of using cached readings")
     args = ap.parse_args()
     if get_agent() is None:
         sys.exit("Set AGENT_PROVIDER=groq and GROQ_API_KEY in .env")
@@ -144,7 +146,9 @@ def main() -> None:
         row = {"file": case["file"], "folder": case["folder"], "expected": exp["rating"], "expected_rules": exp["rules"],
                "defect": exp["defect"]}
         try:
-            dtype, fields = documents._clean(read(data))
+            t0 = time.perf_counter()
+            dtype, fields = documents._clean(read(data, args.fresh))
+            row["secs"] = round(time.perf_counter() - t0, 1)
         except Exception as e:  # noqa: BLE001 — record and continue
             rows.append({**row, "got": "ERROR", "detail": str(e)[:200]})
             print(f"[{n}/{len(cases)}] {case['file']}: ERROR {e}")
@@ -193,10 +197,10 @@ def main() -> None:
                          "fields_wrong": ",".join(wrong), "detail": " | ".join(inv.rating_reasons)[:300]})
         print(f"[{n}/{len(cases)}] {case['file']}: expected {exp['rating']:6} got {rows[-1]['got']:6}"
               f" fail={rows[-1].get('failing_rules', '')} unsure={rows[-1].get('uncertain_rules', '')}"
-              + (f" fields_wrong={','.join(wrong)}" if wrong else ""), flush=True)
+              + (f" fields_wrong={','.join(wrong)}" if wrong else "") + f" read={row['secs']}s", flush=True)
 
     OUT.mkdir(parents=True, exist_ok=True)
-    keys = ["file", "folder", "expected", "got", "expected_rules", "failing_rules", "uncertain_rules", "rule_hit",
+    keys = ["file", "folder", "secs", "expected", "got", "expected_rules", "failing_rules", "uncertain_rules", "rule_hit",
             "fields_wrong", "defect", "detail"]
     with open(OUT / "results.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=keys, extrasaction="ignore")

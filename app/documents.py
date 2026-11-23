@@ -26,7 +26,9 @@ ALLOWED = {"application/pdf": ".pdf", "image/jpeg": ".jpg", "image/png": ".png",
 MAGIC = {"application/pdf": b"%PDF-", "image/jpeg": b"\xff\xd8\xff", "image/png": b"\x89PNG", "image/webp": b"RIFF"}
 MAX_PIXELS = 40_000_000  # decompression-bomb guard for uploaded images
 MAX_SIDE = 2000  # px sent to the model
-PROMPT_VERSION = "extract-2026.11-4"
+LOCAL_OCR = os.getenv("LOCAL_OCR", "").lower() in ("1", "true", "yes", "paddle")  # text layer / PaddleOCR + text model
+OCR_ALWAYS = os.getenv("LOCAL_OCR", "").lower() == "paddle"  # skip the PDF text layer, OCR every page (demo)
+PROMPT_VERSION = "extract-2026.11-4" + ("-text" if LOCAL_OCR else "")
 FIELDS = ["title", "invoice_type", "supplier_name", "supplier_address", "supplier_trn", "invoice_no", "invoice_date",
           "supply_date", "recipient_name", "recipient_address", "for_applicant_statement", "plot_no", "description",
           "line_items", "taxable_amount", "vat_rate", "vat_amount", "total", "currency"]
@@ -109,8 +111,43 @@ Return compact JSON {"trn_digits": "1 0 0 ..."} with every digit separated by on
 or {"trn_digits": ""} if there is none."""
 
 
+_paddle = None
+
+
+def ocr_image(jpeg: bytes) -> str:
+    """PaddleOCR, fully local. Models download once (~100 MB) on first use, then load in a few seconds."""
+    global _paddle
+    if _paddle is None:
+        import numpy as np  # noqa: F401 — paddleocr dependency
+        from paddleocr import PaddleOCR
+        # ponytail: mobile models, ~9 s/page on an M5 CPU (server models ~15 s, same TRN accuracy on the test set).
+        _paddle = PaddleOCR(text_detection_model_name="PP-OCRv5_mobile_det", text_recognition_model_name="en_PP-OCRv5_mobile_rec",
+                            use_doc_orientation_classify=False, use_doc_unwarping=False, use_textline_orientation=False)
+    import numpy as np
+    res = _paddle.predict(np.array(Image.open(io.BytesIO(jpeg)).convert("RGB")))[0]
+    # Boxes are [x1, y1, x2, y2] from the top-left: group into rows (~12 px), then left to right.
+    items = sorted(zip(res["rec_texts"], res["rec_boxes"].tolist()), key=lambda t: (round(t[1][1] / 12), t[1][0]))
+    return "\n".join(t for t, _ in items)
+
+
+def document_text(data: bytes, content_type: str) -> str:
+    """LOCAL_OCR mode: the PDF's own text layer, or PaddleOCR for scans and photos (LOCAL_OCR=paddle: always OCR)."""
+    pages = []
+    if content_type == "application/pdf" and not OCR_ALWAYS:
+        pdf = pdfium.PdfDocument(data)
+        pages = [pdf[i].get_textpage().get_text_range() for i in range(min(len(pdf), MAX_PAGES))]
+    if sum(len(p.strip()) for p in pages) < 50:  # no usable text layer: OCR the page images
+        pages = [ocr_image(jpeg) for jpeg in page_images(data, content_type)]
+    return "\n\n".join(pages).strip()
+
+
 def read_invoice(data: bytes, content_type: str) -> dict:
-    """Raw vision-model reading of one document (used by app.agent.GroqAgent.extract_invoice)."""
+    """Raw model reading of one document (used by app.agent.GroqAgent.extract_invoice)."""
+    if LOCAL_OCR:
+        text = document_text(data, content_type)
+        if not text:
+            raise ValueError("no text found in the document")
+        return llm.chat_json(EXTRACT_SYSTEM, f"Extract this invoice. Its text, in reading order:\n\n{text}")
     images = page_images(data, content_type)
     parts: list = [{"type": "text", "text": "Extract this invoice."}] + [llm.image_part(img) for img in images]
     return fix_trn(images, llm.chat_json(EXTRACT_SYSTEM, parts, model=llm.VISION_MODEL))
@@ -126,7 +163,7 @@ def fix_trn(images: list[bytes], raw: dict) -> dict:
     f = (raw.get("fields") or {}).get("supplier_trn")
     value = f.get("value") if isinstance(f, dict) else f
     digits = re.sub(r"\D", "", str(value or ""))
-    if not digits or len(digits) == 15:
+    if not digits or len(digits) == 15 or LOCAL_OCR:  # a text reading has no image to look at again
         return raw
     out = llm.chat_json(TRN_SYSTEM, [{"type": "text", "text": "Read the TRN."}, llm.image_part(images[0])], model=llm.VISION_MODEL)
     second = re.sub(r"\D", "", str(out.get("trn_digits") or ""))

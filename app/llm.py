@@ -16,7 +16,8 @@ import time
 import httpx
 
 BASE_URL = os.getenv("LLM_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/")
-API_KEY = os.getenv("GROQ_API_KEY", "")
+GEMINI = "generativelanguage.googleapis.com" in BASE_URL  # Gemini's OpenAI-compatible endpoint
+API_KEY = os.getenv("GEMINI_API_KEY" if GEMINI else "GROQ_API_KEY", "")
 MODEL = os.getenv("LLM_MODEL", "qwen/qwen3.8-27b")
 VISION_MODEL = os.getenv("VISION_MODEL", MODEL)
 TIMEOUT = float(os.getenv("LLM_TIMEOUT", "120"))
@@ -31,7 +32,7 @@ class LLMError(RuntimeError):
 
 
 def enabled() -> bool:
-    return bool(API_KEY)
+    return bool(API_KEY) or "://localhost" in BASE_URL or "://127.0.0.1" in BASE_URL  # local servers (Ollama) need no key
 
 
 def status() -> dict:
@@ -66,6 +67,8 @@ def chat_json(system: str, user: str | list, model: str | None = None) -> dict:
         "max_completion_tokens": MAX_TOKENS,
         "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
     }
+    if GEMINI:  # JSON mode: without it Gemini sometimes emits invalid \u escapes in Arabic text
+        body["response_format"] = {"type": "json_object"}
     # Every failure leaves as LLMError so callers have one thing to catch.
     with _lock:
         return _post(body)

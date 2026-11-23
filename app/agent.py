@@ -53,6 +53,6 @@ def get_agent() -> Agent | None:
     provider = os.getenv("AGENT_PROVIDER", "").strip().lower()
     if not provider:
         return None
-    if provider == "groq":
+    if provider in ("groq", "local"):  # "local": same OpenAI-compatible client pointed at Ollama (LLM_BASE_URL)
         return GroqAgent()
     raise NotImplementedError(f"No agent implementation for AGENT_PROVIDER={provider!r}")

@@ -61,6 +61,7 @@ class RequestStatus(StrEnum):
 
 
 class DocumentStatus(StrEnum):
+    STORED = "STORED"  # kept locally, not read by the agent yet (e.g. scripts/load_test_data.py)
     UPLOADED = "UPLOADED"
     EXTRACTING = "EXTRACTING"
     EXTRACTED = "EXTRACTED"

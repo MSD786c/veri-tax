@@ -317,10 +317,19 @@ def link_document(session: Session, doc: Document, ext: ExtractedInvoice) -> lis
     linked = list(session.exec(select(Invoice).where(Invoice.document_hash == doc.sha256)).all())
     open_unlinked = select(Invoice).join(Application, Application.id == Invoice.application_id).where(
         col(Invoice.document_hash).is_(None), col(Application.status).not_in(DECIDED))
-    for inv in session.exec(open_unlinked).all():
+    candidates = session.exec(open_unlinked).all()
+    for inv in candidates:
         if _matches(d, inv):
             inv.document_hash = doc.sha256
             linked.append(inv)
+    no = rules.trusted(d, "invoice_no")
+    if not linked and no and not rules.field(d, "supplier_trn")[0]:
+        # No TRN printed (itself a TI-02/TI-03 finding): link on the invoice number only when exactly one open
+        # invoice carries it, so the officer sees the document; EX-01 then reports the TRN as not read.
+        same_no = [i for i in candidates if rules.same_ref(no, i.invoice_no)]
+        if len(same_no) == 1:
+            same_no[0].document_hash = doc.sha256
+            linked.append(same_no[0])
     for inv in linked:
         reverify(session, inv)
     return linked

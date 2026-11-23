@@ -12,6 +12,8 @@ dependencies = [
     "pillow>=13.0.0",
     "python-multipart>=0.0.34",
     "python-dotenv>=1.2.4",
+    "paddleocr>=3 ; sys_platform == 'darwin'",
+    "paddlepaddle>=3 ; sys_platform == 'darwin'",
 ]
 
 [dependency-groups]
