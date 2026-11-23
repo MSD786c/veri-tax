@@ -6,7 +6,8 @@
 Demo flow: upload an MMB_2026_00x PDF in the Maskan portal -> it is read locally, scored, linked to MSK-2026-9001
 -> sign in to EmaraTax as the supplier and answer the verification questions -> review and approve in the FTA portal.
   Mumtaz Building Materials  TRN 100000000000003  invoices MMB/2026/001 (AED 15,000) and MMB/2026/003 (AED 1,000,000)
-  Vinay Building Materials   TRN 100000000000011  invoice MMB/2026/002 (plain "Invoice", no TRN printed -> FAIL)
+  Vinay Building Materials   not registered, no TRN   invoice MMB/2026/002 -> Maskan portal shows "Flagged · Not a registered
+                                                    vendor"; the officer sees it straight away (FAIL needs no supplier step)
 Data stays in the local database (git-ignored).
 """
 import sys
@@ -23,11 +24,12 @@ from app.models import (AgentRun, Application, AuditEvent, ConfirmationRequest, 
 from app.schemas import IngestApplication, IngestInvoice, LineItem  # noqa: E402
 
 REF = "MSK-2026-9001"
-COMPANIES = {"100000000000003": "Mumtaz Building Materials", "100000000000011": "Vinay Building Materials"}
+COMPANIES = {"100000000000003": "Mumtaz Building Materials"}  # the only registered demo vendor
+UNREGISTERED = {"": "Vinay Building Materials"}  # no TRN on its invoice, not in the FTA registry
 
 
 def inv(trn, no, desc, taxable, vat, total, title="Tax Invoice"):
-    return IngestInvoice(supplier_trn=trn, supplier_name=COMPANIES[trn], invoice_no=no, invoice_date="2026-11-23",
+    return IngestInvoice(supplier_trn=trn, supplier_name={**COMPANIES, **UNREGISTERED}[trn], invoice_no=no, invoice_date="2026-11-23",
                          supply_date="2026-11-23", title=title, taxable_amount=taxable, vat_amount=vat, total=total,
                          description=desc, supplier_address="Ras Al Khaimah, UAE", recipient_name="Tarek Mohammed",
                          recipient_address="Ras Al Khaimah, UAE",
@@ -81,9 +83,9 @@ def main() -> None:
             emirate="Ras Al Khaimah", completion_date=date(2026, 11, 23), permit_no="RAK-BP-2025-04417", permit_date=date(2025, 12, 1),
             contract_value=750_000,
             invoices=[inv("100000000000003", "MMB/2026/001", "Cement", 14285.71, 714.29, 15000.00),
-                      inv("100000000000011", "MMB/2026/002", "Sanitary ware", 7619.05, 380.95, 8000.00, title="Invoice"),
+                      inv("", "MMB/2026/002", "Sanitary ware", 7619.05, 380.95, 8000.00, title="Invoice"),
                       inv("100000000000003", "MMB/2026/003", "Cement", 952380.95, 47619.05, 1000000.00)]))
-        print(f"loaded {REF} (Tarek Mohammed): Mumtaz 100000000000003 -> MMB/2026/001, 003; Vinay 100000000000011 -> MMB/2026/002")
+        print(f"loaded {REF} (Tarek Mohammed): Mumtaz 100000000000003 -> MMB/2026/001, 003; Vinay (unregistered) -> MMB/2026/002")
 
 
 if __name__ == "__main__":
