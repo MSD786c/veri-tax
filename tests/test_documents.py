@@ -180,3 +180,16 @@ def test_model_invoice_type_guess_never_fails_ti09(client, monkeypatch):
     guessed, printed = find(client, "MSK-DOC-5"), find(client, "MSK-DOC-6")
     assert guessed["invoice"]["invoice_type"] is None and latest(guessed)["TI-09"]["result"] != "FAIL"
     assert printed["invoice"]["invoice_type"] == "SIMPLIFIED" and latest(printed)["TI-09"]["result"] == "FAIL"
+
+
+def test_upload_flags_furniture_as_not_eligible():
+    """IKEA-style invoice: the portal flags furniture at upload time, before any Maskan claim is matched."""
+    from app.api.maskan_portal import _not_eligible
+    from app.models import ExtractedInvoice
+    lines = [{"description": "3-seat residential sofa sets"}, {"description": "Residential wardrobe units"}]
+    ikea = ExtractedInvoice(document_id=1, document_type="TAX_INVOICE", model="m", prompt_version="p",
+                            fields={"line_items": {"value": lines, "confidence": 0.9}})
+    assert "Furniture is not included in the refund programme" in _not_eligible(ikea)
+    cement = ExtractedInvoice(document_id=2, document_type="TAX_INVOICE", model="m", prompt_version="p",
+                              fields={"description": {"value": "Cement", "confidence": 0.9}})
+    assert _not_eligible(cement) is None
