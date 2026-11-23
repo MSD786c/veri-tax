@@ -1,0 +1,3214 @@
+{
+ "note": "Synthetic test data. Expected ratings assume the supplier confirms the invoice; duplicates assume the Good copy was claimed first.",
+ "applications": [
+  {
+   "name": "Ahmed Al Mansoori",
+   "plot": "DXB-345-112",
+   "area": "Al Khawaneej 2",
+   "emirate": "Dubai",
+   "maskan": "MSK-2026-0101",
+   "permit_date": "2025-10-20",
+   "completion_date": "2026-09-15"
+  },
+  {
+   "name": "Fatima Al Ketbi",
+   "plot": "AUH-12-0098",
+   "area": "Mohamed Bin Zayed City",
+   "emirate": "Abu Dhabi",
+   "maskan": "MSK-2026-0102",
+   "permit_date": "2025-10-20",
+   "completion_date": "2026-09-15"
+  },
+  {
+   "name": "Khalid Al Shamsi",
+   "plot": "SHJ-7-301",
+   "area": "Al Rahmaniya 4",
+   "emirate": "Sharjah",
+   "maskan": "MSK-2026-0103",
+   "permit_date": "2025-10-20",
+   "completion_date": "2026-09-15"
+  },
+  {
+   "name": "Mariam Al Nuaimi",
+   "plot": "RAK-9-77",
+   "area": "Al Dhait South",
+   "emirate": "Ras Al Khaimah",
+   "maskan": "MSK-2026-0104",
+   "permit_date": "2025-10-20",
+   "completion_date": "2026-09-15"
+  },
+  {
+   "name": "Saeed Al Mazrouei",
+   "plot": "AAN-22-415",
+   "area": "Zakher",
+   "emirate": "Abu Dhabi",
+   "maskan": "MSK-2026-0105",
+   "permit_date": "2025-10-20",
+   "completion_date": "2026-09-15"
+  },
+  {
+   "name": "Noura Al Zaabi",
+   "plot": "AJM-5-208",
+   "area": "Al Helio 2",
+   "emirate": "Ajman",
+   "maskan": "MSK-2026-0106",
+   "permit_date": "2025-10-20",
+   "completion_date": "2026-09-15"
+  }
+ ],
+ "suppliers": [
+  {
+   "trn": "100111111100003",
+   "legal_name": "Al Noor Building Contracting LLC",
+   "address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100222222200003",
+   "legal_name": "Gulf Steel & Cement Trading",
+   "address": "Plot M-14, Mussafah Industrial, Abu Dhabi, UAE, P.O. Box 92217",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100333333300003",
+   "legal_name": "Desert Rose Electrical Works",
+   "address": "Shed 6, Industrial Area 6, Sharjah, UAE, P.O. Box 30418",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100444444400003",
+   "legal_name": "Emirates Home Furnishing LLC",
+   "address": "Showroom 3, Sheikh Zayed Road, Dubai, UAE, P.O. Box 77120",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100555555500003",
+   "legal_name": "Falcon Pools & Landscaping LLC",
+   "address": "Office 204, Al Barsha South, Dubai, UAE, P.O. Box 58833",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100666666600003",
+   "legal_name": "Oasis Security Systems LLC",
+   "address": "Office 1102, Electra Street, Abu Dhabi, UAE, P.O. Box 41906",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100777777700003",
+   "legal_name": "Marina Aluminium & Glass LLC",
+   "address": "Unit 9, Ajman Industrial Area 2, Ajman, UAE, P.O. Box 20655",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100999999900003",
+   "legal_name": "Jabal Sanitary & Plumbing Trading LLC",
+   "address": "Shop 22, Naif Road, Deira, Dubai, UAE, P.O. Box 66241",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100121212100003",
+   "legal_name": "Rimal Engineering Consultancy",
+   "address": "Office 508, Corniche Tower, Sharjah, UAE, P.O. Box 15377",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100131313100003",
+   "legal_name": "Bayt Al Rukham Marble & Tiles LLC",
+   "address": "Warehouse 31, Ras Al Khor Industrial 2, Dubai, UAE, P.O. Box 83410",
+   "status": "ACTIVE"
+  },
+  {
+   "trn": "100141414100003",
+   "legal_name": "Naseem Air Conditioning LLC",
+   "address": "Warehouse 8, Mussafah M-37, Abu Dhabi, UAE, P.O. Box 70218",
+   "status": "ACTIVE"
+  }
+ ],
+ "invoices": [
+  {
+   "file": "invoice_001.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Duplicate: same supplier and invoice number as a Good invoice (GSC-3482), claimed by another applicant",
+    "rules": "NR-05"
+   },
+   "fields": {
+    "supplier_trn": "100222222200003",
+    "supplier_name": "Gulf Steel & Cement Trading",
+    "supplier_address": "Plot M-14, Mussafah Industrial, Abu Dhabi, UAE, P.O. Box 92217",
+    "invoice_no": "GSC-3482",
+    "invoice_date": "2026-07-04",
+    "supply_date": "2026-07-03",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Sulphate resisting cement, 50 kg bags; Reinforcement steel bars 12 mm, grade B500B",
+    "line_items": [
+     {
+      "description": "Sulphate resisting cement, 50 kg bags",
+      "unit": "bag",
+      "quantity": 245,
+      "unit_price": 17.0,
+      "amount": 4165.0
+     },
+     {
+      "description": "Reinforcement steel bars 12 mm, grade B500B",
+      "unit": "ton",
+      "quantity": 11,
+      "unit_price": 2395.0,
+      "amount": 26345
+     }
+    ],
+    "taxable_amount": 30510.0,
+    "vat_amount": 1525.5,
+    "total": 32035.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_002.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Furniture: not eligible",
+    "rules": "NR-02"
+   },
+   "fields": {
+    "supplier_trn": "100444444400003",
+    "supplier_name": "Emirates Home Furnishing LLC",
+    "supplier_address": "Showroom 3, Sheikh Zayed Road, Dubai, UAE, P.O. Box 77120",
+    "invoice_no": "EHF-3130",
+    "invoice_date": "2026-05-14",
+    "supply_date": "2026-05-07",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Ahmed Al Mansoori",
+    "recipient_address": "Villa on Plot DXB-345-112, Al Khawaneej 2, Dubai",
+    "plot_no": "DXB-345-112",
+    "description": "Living room sofa set, 7-seater; Dining table with 8 chairs; Curtains and blinds, made to measure",
+    "line_items": [
+     {
+      "description": "Living room sofa set, 7-seater",
+      "unit": "set",
+      "quantity": 1,
+      "unit_price": 10065.0,
+      "amount": 10065
+     },
+     {
+      "description": "Dining table with 8 chairs",
+      "unit": "set",
+      "quantity": 1,
+      "unit_price": 7665.0,
+      "amount": 7665
+     },
+     {
+      "description": "Curtains and blinds, made to measure",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 7910.0,
+      "amount": 7910
+     }
+    ],
+    "taxable_amount": 25640,
+    "vat_amount": 1282.0,
+    "total": 26922.0,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_003.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Simplified tax invoice: no customer name or address, VAT-inclusive prices",
+    "rules": "TI-09"
+   },
+   "fields": {
+    "supplier_trn": "100222222200003",
+    "supplier_name": "Gulf Steel & Cement Trading",
+    "supplier_address": "Plot M-14, Mussafah Industrial, Abu Dhabi, UAE, P.O. Box 92217",
+    "invoice_no": "R129518",
+    "invoice_date": "2026-01-24",
+    "supply_date": "2026-01-24",
+    "title": "Tax Invoice",
+    "invoice_type": "SIMPLIFIED",
+    "currency": "AED",
+    "recipient_name": "",
+    "recipient_address": "",
+    "plot_no": "",
+    "description": "Ordinary Portland cement, 50 kg bags; Washed sand",
+    "line_items": [
+     {
+      "description": "Ordinary Portland cement, 50 kg bags",
+      "unit": "bag",
+      "quantity": 15,
+      "unit_price": 14.5,
+      "amount": 217.5
+     },
+     {
+      "description": "Washed sand",
+      "unit": "m3",
+      "quantity": 2,
+      "unit_price": 55.0,
+      "amount": 110.0
+     }
+    ],
+    "taxable_amount": 327.5,
+    "vat_amount": 16.38,
+    "total": 343.88,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_004.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0105",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Document is titled \"Quotation\", not \"Tax Invoice\"",
+    "rules": "TI-01"
+   },
+   "fields": {
+    "supplier_trn": "100777777700003",
+    "supplier_name": "Marina Aluminium & Glass LLC",
+    "supplier_address": "Unit 9, Ajman Industrial Area 2, Ajman, UAE, P.O. Box 20655",
+    "invoice_no": "MAG-3448",
+    "invoice_date": "2026-03-19",
+    "supply_date": "2026-03-13",
+    "title": "Quotation",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Saeed Al Mazrouei",
+    "recipient_address": "Villa on Plot AAN-22-415, Zakher, Abu Dhabi",
+    "plot_no": "AAN-22-415",
+    "description": "Aluminium sliding doors, thermal break, double glazed; Fixed awnings over windows; Aluminium window frames, powder coated, double glazed",
+    "line_items": [
+     {
+      "description": "Aluminium sliding doors, thermal break, double glazed",
+      "unit": "m2",
+      "quantity": 33,
+      "unit_price": 765.0,
+      "amount": 25245
+     },
+     {
+      "description": "Fixed awnings over windows",
+      "unit": "no",
+      "quantity": 8,
+      "unit_price": 645.0,
+      "amount": 5160
+     },
+     {
+      "description": "Aluminium window frames, powder coated, double glazed",
+      "unit": "m2",
+      "quantity": 52,
+      "unit_price": 590.0,
+      "amount": 30680
+     }
+    ],
+    "taxable_amount": 61085,
+    "vat_amount": 3054.25,
+    "total": 64139.25,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_005.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Issued to the contractor for the applicant's use, but no confirmation that the contractor is not recovering the VAT",
+    "rules": "NR-06"
+   },
+   "fields": {
+    "supplier_trn": "100333333300003",
+    "supplier_name": "Desert Rose Electrical Works",
+    "supplier_address": "Shed 6, Industrial Area 6, Sharjah, UAE, P.O. Box 30418",
+    "invoice_no": "DRE-3852",
+    "invoice_date": "2026-02-20",
+    "supply_date": "2026-02-14",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Al Noor Building Contracting LLC",
+    "recipient_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai",
+    "plot_no": "RAK-9-77",
+    "description": "Main distribution board, 3-phase, 48-way; Supply and installation of concealed electrical wiring; Sub distribution board, 18-way",
+    "line_items": [
+     {
+      "description": "Main distribution board, 3-phase, 48-way",
+      "unit": "no",
+      "quantity": 1,
+      "unit_price": 4210.0,
+      "amount": 4210
+     },
+     {
+      "description": "Supply and installation of concealed electrical wiring",
+      "unit": "point",
+      "quantity": 249,
+      "unit_price": 88.5,
+      "amount": 22036.5
+     },
+     {
+      "description": "Sub distribution board, 18-way",
+      "unit": "no",
+      "quantity": 3,
+      "unit_price": 1395.0,
+      "amount": 4185
+     }
+    ],
+    "taxable_amount": 30431.5,
+    "vat_amount": 1521.58,
+    "total": 31953.08,
+    "for_applicant_statement": true
+   }
+  },
+  {
+   "file": "invoice_006.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Invoice number is missing",
+    "rules": "TI-04"
+   },
+   "fields": {
+    "supplier_trn": "100777777700003",
+    "supplier_name": "Marina Aluminium & Glass LLC",
+    "supplier_address": "Unit 9, Ajman Industrial Area 2, Ajman, UAE, P.O. Box 20655",
+    "invoice_no": "",
+    "invoice_date": "2026-07-17",
+    "supply_date": "2026-07-08",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Fatima Al Ketbi",
+    "recipient_address": "Villa on Plot AUH-12-0098, Mohamed Bin Zayed City, Abu Dhabi",
+    "plot_no": "AUH-12-0098",
+    "description": "Aluminium window frames, powder coated, double glazed; Fixed awnings over windows; Glass balustrade to staircase and balconies",
+    "line_items": [
+     {
+      "description": "Aluminium window frames, powder coated, double glazed",
+      "unit": "m2",
+      "quantity": 49,
+      "unit_price": 620.0,
+      "amount": 30380
+     },
+     {
+      "description": "Fixed awnings over windows",
+      "unit": "no",
+      "quantity": 5,
+      "unit_price": 835.0,
+      "amount": 4175
+     },
+     {
+      "description": "Glass balustrade to staircase and balconies",
+      "unit": "lm",
+      "quantity": 35,
+      "unit_price": 910.0,
+      "amount": 31850
+     }
+    ],
+    "taxable_amount": 66405,
+    "vat_amount": 3320.25,
+    "total": 69725.25,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_007.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100222222200003",
+    "supplier_name": "Gulf Steel & Cement Trading",
+    "supplier_address": "Plot M-14, Mussafah Industrial, Abu Dhabi, UAE, P.O. Box 92217",
+    "invoice_no": "GSC-3495",
+    "invoice_date": "2026-01-19",
+    "supply_date": "2026-01-15",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Fatima Al Ketbi",
+    "recipient_address": "Villa on Plot AUH-12-0098, Mohamed Bin Zayed City, Abu Dhabi",
+    "plot_no": "AUH-12-0098",
+    "description": "Reinforcement steel bars 12 mm, grade B500B; Aggregate 20 mm; Sulphate resisting cement, 50 kg bags",
+    "line_items": [
+     {
+      "description": "Reinforcement steel bars 12 mm, grade B500B",
+      "unit": "ton",
+      "quantity": 7,
+      "unit_price": 2540.0,
+      "amount": 17780
+     },
+     {
+      "description": "Aggregate 20 mm",
+      "unit": "m3",
+      "quantity": 154,
+      "unit_price": 57.5,
+      "amount": 8855.0
+     },
+     {
+      "description": "Sulphate resisting cement, 50 kg bags",
+      "unit": "bag",
+      "quantity": 466,
+      "unit_price": 17.0,
+      "amount": 7922.0
+     }
+    ],
+    "taxable_amount": 34557.0,
+    "vat_amount": 1727.85,
+    "total": 36284.85,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_008.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100111111100003",
+    "supplier_name": "Al Noor Building Contracting LLC",
+    "supplier_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+    "invoice_no": "ANB-4250",
+    "invoice_date": "2026-04-01",
+    "supply_date": "2026-03-26",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Concrete works to ground floor slab, grade C40; Internal plastering to walls and ceilings",
+    "line_items": [
+     {
+      "description": "Concrete works to ground floor slab, grade C40",
+      "unit": "m3",
+      "quantity": 110,
+      "unit_price": 334.5,
+      "amount": 36795.0
+     },
+     {
+      "description": "Internal plastering to walls and ceilings",
+      "unit": "m2",
+      "quantity": 1054,
+      "unit_price": 30.0,
+      "amount": 31620.0
+     }
+    ],
+    "taxable_amount": 68415.0,
+    "vat_amount": 3420.75,
+    "total": 71835.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_009.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "WEAK",
+    "defect": "Landscaping invoiced after the completion date (work after completion is not refundable)",
+    "rules": "NR-02, NR-03"
+   },
+   "fields": {
+    "supplier_trn": "100555555500003",
+    "supplier_name": "Falcon Pools & Landscaping LLC",
+    "supplier_address": "Office 204, Al Barsha South, Dubai, UAE, P.O. Box 58833",
+    "invoice_no": "FPL-1818",
+    "invoice_date": "2026-10-14",
+    "supply_date": "2026-10-12",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Irrigation network to landscaped areas; Garden landscaping: date palms and shade trees, supplied and planted",
+    "line_items": [
+     {
+      "description": "Irrigation network to landscaped areas",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 10470.0,
+      "amount": 10470
+     },
+     {
+      "description": "Garden landscaping: date palms and shade trees, supplied and planted",
+      "unit": "no",
+      "quantity": 7,
+      "unit_price": 1620.0,
+      "amount": 11340
+     }
+    ],
+    "taxable_amount": 21810,
+    "vat_amount": 1090.5,
+    "total": 22900.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_010.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100111111100003",
+    "supplier_name": "Al Noor Building Contracting LLC",
+    "supplier_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+    "invoice_no": "ANB-4219",
+    "invoice_date": "2026-05-11",
+    "supply_date": "2026-05-04",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Fatima Al Ketbi",
+    "recipient_address": "Villa on Plot AUH-12-0098, Mohamed Bin Zayed City, Abu Dhabi",
+    "plot_no": "AUH-12-0098",
+    "description": "Concrete works to ground floor slab, grade C40; External painting, two coats weather-shield; Internal plastering to walls and ceilings",
+    "line_items": [
+     {
+      "description": "Concrete works to ground floor slab, grade C40",
+      "unit": "m3",
+      "quantity": 66,
+      "unit_price": 333.5,
+      "amount": 22011.0
+     },
+     {
+      "description": "External painting, two coats weather-shield",
+      "unit": "m2",
+      "quantity": 1475,
+      "unit_price": 21.5,
+      "amount": 31712.5
+     },
+     {
+      "description": "Internal plastering to walls and ceilings",
+      "unit": "m2",
+      "quantity": 1081,
+      "unit_price": 29.5,
+      "amount": 31889.5
+     }
+    ],
+    "taxable_amount": 85613.0,
+    "vat_amount": 4280.65,
+    "total": 89893.65,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_011.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0105",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100111111100003",
+    "supplier_name": "Al Noor Building Contracting LLC",
+    "supplier_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+    "invoice_no": "ANB-4267",
+    "invoice_date": "2026-06-23",
+    "supply_date": "2026-06-21",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Saeed Al Mazrouei",
+    "recipient_address": "Villa on Plot AAN-22-415, Zakher, Abu Dhabi",
+    "plot_no": "AAN-22-415",
+    "description": "Roof waterproofing membrane with screed protection; Excavation and backfilling to foundations; Block work 200 mm hollow block including mortar; Boundary wall construction, 2.4 m high",
+    "line_items": [
+     {
+      "description": "Roof waterproofing membrane with screed protection",
+      "unit": "m2",
+      "quantity": 411,
+      "unit_price": 65.5,
+      "amount": 26920.5
+     },
+     {
+      "description": "Excavation and backfilling to foundations",
+      "unit": "m3",
+      "quantity": 641,
+      "unit_price": 25.5,
+      "amount": 16345.5
+     },
+     {
+      "description": "Block work 200 mm hollow block including mortar",
+      "unit": "m2",
+      "quantity": 475,
+      "unit_price": 93.0,
+      "amount": 44175.0
+     },
+     {
+      "description": "Boundary wall construction, 2.4 m high",
+      "unit": "lm",
+      "quantity": 120,
+      "unit_price": 605.0,
+      "amount": 72600
+     }
+    ],
+    "taxable_amount": 160041.0,
+    "vat_amount": 8002.05,
+    "total": 168043.05,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_012.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0106",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100777777700003",
+    "supplier_name": "Marina Aluminium & Glass LLC",
+    "supplier_address": "Unit 9, Ajman Industrial Area 2, Ajman, UAE, P.O. Box 20655",
+    "invoice_no": "MAG-3413",
+    "invoice_date": "2026-09-02",
+    "supply_date": "2026-08-29",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Noura Al Zaabi",
+    "recipient_address": "Villa on Plot AJM-5-208, Al Helio 2, Ajman",
+    "plot_no": "AJM-5-208",
+    "description": "Glass balustrade to staircase and balconies; Aluminium sliding doors, thermal break, double glazed; Fixed awnings over windows; Aluminium window frames, powder coated, double glazed",
+    "line_items": [
+     {
+      "description": "Glass balustrade to staircase and balconies",
+      "unit": "lm",
+      "quantity": 32,
+      "unit_price": 835.0,
+      "amount": 26720
+     },
+     {
+      "description": "Aluminium sliding doors, thermal break, double glazed",
+      "unit": "m2",
+      "quantity": 26,
+      "unit_price": 655.0,
+      "amount": 17030
+     },
+     {
+      "description": "Fixed awnings over windows",
+      "unit": "no",
+      "quantity": 6,
+      "unit_price": 630.0,
+      "amount": 3780
+     },
+     {
+      "description": "Aluminium window frames, powder coated, double glazed",
+      "unit": "m2",
+      "quantity": 52,
+      "unit_price": 600.0,
+      "amount": 31200
+     }
+    ],
+    "taxable_amount": 78730,
+    "vat_amount": 3936.5,
+    "total": 82666.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_013.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100111111100003",
+    "supplier_name": "Al Noor Building Contracting LLC",
+    "supplier_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+    "invoice_no": "ANB-4240",
+    "invoice_date": "2026-07-18",
+    "supply_date": "2026-07-18",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Khalid Al Shamsi",
+    "recipient_address": "Villa on Plot SHJ-7-301, Al Rahmaniya 4, Sharjah",
+    "plot_no": "SHJ-7-301",
+    "description": "Boundary wall construction, 2.4 m high; Reinforced concrete columns and beams, first floor; Roof waterproofing membrane with screed protection",
+    "line_items": [
+     {
+      "description": "Boundary wall construction, 2.4 m high",
+      "unit": "lm",
+      "quantity": 83,
+      "unit_price": 640.0,
+      "amount": 53120
+     },
+     {
+      "description": "Reinforced concrete columns and beams, first floor",
+      "unit": "m3",
+      "quantity": 67,
+      "unit_price": 460.0,
+      "amount": 30820
+     },
+     {
+      "description": "Roof waterproofing membrane with screed protection",
+      "unit": "m2",
+      "quantity": 357,
+      "unit_price": 61.0,
+      "amount": 21777.0
+     }
+    ],
+    "taxable_amount": 105717.0,
+    "vat_amount": 5285.85,
+    "total": 111002.85,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_014.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100555555500003",
+    "supplier_name": "Falcon Pools & Landscaping LLC",
+    "supplier_address": "Office 204, Al Barsha South, Dubai, UAE, P.O. Box 58833",
+    "invoice_no": "FPL-1809",
+    "invoice_date": "2026-02-20",
+    "supply_date": "2026-02-20",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Khalid Al Shamsi",
+    "recipient_address": "Villa on Plot SHJ-7-301, Al Rahmaniya 4, Sharjah",
+    "plot_no": "SHJ-7-301",
+    "description": "Garden landscaping: date palms and shade trees, supplied and planted; Swimming pool reinforced concrete shell, 10 x 4 m; Decorative water feature to courtyard; Irrigation network to landscaped areas",
+    "line_items": [
+     {
+      "description": "Garden landscaping: date palms and shade trees, supplied and planted",
+      "unit": "no",
+      "quantity": 17,
+      "unit_price": 1485.0,
+      "amount": 25245
+     },
+     {
+      "description": "Swimming pool reinforced concrete shell, 10 x 4 m",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 91345.0,
+      "amount": 91345
+     },
+     {
+      "description": "Decorative water feature to courtyard",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 12800.0,
+      "amount": 12800
+     },
+     {
+      "description": "Irrigation network to landscaped areas",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 7985.0,
+      "amount": 7985
+     }
+    ],
+    "taxable_amount": 137375,
+    "vat_amount": 6868.75,
+    "total": 144243.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_015.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100222222200003",
+    "supplier_name": "Gulf Steel & Cement Trading",
+    "supplier_address": "Plot M-14, Mussafah Industrial, Abu Dhabi, UAE, P.O. Box 92217",
+    "invoice_no": "GSC-3506",
+    "invoice_date": "2026-08-15",
+    "supply_date": "2026-08-06",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Khalid Al Shamsi",
+    "recipient_address": "Villa on Plot SHJ-7-301, Al Rahmaniya 4, Sharjah",
+    "plot_no": "SHJ-7-301",
+    "description": "Ordinary Portland cement, 50 kg bags; Reinforcement steel bars 12 mm, grade B500B; Aggregate 20 mm",
+    "line_items": [
+     {
+      "description": "Ordinary Portland cement, 50 kg bags",
+      "unit": "bag",
+      "quantity": 1334,
+      "unit_price": 15.5,
+      "amount": 20677.0
+     },
+     {
+      "description": "Reinforcement steel bars 12 mm, grade B500B",
+      "unit": "ton",
+      "quantity": 6,
+      "unit_price": 2515.0,
+      "amount": 15090
+     },
+     {
+      "description": "Aggregate 20 mm",
+      "unit": "m3",
+      "quantity": 88,
+      "unit_price": 63.5,
+      "amount": 5588.0
+     }
+    ],
+    "taxable_amount": 41355.0,
+    "vat_amount": 2067.75,
+    "total": 43422.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_016.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Issued to the contractor, with no statement that it is for the applicant's use",
+    "rules": "TI-08"
+   },
+   "fields": {
+    "supplier_trn": "100222222200003",
+    "supplier_name": "Gulf Steel & Cement Trading",
+    "supplier_address": "Plot M-14, Mussafah Industrial, Abu Dhabi, UAE, P.O. Box 92217",
+    "invoice_no": "GSC-3539",
+    "invoice_date": "2026-09-03",
+    "supply_date": "2026-08-31",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Al Noor Building Contracting LLC",
+    "recipient_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai",
+    "plot_no": "AUH-12-0098",
+    "description": "Sulphate resisting cement, 50 kg bags; Reinforcement steel bars 16 mm, grade B500B; Reinforcement steel bars 12 mm, grade B500B; Washed sand",
+    "line_items": [
+     {
+      "description": "Sulphate resisting cement, 50 kg bags",
+      "unit": "bag",
+      "quantity": 475,
+      "unit_price": 16.5,
+      "amount": 7837.5
+     },
+     {
+      "description": "Reinforcement steel bars 16 mm, grade B500B",
+      "unit": "ton",
+      "quantity": 11,
+      "unit_price": 2505.0,
+      "amount": 27555
+     },
+     {
+      "description": "Reinforcement steel bars 12 mm, grade B500B",
+      "unit": "ton",
+      "quantity": 8,
+      "unit_price": 2575.0,
+      "amount": 20600
+     },
+     {
+      "description": "Washed sand",
+      "unit": "m3",
+      "quantity": 150,
+      "unit_price": 48.5,
+      "amount": 7275.0
+     }
+    ],
+    "taxable_amount": 63267.5,
+    "vat_amount": 3163.38,
+    "total": 66430.88,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_017.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "VAT amount understated: lower than 5% of the taxable amount",
+    "rules": "TI-07"
+   },
+   "fields": {
+    "supplier_trn": "100131313100003",
+    "supplier_name": "Bayt Al Rukham Marble & Tiles LLC",
+    "supplier_address": "Warehouse 31, Ras Al Khor Industrial 2, Dubai, UAE, P.O. Box 83410",
+    "invoice_no": "BRM-2687",
+    "invoice_date": "2026-08-12",
+    "supply_date": "2026-08-10",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Khalid Al Shamsi",
+    "recipient_address": "Villa on Plot SHJ-7-301, Al Rahmaniya 4, Sharjah",
+    "plot_no": "SHJ-7-301",
+    "description": "Porcelain floor tiles 60 x 60 cm, supplied and fixed; Marble flooring to entrance hall and stairs",
+    "line_items": [
+     {
+      "description": "Porcelain floor tiles 60 x 60 cm, supplied and fixed",
+      "unit": "m2",
+      "quantity": 593,
+      "unit_price": 134.0,
+      "amount": 79462.0
+     },
+     {
+      "description": "Marble flooring to entrance hall and stairs",
+      "unit": "m2",
+      "quantity": 151,
+      "unit_price": 265.5,
+      "amount": 40090.5
+     }
+    ],
+    "taxable_amount": 119552.5,
+    "vat_amount": 4782.1,
+    "total": 124334.6,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_018.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0105",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100333333300003",
+    "supplier_name": "Desert Rose Electrical Works",
+    "supplier_address": "Shed 6, Industrial Area 6, Sharjah, UAE, P.O. Box 30418",
+    "invoice_no": "DRE-3808",
+    "invoice_date": "2026-04-03",
+    "supply_date": "2026-04-02",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Saeed Al Mazrouei",
+    "recipient_address": "Villa on Plot AAN-22-415, Zakher, Abu Dhabi",
+    "plot_no": "AAN-22-415",
+    "description": "Earthing and lightning protection system; Supply and installation of concealed electrical wiring",
+    "line_items": [
+     {
+      "description": "Earthing and lightning protection system",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 8725.0,
+      "amount": 8725
+     },
+     {
+      "description": "Supply and installation of concealed electrical wiring",
+      "unit": "point",
+      "quantity": 255,
+      "unit_price": 87.0,
+      "amount": 22185.0
+     }
+    ],
+    "taxable_amount": 30910.0,
+    "vat_amount": 1545.5,
+    "total": 32455.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_019.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0106",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100222222200003",
+    "supplier_name": "Gulf Steel & Cement Trading",
+    "supplier_address": "Plot M-14, Mussafah Industrial, Abu Dhabi, UAE, P.O. Box 92217",
+    "invoice_no": "GSC-3462",
+    "invoice_date": "2026-07-03",
+    "supply_date": "2026-06-27",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Noura Al Zaabi",
+    "recipient_address": "Villa on Plot AJM-5-208, Al Helio 2, Ajman",
+    "plot_no": "AJM-5-208",
+    "description": "Sulphate resisting cement, 50 kg bags; Washed sand; Reinforcement steel bars 12 mm, grade B500B; Aggregate 20 mm",
+    "line_items": [
+     {
+      "description": "Sulphate resisting cement, 50 kg bags",
+      "unit": "bag",
+      "quantity": 367,
+      "unit_price": 17.0,
+      "amount": 6239.0
+     },
+     {
+      "description": "Washed sand",
+      "unit": "m3",
+      "quantity": 121,
+      "unit_price": 51.5,
+      "amount": 6231.5
+     },
+     {
+      "description": "Reinforcement steel bars 12 mm, grade B500B",
+      "unit": "ton",
+      "quantity": 12,
+      "unit_price": 2460.0,
+      "amount": 29520
+     },
+     {
+      "description": "Aggregate 20 mm",
+      "unit": "m3",
+      "quantity": 63,
+      "unit_price": 65.0,
+      "amount": 4095.0
+     }
+    ],
+    "taxable_amount": 46085.5,
+    "vat_amount": 2304.28,
+    "total": 48389.78,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_020.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100555555500003",
+    "supplier_name": "Falcon Pools & Landscaping LLC",
+    "supplier_address": "Office 204, Al Barsha South, Dubai, UAE, P.O. Box 58833",
+    "invoice_no": "FPL-1774",
+    "invoice_date": "2026-02-28",
+    "supply_date": "2026-02-24",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Ahmed Al Mansoori",
+    "recipient_address": "Villa on Plot DXB-345-112, Al Khawaneej 2, Dubai",
+    "plot_no": "DXB-345-112",
+    "description": "Pool mosaic tiling and waterproofing; Garden landscaping: date palms and shade trees, supplied and planted; Decorative water feature to courtyard",
+    "line_items": [
+     {
+      "description": "Pool mosaic tiling and waterproofing",
+      "unit": "m2",
+      "quantity": 110,
+      "unit_price": 228.5,
+      "amount": 25135.0
+     },
+     {
+      "description": "Garden landscaping: date palms and shade trees, supplied and planted",
+      "unit": "no",
+      "quantity": 20,
+      "unit_price": 1450.0,
+      "amount": 29000
+     },
+     {
+      "description": "Decorative water feature to courtyard",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 11495.0,
+      "amount": 11495
+     }
+    ],
+    "taxable_amount": 65630.0,
+    "vat_amount": 3281.5,
+    "total": 68911.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_021.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Supplier TRN does not start with 100 (wrong format)",
+    "rules": "TI-03"
+   },
+   "fields": {
+    "supplier_trn": "200141414100003",
+    "supplier_name": "Naseem Air Conditioning LLC",
+    "supplier_address": "Warehouse 8, Mussafah M-37, Abu Dhabi, UAE, P.O. Box 70218",
+    "invoice_no": "NAC-2762",
+    "invoice_date": "2026-07-27",
+    "supply_date": "2026-07-21",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Ahmed Al Mansoori",
+    "recipient_address": "Villa on Plot DXB-345-112, Al Khawaneej 2, Dubai",
+    "plot_no": "DXB-345-112",
+    "description": "Central air conditioning controls and thermostats; Wall mounted split units, 2 TR; Ducted split air conditioning units, 5 TR",
+    "line_items": [
+     {
+      "description": "Central air conditioning controls and thermostats",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 4350.0,
+      "amount": 4350
+     },
+     {
+      "description": "Wall mounted split units, 2 TR",
+      "unit": "no",
+      "quantity": 4,
+      "unit_price": 2750.0,
+      "amount": 11000
+     },
+     {
+      "description": "Ducted split air conditioning units, 5 TR",
+      "unit": "no",
+      "quantity": 6,
+      "unit_price": 10040.0,
+      "amount": 60240
+     }
+    ],
+    "taxable_amount": 75590,
+    "vat_amount": 3779.5,
+    "total": 79369.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_022.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "WEAK",
+    "defect": "Supplier address is missing",
+    "rules": "TI-02"
+   },
+   "fields": {
+    "supplier_trn": "100121212100003",
+    "supplier_name": "Rimal Engineering Consultancy",
+    "supplier_address": "",
+    "invoice_no": "REC-3342",
+    "invoice_date": "2026-02-05",
+    "supply_date": "2026-02-03",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Khalid Al Shamsi",
+    "recipient_address": "Villa on Plot SHJ-7-301, Al Rahmaniya 4, Sharjah",
+    "plot_no": "SHJ-7-301",
+    "description": "Architectural design services, villa G+1; Site supervision services, monthly fee",
+    "line_items": [
+     {
+      "description": "Architectural design services, villa G+1",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 44805.0,
+      "amount": 44805
+     },
+     {
+      "description": "Site supervision services, monthly fee",
+      "unit": "month",
+      "quantity": 6,
+      "unit_price": 5155.0,
+      "amount": 30930
+     }
+    ],
+    "taxable_amount": 75735,
+    "vat_amount": 3786.75,
+    "total": 79521.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_023.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100111111100003",
+    "supplier_name": "Al Noor Building Contracting LLC",
+    "supplier_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+    "invoice_no": "ANB-4197",
+    "invoice_date": "2026-07-18",
+    "supply_date": "2026-07-18",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Ahmed Al Mansoori",
+    "recipient_address": "Villa on Plot DXB-345-112, Al Khawaneej 2, Dubai",
+    "plot_no": "DXB-345-112",
+    "description": "Block work 200 mm hollow block including mortar; Concrete works to ground floor slab, grade C40",
+    "line_items": [
+     {
+      "description": "Block work 200 mm hollow block including mortar",
+      "unit": "m2",
+      "quantity": 734,
+      "unit_price": 89.5,
+      "amount": 65693.0
+     },
+     {
+      "description": "Concrete works to ground floor slab, grade C40",
+      "unit": "m3",
+      "quantity": 74,
+      "unit_price": 343.5,
+      "amount": 25419.0
+     }
+    ],
+    "taxable_amount": 91112.0,
+    "vat_amount": 4555.6,
+    "total": 95667.6,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_024.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0106",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Document is titled \"Proforma Invoice\", not \"Tax Invoice\"",
+    "rules": "TI-01"
+   },
+   "fields": {
+    "supplier_trn": "100141414100003",
+    "supplier_name": "Naseem Air Conditioning LLC",
+    "supplier_address": "Warehouse 8, Mussafah M-37, Abu Dhabi, UAE, P.O. Box 70218",
+    "invoice_no": "NAC-2740",
+    "invoice_date": "2026-05-23",
+    "supply_date": "2026-05-17",
+    "title": "Proforma Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Noura Al Zaabi",
+    "recipient_address": "Villa on Plot AJM-5-208, Al Helio 2, Ajman",
+    "plot_no": "AJM-5-208",
+    "description": "GI ducting with insulation; Wall mounted split units, 2 TR; Ducted split air conditioning units, 5 TR; Central air conditioning controls and thermostats",
+    "line_items": [
+     {
+      "description": "GI ducting with insulation",
+      "unit": "m2",
+      "quantity": 194,
+      "unit_price": 121.5,
+      "amount": 23571.0
+     },
+     {
+      "description": "Wall mounted split units, 2 TR",
+      "unit": "no",
+      "quantity": 8,
+      "unit_price": 2705.0,
+      "amount": 21640
+     },
+     {
+      "description": "Ducted split air conditioning units, 5 TR",
+      "unit": "no",
+      "quantity": 3,
+      "unit_price": 11725.0,
+      "amount": 35175
+     },
+     {
+      "description": "Central air conditioning controls and thermostats",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 4600.0,
+      "amount": 4600
+     }
+    ],
+    "taxable_amount": 84986.0,
+    "vat_amount": 4249.3,
+    "total": 89235.3,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_025.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Simplified tax invoice: no customer name or address, VAT-inclusive prices",
+    "rules": "TI-09"
+   },
+   "fields": {
+    "supplier_trn": "100131313100003",
+    "supplier_name": "Bayt Al Rukham Marble & Tiles LLC",
+    "supplier_address": "Warehouse 31, Ras Al Khor Industrial 2, Dubai, UAE, P.O. Box 83410",
+    "invoice_no": "R106833",
+    "invoice_date": "2026-01-15",
+    "supply_date": "2026-01-06",
+    "title": "Tax Invoice",
+    "invoice_type": "SIMPLIFIED",
+    "currency": "AED",
+    "recipient_name": "",
+    "recipient_address": "",
+    "plot_no": "",
+    "description": "Marble flooring to entrance hall and stairs; Ceramic wall tiles to bathrooms",
+    "line_items": [
+     {
+      "description": "Marble flooring to entrance hall and stairs",
+      "unit": "m2",
+      "quantity": 3,
+      "unit_price": 302.0,
+      "amount": 906.0
+     },
+     {
+      "description": "Ceramic wall tiles to bathrooms",
+      "unit": "m2",
+      "quantity": 5,
+      "unit_price": 86.0,
+      "amount": 430.0
+     }
+    ],
+    "taxable_amount": 1336.0,
+    "vat_amount": 66.8,
+    "total": 1402.8,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_026.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0106",
+   "expected": {
+    "rating": "WEAK",
+    "defect": "CCTV cameras: listed as not eligible, though integrated security systems are eligible",
+    "rules": "NR-02"
+   },
+   "fields": {
+    "supplier_trn": "100666666600003",
+    "supplier_name": "Oasis Security Systems LLC",
+    "supplier_address": "Office 1102, Electra Street, Abu Dhabi, UAE, P.O. Box 41906",
+    "invoice_no": "OSS-1850",
+    "invoice_date": "2026-01-24",
+    "supply_date": "2026-01-15",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Noura Al Zaabi",
+    "recipient_address": "Villa on Plot AJM-5-208, Al Helio 2, Ajman",
+    "plot_no": "AJM-5-208",
+    "description": "Integrated access control system, fixed, 4 doors; CCTV cameras, 8 channel, with recorder",
+    "line_items": [
+     {
+      "description": "Integrated access control system, fixed, 4 doors",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 12885.0,
+      "amount": 12885
+     },
+     {
+      "description": "CCTV cameras, 8 channel, with recorder",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 8805.0,
+      "amount": 8805
+     }
+    ],
+    "taxable_amount": 21690,
+    "vat_amount": 1084.5,
+    "total": 22774.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_027.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100131313100003",
+    "supplier_name": "Bayt Al Rukham Marble & Tiles LLC",
+    "supplier_address": "Warehouse 31, Ras Al Khor Industrial 2, Dubai, UAE, P.O. Box 83410",
+    "invoice_no": "BRM-2666",
+    "invoice_date": "2026-02-03",
+    "supply_date": "2026-01-31",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Ceramic wall tiles to bathrooms; Porcelain floor tiles 60 x 60 cm, supplied and fixed; Marble flooring to entrance hall and stairs",
+    "line_items": [
+     {
+      "description": "Ceramic wall tiles to bathrooms",
+      "unit": "m2",
+      "quantity": 126,
+      "unit_price": 79.5,
+      "amount": 10017.0
+     },
+     {
+      "description": "Porcelain floor tiles 60 x 60 cm, supplied and fixed",
+      "unit": "m2",
+      "quantity": 427,
+      "unit_price": 127.5,
+      "amount": 54442.5
+     },
+     {
+      "description": "Marble flooring to entrance hall and stairs",
+      "unit": "m2",
+      "quantity": 139,
+      "unit_price": 342.5,
+      "amount": 47607.5
+     }
+    ],
+    "taxable_amount": 112067.0,
+    "vat_amount": 5603.35,
+    "total": 117670.35,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_028.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100121212100003",
+    "supplier_name": "Rimal Engineering Consultancy",
+    "supplier_address": "Office 508, Corniche Tower, Sharjah, UAE, P.O. Box 15377",
+    "invoice_no": "REC-3333",
+    "invoice_date": "2026-06-29",
+    "supply_date": "2026-06-24",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Ahmed Al Mansoori",
+    "recipient_address": "Villa on Plot DXB-345-112, Al Khawaneej 2, Dubai",
+    "plot_no": "DXB-345-112",
+    "description": "Site supervision services, monthly fee; Architectural design services, villa G+1; Structural engineering design and drawings",
+    "line_items": [
+     {
+      "description": "Site supervision services, monthly fee",
+      "unit": "month",
+      "quantity": 3,
+      "unit_price": 6255.0,
+      "amount": 18765
+     },
+     {
+      "description": "Architectural design services, villa G+1",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 38705.0,
+      "amount": 38705
+     },
+     {
+      "description": "Structural engineering design and drawings",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 25290.0,
+      "amount": 25290
+     }
+    ],
+    "taxable_amount": 82760,
+    "vat_amount": 4138.0,
+    "total": 86898.0,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_029.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0105",
+   "expected": {
+    "rating": "WEAK",
+    "defect": "Mixed: floor tiling (eligible) with loose carpets and a sofa (not eligible)",
+    "rules": "NR-02"
+   },
+   "fields": {
+    "supplier_trn": "100131313100003",
+    "supplier_name": "Bayt Al Rukham Marble & Tiles LLC",
+    "supplier_address": "Warehouse 31, Ras Al Khor Industrial 2, Dubai, UAE, P.O. Box 83410",
+    "invoice_no": "BRM-2723",
+    "invoice_date": "2026-05-13",
+    "supply_date": "2026-05-10",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Saeed Al Mazrouei",
+    "recipient_address": "Villa on Plot AAN-22-415, Zakher, Abu Dhabi",
+    "plot_no": "AAN-22-415",
+    "description": "Marble flooring to entrance hall and stairs; Ceramic wall tiles to bathrooms; Sofa, 3-seater; Loose carpets to bedrooms",
+    "line_items": [
+     {
+      "description": "Marble flooring to entrance hall and stairs",
+      "unit": "m2",
+      "quantity": 159,
+      "unit_price": 378.0,
+      "amount": 60102.0
+     },
+     {
+      "description": "Ceramic wall tiles to bathrooms",
+      "unit": "m2",
+      "quantity": 235,
+      "unit_price": 108.0,
+      "amount": 25380.0
+     },
+     {
+      "description": "Sofa, 3-seater",
+      "unit": "no",
+      "quantity": 1,
+      "unit_price": 5185.0,
+      "amount": 5185
+     },
+     {
+      "description": "Loose carpets to bedrooms",
+      "unit": "no",
+      "quantity": 4,
+      "unit_price": 2435.0,
+      "amount": 9740
+     }
+    ],
+    "taxable_amount": 100407.0,
+    "vat_amount": 5020.35,
+    "total": 105427.35,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_030.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100333333300003",
+    "supplier_name": "Desert Rose Electrical Works",
+    "supplier_address": "Shed 6, Industrial Area 6, Sharjah, UAE, P.O. Box 30418",
+    "invoice_no": "DRE-3805",
+    "invoice_date": "2026-02-05",
+    "supply_date": "2026-01-28",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Earthing and lightning protection system; Power points, 13A twin switched socket; Supply and installation of concealed electrical wiring",
+    "line_items": [
+     {
+      "description": "Earthing and lightning protection system",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 6920.0,
+      "amount": 6920
+     },
+     {
+      "description": "Power points, 13A twin switched socket",
+      "unit": "no",
+      "quantity": 172,
+      "unit_price": 43.5,
+      "amount": 7482.0
+     },
+     {
+      "description": "Supply and installation of concealed electrical wiring",
+      "unit": "point",
+      "quantity": 203,
+      "unit_price": 102.5,
+      "amount": 20807.5
+     }
+    ],
+    "taxable_amount": 35209.5,
+    "vat_amount": 1760.48,
+    "total": 36969.98,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_031.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0106",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100121212100003",
+    "supplier_name": "Rimal Engineering Consultancy",
+    "supplier_address": "Office 508, Corniche Tower, Sharjah, UAE, P.O. Box 15377",
+    "invoice_no": "REC-3320",
+    "invoice_date": "2026-08-29",
+    "supply_date": "2026-08-21",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Noura Al Zaabi",
+    "recipient_address": "Villa on Plot AJM-5-208, Al Helio 2, Ajman",
+    "plot_no": "AJM-5-208",
+    "description": "Architectural design services, villa G+1; Structural engineering design and drawings; Site supervision services, monthly fee",
+    "line_items": [
+     {
+      "description": "Architectural design services, villa G+1",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 60155.0,
+      "amount": 60155
+     },
+     {
+      "description": "Structural engineering design and drawings",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 21690.0,
+      "amount": 21690
+     },
+     {
+      "description": "Site supervision services, monthly fee",
+      "unit": "month",
+      "quantity": 2,
+      "unit_price": 6095.0,
+      "amount": 12190
+     }
+    ],
+    "taxable_amount": 94035,
+    "vat_amount": 4701.75,
+    "total": 98736.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_032.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100777777700003",
+    "supplier_name": "Marina Aluminium & Glass LLC",
+    "supplier_address": "Unit 9, Ajman Industrial Area 2, Ajman, UAE, P.O. Box 20655",
+    "invoice_no": "MAG-3445",
+    "invoice_date": "2026-08-05",
+    "supply_date": "2026-08-02",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Fatima Al Ketbi",
+    "recipient_address": "Villa on Plot AUH-12-0098, Mohamed Bin Zayed City, Abu Dhabi",
+    "plot_no": "AUH-12-0098",
+    "description": "Glass balustrade to staircase and balconies; Fixed awnings over windows; Aluminium sliding doors, thermal break, double glazed; Aluminium window frames, powder coated, double glazed",
+    "line_items": [
+     {
+      "description": "Glass balustrade to staircase and balconies",
+      "unit": "lm",
+      "quantity": 31,
+      "unit_price": 875.0,
+      "amount": 27125
+     },
+     {
+      "description": "Fixed awnings over windows",
+      "unit": "no",
+      "quantity": 6,
+      "unit_price": 840.0,
+      "amount": 5040
+     },
+     {
+      "description": "Aluminium sliding doors, thermal break, double glazed",
+      "unit": "m2",
+      "quantity": 38,
+      "unit_price": 695.0,
+      "amount": 26410
+     },
+     {
+      "description": "Aluminium window frames, powder coated, double glazed",
+      "unit": "m2",
+      "quantity": 52,
+      "unit_price": 660.0,
+      "amount": 34320
+     }
+    ],
+    "taxable_amount": 92895,
+    "vat_amount": 4644.75,
+    "total": 97539.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_033.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0106",
+   "expected": {
+    "rating": "WEAK",
+    "defect": "No plot number or site address on the invoice",
+    "rules": "NR-01"
+   },
+   "fields": {
+    "supplier_trn": "100141414100003",
+    "supplier_name": "Naseem Air Conditioning LLC",
+    "supplier_address": "Warehouse 8, Mussafah M-37, Abu Dhabi, UAE, P.O. Box 70218",
+    "invoice_no": "NAC-2773",
+    "invoice_date": "2026-02-12",
+    "supply_date": "2026-02-05",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Noura Al Zaabi",
+    "recipient_address": "Al Helio 2, Ajman",
+    "plot_no": "",
+    "description": "Wall mounted split units, 2 TR; Central air conditioning controls and thermostats; GI ducting with insulation; Ducted split air conditioning units, 5 TR",
+    "line_items": [
+     {
+      "description": "Wall mounted split units, 2 TR",
+      "unit": "no",
+      "quantity": 3,
+      "unit_price": 2760.0,
+      "amount": 8280
+     },
+     {
+      "description": "Central air conditioning controls and thermostats",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 4635.0,
+      "amount": 4635
+     },
+     {
+      "description": "GI ducting with insulation",
+      "unit": "m2",
+      "quantity": 211,
+      "unit_price": 118.5,
+      "amount": 25003.5
+     },
+     {
+      "description": "Ducted split air conditioning units, 5 TR",
+      "unit": "no",
+      "quantity": 5,
+      "unit_price": 10550.0,
+      "amount": 52750
+     }
+    ],
+    "taxable_amount": 90668.5,
+    "vat_amount": 4533.43,
+    "total": 95201.93,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_034.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100666666600003",
+    "supplier_name": "Oasis Security Systems LLC",
+    "supplier_address": "Office 1102, Electra Street, Abu Dhabi, UAE, P.O. Box 41906",
+    "invoice_no": "OSS-1826",
+    "invoice_date": "2026-05-19",
+    "supply_date": "2026-05-17",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Integrated access control system, fixed, 4 doors; Fire alarm panel with smoke detectors; Electronic smart door locks, hard-wired; Motorised sliding entrance gate with controller",
+    "line_items": [
+     {
+      "description": "Integrated access control system, fixed, 4 doors",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 16735.0,
+      "amount": 16735
+     },
+     {
+      "description": "Fire alarm panel with smoke detectors",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 10175.0,
+      "amount": 10175
+     },
+     {
+      "description": "Electronic smart door locks, hard-wired",
+      "unit": "no",
+      "quantity": 3,
+      "unit_price": 1950.0,
+      "amount": 5850
+     },
+     {
+      "description": "Motorised sliding entrance gate with controller",
+      "unit": "no",
+      "quantity": 2,
+      "unit_price": 12915.0,
+      "amount": 25830
+     }
+    ],
+    "taxable_amount": 58590,
+    "vat_amount": 2929.5,
+    "total": 61519.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_035.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0105",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100999999900003",
+    "supplier_name": "Jabal Sanitary & Plumbing Trading LLC",
+    "supplier_address": "Shop 22, Naif Road, Deira, Dubai, UAE, P.O. Box 66241",
+    "invoice_no": "JSP-1496",
+    "invoice_date": "2026-01-23",
+    "supply_date": "2026-01-23",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Saeed Al Mazrouei",
+    "recipient_address": "Villa on Plot AAN-22-415, Zakher, Abu Dhabi",
+    "plot_no": "AAN-22-415",
+    "description": "Wash basins with mixer taps; Roof water tank, GRP, 1000 gallons",
+    "line_items": [
+     {
+      "description": "Wash basins with mixer taps",
+      "unit": "no",
+      "quantity": 5,
+      "unit_price": 670.0,
+      "amount": 3350
+     },
+     {
+      "description": "Roof water tank, GRP, 1000 gallons",
+      "unit": "no",
+      "quantity": 1,
+      "unit_price": 2520.0,
+      "amount": 2520
+     }
+    ],
+    "taxable_amount": 5870,
+    "vat_amount": 293.5,
+    "total": 6163.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_036.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0105",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Supplier TRN is missing from the invoice",
+    "rules": "TI-02, TI-03"
+   },
+   "fields": {
+    "supplier_trn": "",
+    "supplier_name": "Jabal Sanitary & Plumbing Trading LLC",
+    "supplier_address": "Shop 22, Naif Road, Deira, Dubai, UAE, P.O. Box 66241",
+    "invoice_no": "JSP-1523",
+    "invoice_date": "2026-06-13",
+    "supply_date": "2026-06-11",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Saeed Al Mazrouei",
+    "recipient_address": "Villa on Plot AAN-22-415, Zakher, Abu Dhabi",
+    "plot_no": "AAN-22-415",
+    "description": "Shower units with thermostatic mixer; Roof water tank, GRP, 1000 gallons; PPR hot and cold water pipework; Wash basins with mixer taps",
+    "line_items": [
+     {
+      "description": "Shower units with thermostatic mixer",
+      "unit": "no",
+      "quantity": 5,
+      "unit_price": 1320.0,
+      "amount": 6600
+     },
+     {
+      "description": "Roof water tank, GRP, 1000 gallons",
+      "unit": "no",
+      "quantity": 3,
+      "unit_price": 3070.0,
+      "amount": 9210
+     },
+     {
+      "description": "PPR hot and cold water pipework",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 13450.0,
+      "amount": 13450
+     },
+     {
+      "description": "Wash basins with mixer taps",
+      "unit": "no",
+      "quantity": 7,
+      "unit_price": 865.0,
+      "amount": 6055
+     }
+    ],
+    "taxable_amount": 35315,
+    "vat_amount": 1765.75,
+    "total": 37080.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_037.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0105",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100666666600003",
+    "supplier_name": "Oasis Security Systems LLC",
+    "supplier_address": "Office 1102, Electra Street, Abu Dhabi, UAE, P.O. Box 41906",
+    "invoice_no": "OSS-1839",
+    "invoice_date": "2026-03-11",
+    "supply_date": "2026-03-06",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Saeed Al Mazrouei",
+    "recipient_address": "Villa on Plot AAN-22-415, Zakher, Abu Dhabi",
+    "plot_no": "AAN-22-415",
+    "description": "Motorised sliding entrance gate with controller; Integrated access control system, fixed, 4 doors; Fire alarm panel with smoke detectors",
+    "line_items": [
+     {
+      "description": "Motorised sliding entrance gate with controller",
+      "unit": "no",
+      "quantity": 1,
+      "unit_price": 13570.0,
+      "amount": 13570
+     },
+     {
+      "description": "Integrated access control system, fixed, 4 doors",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 13565.0,
+      "amount": 13565
+     },
+     {
+      "description": "Fire alarm panel with smoke detectors",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 11275.0,
+      "amount": 11275
+     }
+    ],
+    "taxable_amount": 38410,
+    "vat_amount": 1920.5,
+    "total": 40330.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_038.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "WEAK",
+    "defect": "Mixed: fitted kitchen work (eligible) with appliances (not eligible)",
+    "rules": "NR-02"
+   },
+   "fields": {
+    "supplier_trn": "100444444400003",
+    "supplier_name": "Emirates Home Furnishing LLC",
+    "supplier_address": "Showroom 3, Sheikh Zayed Road, Dubai, UAE, P.O. Box 77120",
+    "invoice_no": "EHF-3174",
+    "invoice_date": "2026-07-20",
+    "supply_date": "2026-07-15",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Built-in kitchen cabinets and fitted cupboards; Washing machine, front load, 9 kg; 55 inch television",
+    "line_items": [
+     {
+      "description": "Built-in kitchen cabinets and fitted cupboards",
+      "unit": "lm",
+      "quantity": 12,
+      "unit_price": 1475.0,
+      "amount": 17700
+     },
+     {
+      "description": "Washing machine, front load, 9 kg",
+      "unit": "no",
+      "quantity": 2,
+      "unit_price": 2265.0,
+      "amount": 4530
+     },
+     {
+      "description": "55 inch television",
+      "unit": "no",
+      "quantity": 1,
+      "unit_price": 3400.0,
+      "amount": 3400
+     }
+    ],
+    "taxable_amount": 25630,
+    "vat_amount": 1281.5,
+    "total": 26911.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_039.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0105",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Plot number on the invoice differs from the application",
+    "rules": "NR-01"
+   },
+   "fields": {
+    "supplier_trn": "100111111100003",
+    "supplier_name": "Al Noor Building Contracting LLC",
+    "supplier_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+    "invoice_no": "ANB-4296",
+    "invoice_date": "2026-02-28",
+    "supply_date": "2026-02-21",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Saeed Al Mazrouei",
+    "recipient_address": "Villa on Plot AAN-22-451, Zakher, Abu Dhabi",
+    "plot_no": "AAN-22-451",
+    "description": "Block work 200 mm hollow block including mortar; Excavation and backfilling to foundations; Concrete works to ground floor slab, grade C40; Internal plastering to walls and ceilings",
+    "line_items": [
+     {
+      "description": "Block work 200 mm hollow block including mortar",
+      "unit": "m2",
+      "quantity": 787,
+      "unit_price": 83.5,
+      "amount": 65714.5
+     },
+     {
+      "description": "Excavation and backfilling to foundations",
+      "unit": "m3",
+      "quantity": 477,
+      "unit_price": 30.0,
+      "amount": 14310.0
+     },
+     {
+      "description": "Concrete works to ground floor slab, grade C40",
+      "unit": "m3",
+      "quantity": 95,
+      "unit_price": 321.0,
+      "amount": 30495.0
+     },
+     {
+      "description": "Internal plastering to walls and ceilings",
+      "unit": "m2",
+      "quantity": 1372,
+      "unit_price": 28.5,
+      "amount": 39102.0
+     }
+    ],
+    "taxable_amount": 149621.5,
+    "vat_amount": 7481.08,
+    "total": 157102.58,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_040.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Furniture and curtains: not eligible",
+    "rules": "NR-02"
+   },
+   "fields": {
+    "supplier_trn": "100444444400003",
+    "supplier_name": "Emirates Home Furnishing LLC",
+    "supplier_address": "Showroom 3, Sheikh Zayed Road, Dubai, UAE, P.O. Box 77120",
+    "invoice_no": "EHF-3137",
+    "invoice_date": "2026-07-28",
+    "supply_date": "2026-07-23",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Fatima Al Ketbi",
+    "recipient_address": "Villa on Plot AUH-12-0098, Mohamed Bin Zayed City, Abu Dhabi",
+    "plot_no": "AUH-12-0098",
+    "description": "Living room sofa set, 7-seater; Dining table with 8 chairs",
+    "line_items": [
+     {
+      "description": "Living room sofa set, 7-seater",
+      "unit": "set",
+      "quantity": 1,
+      "unit_price": 11530.0,
+      "amount": 11530
+     },
+     {
+      "description": "Dining table with 8 chairs",
+      "unit": "set",
+      "quantity": 1,
+      "unit_price": 8265.0,
+      "amount": 8265
+     }
+    ],
+    "taxable_amount": 19795,
+    "vat_amount": 989.75,
+    "total": 20784.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_041.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Duplicate: same supplier and invoice number as a Good invoice (ANB-4197), claimed by another applicant",
+    "rules": "NR-05"
+   },
+   "fields": {
+    "supplier_trn": "100111111100003",
+    "supplier_name": "Al Noor Building Contracting LLC",
+    "supplier_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+    "invoice_no": "ANB-4197",
+    "invoice_date": "2026-07-18",
+    "supply_date": "2026-07-18",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Block work 200 mm hollow block including mortar; Concrete works to ground floor slab, grade C40",
+    "line_items": [
+     {
+      "description": "Block work 200 mm hollow block including mortar",
+      "unit": "m2",
+      "quantity": 734,
+      "unit_price": 89.5,
+      "amount": 65693.0
+     },
+     {
+      "description": "Concrete works to ground floor slab, grade C40",
+      "unit": "m3",
+      "quantity": 74,
+      "unit_price": 343.5,
+      "amount": 25419.0
+     }
+    ],
+    "taxable_amount": 91112.0,
+    "vat_amount": 4555.6,
+    "total": 95667.6,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_042.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100555555500003",
+    "supplier_name": "Falcon Pools & Landscaping LLC",
+    "supplier_address": "Office 204, Al Barsha South, Dubai, UAE, P.O. Box 58833",
+    "invoice_no": "FPL-1787",
+    "invoice_date": "2026-06-27",
+    "supply_date": "2026-06-24",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Fatima Al Ketbi",
+    "recipient_address": "Villa on Plot AUH-12-0098, Mohamed Bin Zayed City, Abu Dhabi",
+    "plot_no": "AUH-12-0098",
+    "description": "Decorative water feature to courtyard; Irrigation network to landscaped areas; Garden landscaping: date palms and shade trees, supplied and planted; Pool filtration plant and pipework",
+    "line_items": [
+     {
+      "description": "Decorative water feature to courtyard",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 11470.0,
+      "amount": 11470
+     },
+     {
+      "description": "Irrigation network to landscaped areas",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 8345.0,
+      "amount": 8345
+     },
+     {
+      "description": "Garden landscaping: date palms and shade trees, supplied and planted",
+      "unit": "no",
+      "quantity": 18,
+      "unit_price": 1765.0,
+      "amount": 31770
+     },
+     {
+      "description": "Pool filtration plant and pipework",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 19240.0,
+      "amount": 19240
+     }
+    ],
+    "taxable_amount": 70825,
+    "vat_amount": 3541.25,
+    "total": 74366.25,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_043.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0106",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100333333300003",
+    "supplier_name": "Desert Rose Electrical Works",
+    "supplier_address": "Shed 6, Industrial Area 6, Sharjah, UAE, P.O. Box 30418",
+    "invoice_no": "DRE-3828",
+    "invoice_date": "2026-05-02",
+    "supply_date": "2026-04-24",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Noura Al Zaabi",
+    "recipient_address": "Villa on Plot AJM-5-208, Al Helio 2, Ajman",
+    "plot_no": "AJM-5-208",
+    "description": "Power points, 13A twin switched socket; Supply and installation of concealed electrical wiring; Earthing and lightning protection system; Main distribution board, 3-phase, 48-way",
+    "line_items": [
+     {
+      "description": "Power points, 13A twin switched socket",
+      "unit": "no",
+      "quantity": 174,
+      "unit_price": 52.0,
+      "amount": 9048.0
+     },
+     {
+      "description": "Supply and installation of concealed electrical wiring",
+      "unit": "point",
+      "quantity": 286,
+      "unit_price": 117.0,
+      "amount": 33462.0
+     },
+     {
+      "description": "Earthing and lightning protection system",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 6570.0,
+      "amount": 6570
+     },
+     {
+      "description": "Main distribution board, 3-phase, 48-way",
+      "unit": "no",
+      "quantity": 2,
+      "unit_price": 5285.0,
+      "amount": 10570
+     }
+    ],
+    "taxable_amount": 59650.0,
+    "vat_amount": 2982.5,
+    "total": 62632.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_044.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Simplified tax invoice: no customer name or address, VAT-inclusive prices",
+    "rules": "TI-09"
+   },
+   "fields": {
+    "supplier_trn": "100999999900003",
+    "supplier_name": "Jabal Sanitary & Plumbing Trading LLC",
+    "supplier_address": "Shop 22, Naif Road, Deira, Dubai, UAE, P.O. Box 66241",
+    "invoice_no": "R865159",
+    "invoice_date": "2026-06-27",
+    "supply_date": "2026-06-20",
+    "title": "Tax Invoice",
+    "invoice_type": "SIMPLIFIED",
+    "currency": "AED",
+    "recipient_name": "",
+    "recipient_address": "",
+    "plot_no": "",
+    "description": "uPVC drainage pipes and fittings; Roof water tank, GRP, 1000 gallons",
+    "line_items": [
+     {
+      "description": "uPVC drainage pipes and fittings",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 10460.0,
+      "amount": 10460.0
+     },
+     {
+      "description": "Roof water tank, GRP, 1000 gallons",
+      "unit": "no",
+      "quantity": 1,
+      "unit_price": 3055.0,
+      "amount": 3055.0
+     }
+    ],
+    "taxable_amount": 13515.0,
+    "vat_amount": 675.75,
+    "total": 14190.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_045.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0106",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Supplier TRN has 14 digits instead of 15",
+    "rules": "TI-03"
+   },
+   "fields": {
+    "supplier_trn": "10077777770000",
+    "supplier_name": "Marina Aluminium & Glass LLC",
+    "supplier_address": "Unit 9, Ajman Industrial Area 2, Ajman, UAE, P.O. Box 20655",
+    "invoice_no": "MAG-3450",
+    "invoice_date": "2026-06-23",
+    "supply_date": "2026-06-15",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Noura Al Zaabi",
+    "recipient_address": "Villa on Plot AJM-5-208, Al Helio 2, Ajman",
+    "plot_no": "AJM-5-208",
+    "description": "Aluminium window frames, powder coated, double glazed; Fixed awnings over windows",
+    "line_items": [
+     {
+      "description": "Aluminium window frames, powder coated, double glazed",
+      "unit": "m2",
+      "quantity": 76,
+      "unit_price": 635.0,
+      "amount": 48260
+     },
+     {
+      "description": "Fixed awnings over windows",
+      "unit": "no",
+      "quantity": 4,
+      "unit_price": 825.0,
+      "amount": 3300
+     }
+    ],
+    "taxable_amount": 51560,
+    "vat_amount": 2578.0,
+    "total": 54138.0,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_046.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100222222200003",
+    "supplier_name": "Gulf Steel & Cement Trading",
+    "supplier_address": "Plot M-14, Mussafah Industrial, Abu Dhabi, UAE, P.O. Box 92217",
+    "invoice_no": "GSC-3482",
+    "invoice_date": "2026-07-04",
+    "supply_date": "2026-07-03",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Ahmed Al Mansoori",
+    "recipient_address": "Villa on Plot DXB-345-112, Al Khawaneej 2, Dubai",
+    "plot_no": "DXB-345-112",
+    "description": "Sulphate resisting cement, 50 kg bags; Reinforcement steel bars 12 mm, grade B500B",
+    "line_items": [
+     {
+      "description": "Sulphate resisting cement, 50 kg bags",
+      "unit": "bag",
+      "quantity": 245,
+      "unit_price": 17.0,
+      "amount": 4165.0
+     },
+     {
+      "description": "Reinforcement steel bars 12 mm, grade B500B",
+      "unit": "ton",
+      "quantity": 11,
+      "unit_price": 2395.0,
+      "amount": 26345
+     }
+    ],
+    "taxable_amount": 30510.0,
+    "vat_amount": 1525.5,
+    "total": 32035.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_047.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "WEAK",
+    "defect": "Intelligent lighting system: listed as not eligible, though light fittings are eligible",
+    "rules": "NR-02"
+   },
+   "fields": {
+    "supplier_trn": "100333333300003",
+    "supplier_name": "Desert Rose Electrical Works",
+    "supplier_address": "Shed 6, Industrial Area 6, Sharjah, UAE, P.O. Box 30418",
+    "invoice_no": "DRE-3875",
+    "invoice_date": "2026-07-11",
+    "supply_date": "2026-07-05",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Ahmed Al Mansoori",
+    "recipient_address": "Villa on Plot DXB-345-112, Al Khawaneej 2, Dubai",
+    "plot_no": "DXB-345-112",
+    "description": "Intelligent lighting control system with scene panels; LED light fittings, recessed downlight",
+    "line_items": [
+     {
+      "description": "Intelligent lighting control system with scene panels",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 25740.0,
+      "amount": 25740
+     },
+     {
+      "description": "LED light fittings, recessed downlight",
+      "unit": "no",
+      "quantity": 200,
+      "unit_price": 51.0,
+      "amount": 10200.0
+     }
+    ],
+    "taxable_amount": 35940.0,
+    "vat_amount": 1797.0,
+    "total": 37737.0,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_048.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "VAT amount is not 5% of the taxable amount (charged about 6.25%)",
+    "rules": "TI-07"
+   },
+   "fields": {
+    "supplier_trn": "100222222200003",
+    "supplier_name": "Gulf Steel & Cement Trading",
+    "supplier_address": "Plot M-14, Mussafah Industrial, Abu Dhabi, UAE, P.O. Box 92217",
+    "invoice_no": "GSC-3530",
+    "invoice_date": "2026-07-10",
+    "supply_date": "2026-07-05",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Ahmed Al Mansoori",
+    "recipient_address": "Villa on Plot DXB-345-112, Al Khawaneej 2, Dubai",
+    "plot_no": "DXB-345-112",
+    "description": "Ordinary Portland cement, 50 kg bags; Sulphate resisting cement, 50 kg bags",
+    "line_items": [
+     {
+      "description": "Ordinary Portland cement, 50 kg bags",
+      "unit": "bag",
+      "quantity": 1135,
+      "unit_price": 14.0,
+      "amount": 15890.0
+     },
+     {
+      "description": "Sulphate resisting cement, 50 kg bags",
+      "unit": "bag",
+      "quantity": 518,
+      "unit_price": 17.0,
+      "amount": 8806.0
+     }
+    ],
+    "taxable_amount": 24696.0,
+    "vat_amount": 1543.5,
+    "total": 26239.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_049.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100999999900003",
+    "supplier_name": "Jabal Sanitary & Plumbing Trading LLC",
+    "supplier_address": "Shop 22, Naif Road, Deira, Dubai, UAE, P.O. Box 66241",
+    "invoice_no": "JSP-1483",
+    "invoice_date": "2026-08-13",
+    "supply_date": "2026-08-09",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Khalid Al Shamsi",
+    "recipient_address": "Villa on Plot SHJ-7-301, Al Rahmaniya 4, Sharjah",
+    "plot_no": "SHJ-7-301",
+    "description": "uPVC drainage pipes and fittings; Shower units with thermostatic mixer; PPR hot and cold water pipework; Sanitary units: WC suite, wall hung",
+    "line_items": [
+     {
+      "description": "uPVC drainage pipes and fittings",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 9520.0,
+      "amount": 9520
+     },
+     {
+      "description": "Shower units with thermostatic mixer",
+      "unit": "no",
+      "quantity": 5,
+      "unit_price": 1720.0,
+      "amount": 8600
+     },
+     {
+      "description": "PPR hot and cold water pipework",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 13875.0,
+      "amount": 13875
+     },
+     {
+      "description": "Sanitary units: WC suite, wall hung",
+      "unit": "no",
+      "quantity": 6,
+      "unit_price": 1020.0,
+      "amount": 6120
+     }
+    ],
+    "taxable_amount": 38115,
+    "vat_amount": 1905.75,
+    "total": 40020.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_050.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Document is titled \"Proforma Invoice\", not \"Tax Invoice\"",
+    "rules": "TI-01"
+   },
+   "fields": {
+    "supplier_trn": "100111111100003",
+    "supplier_name": "Al Noor Building Contracting LLC",
+    "supplier_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+    "invoice_no": "ANB-4269",
+    "invoice_date": "2026-03-06",
+    "supply_date": "2026-02-26",
+    "title": "Proforma Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Roof waterproofing membrane with screed protection; External painting, two coats weather-shield; Excavation and backfilling to foundations; Concrete works to ground floor slab, grade C40",
+    "line_items": [
+     {
+      "description": "Roof waterproofing membrane with screed protection",
+      "unit": "m2",
+      "quantity": 419,
+      "unit_price": 66.5,
+      "amount": 27863.5
+     },
+     {
+      "description": "External painting, two coats weather-shield",
+      "unit": "m2",
+      "quantity": 1383,
+      "unit_price": 19.0,
+      "amount": 26277.0
+     },
+     {
+      "description": "Excavation and backfilling to foundations",
+      "unit": "m3",
+      "quantity": 680,
+      "unit_price": 27.5,
+      "amount": 18700.0
+     },
+     {
+      "description": "Concrete works to ground floor slab, grade C40",
+      "unit": "m3",
+      "quantity": 93,
+      "unit_price": 311.5,
+      "amount": 28969.5
+     }
+    ],
+    "taxable_amount": 101810.0,
+    "vat_amount": 5090.5,
+    "total": 106900.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_051.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0101",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100777777700003",
+    "supplier_name": "Marina Aluminium & Glass LLC",
+    "supplier_address": "Unit 9, Ajman Industrial Area 2, Ajman, UAE, P.O. Box 20655",
+    "invoice_no": "MAG-3436",
+    "invoice_date": "2026-01-24",
+    "supply_date": "2026-01-18",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Ahmed Al Mansoori",
+    "recipient_address": "Villa on Plot DXB-345-112, Al Khawaneej 2, Dubai",
+    "plot_no": "DXB-345-112",
+    "description": "Fixed awnings over windows; Glass balustrade to staircase and balconies",
+    "line_items": [
+     {
+      "description": "Fixed awnings over windows",
+      "unit": "no",
+      "quantity": 10,
+      "unit_price": 650.0,
+      "amount": 6500
+     },
+     {
+      "description": "Glass balustrade to staircase and balconies",
+      "unit": "lm",
+      "quantity": 14,
+      "unit_price": 835.0,
+      "amount": 11690
+     }
+    ],
+    "taxable_amount": 18190,
+    "vat_amount": 909.5,
+    "total": 19099.5,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_052.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Electrical appliances: not eligible",
+    "rules": "NR-02"
+   },
+   "fields": {
+    "supplier_trn": "100444444400003",
+    "supplier_name": "Emirates Home Furnishing LLC",
+    "supplier_address": "Showroom 3, Sheikh Zayed Road, Dubai, UAE, P.O. Box 77120",
+    "invoice_no": "EHF-3159",
+    "invoice_date": "2026-08-19",
+    "supply_date": "2026-08-19",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Khalid Al Shamsi",
+    "recipient_address": "Villa on Plot SHJ-7-301, Al Rahmaniya 4, Sharjah",
+    "plot_no": "SHJ-7-301",
+    "description": "55 inch television; Built-in electric oven; Refrigerator, side by side, 600 L",
+    "line_items": [
+     {
+      "description": "55 inch television",
+      "unit": "no",
+      "quantity": 2,
+      "unit_price": 3285.0,
+      "amount": 6570
+     },
+     {
+      "description": "Built-in electric oven",
+      "unit": "no",
+      "quantity": 1,
+      "unit_price": 3725.0,
+      "amount": 3725
+     },
+     {
+      "description": "Refrigerator, side by side, 600 L",
+      "unit": "no",
+      "quantity": 1,
+      "unit_price": 7160.0,
+      "amount": 7160
+     }
+    ],
+    "taxable_amount": 17455,
+    "vat_amount": 872.75,
+    "total": 18327.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_053.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0105",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100141414100003",
+    "supplier_name": "Naseem Air Conditioning LLC",
+    "supplier_address": "Warehouse 8, Mussafah M-37, Abu Dhabi, UAE, P.O. Box 70218",
+    "invoice_no": "NAC-2697",
+    "invoice_date": "2026-02-27",
+    "supply_date": "2026-02-24",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Saeed Al Mazrouei",
+    "recipient_address": "Villa on Plot AAN-22-415, Zakher, Abu Dhabi",
+    "plot_no": "AAN-22-415",
+    "description": "Central air conditioning controls and thermostats; GI ducting with insulation",
+    "line_items": [
+     {
+      "description": "Central air conditioning controls and thermostats",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 4335.0,
+      "amount": 4335
+     },
+     {
+      "description": "GI ducting with insulation",
+      "unit": "m2",
+      "quantity": 224,
+      "unit_price": 126.0,
+      "amount": 28224.0
+     }
+    ],
+    "taxable_amount": 32559.0,
+    "vat_amount": 1627.95,
+    "total": 34186.95,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_054.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100999999900003",
+    "supplier_name": "Jabal Sanitary & Plumbing Trading LLC",
+    "supplier_address": "Shop 22, Naif Road, Deira, Dubai, UAE, P.O. Box 66241",
+    "invoice_no": "JSP-1489",
+    "invoice_date": "2026-08-04",
+    "supply_date": "2026-07-28",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "uPVC drainage pipes and fittings; Roof water tank, GRP, 1000 gallons",
+    "line_items": [
+     {
+      "description": "uPVC drainage pipes and fittings",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 9475.0,
+      "amount": 9475
+     },
+     {
+      "description": "Roof water tank, GRP, 1000 gallons",
+      "unit": "no",
+      "quantity": 2,
+      "unit_price": 3080.0,
+      "amount": 6160
+     }
+    ],
+    "taxable_amount": 15635,
+    "vat_amount": 781.75,
+    "total": 16416.75,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_055.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100131313100003",
+    "supplier_name": "Bayt Al Rukham Marble & Tiles LLC",
+    "supplier_address": "Warehouse 31, Ras Al Khor Industrial 2, Dubai, UAE, P.O. Box 83410",
+    "invoice_no": "BRM-2665",
+    "invoice_date": "2026-03-12",
+    "supply_date": "2026-03-12",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Khalid Al Shamsi",
+    "recipient_address": "Villa on Plot SHJ-7-301, Al Rahmaniya 4, Sharjah",
+    "plot_no": "SHJ-7-301",
+    "description": "Marble flooring to entrance hall and stairs; Granite kitchen work surfaces",
+    "line_items": [
+     {
+      "description": "Marble flooring to entrance hall and stairs",
+      "unit": "m2",
+      "quantity": 102,
+      "unit_price": 311.0,
+      "amount": 31722.0
+     },
+     {
+      "description": "Granite kitchen work surfaces",
+      "unit": "lm",
+      "quantity": 16,
+      "unit_price": 875.0,
+      "amount": 14000
+     }
+    ],
+    "taxable_amount": 45722.0,
+    "vat_amount": 2286.1,
+    "total": 48008.1,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_056.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0103",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Issued to a different person from the applicant",
+    "rules": "TI-08"
+   },
+   "fields": {
+    "supplier_trn": "100131313100003",
+    "supplier_name": "Bayt Al Rukham Marble & Tiles LLC",
+    "supplier_address": "Warehouse 31, Ras Al Khor Industrial 2, Dubai, UAE, P.O. Box 83410",
+    "invoice_no": "BRM-2709",
+    "invoice_date": "2026-09-02",
+    "supply_date": "2026-08-31",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Rashid Al Shamsi",
+    "recipient_address": "Villa on Plot SHJ-7-301, Al Rahmaniya 4, Sharjah",
+    "plot_no": "SHJ-7-301",
+    "description": "Porcelain floor tiles 60 x 60 cm, supplied and fixed; Marble flooring to entrance hall and stairs; Ceramic wall tiles to bathrooms; Granite kitchen work surfaces",
+    "line_items": [
+     {
+      "description": "Porcelain floor tiles 60 x 60 cm, supplied and fixed",
+      "unit": "m2",
+      "quantity": 360,
+      "unit_price": 96.5,
+      "amount": 34740.0
+     },
+     {
+      "description": "Marble flooring to entrance hall and stairs",
+      "unit": "m2",
+      "quantity": 141,
+      "unit_price": 310.0,
+      "amount": 43710.0
+     },
+     {
+      "description": "Ceramic wall tiles to bathrooms",
+      "unit": "m2",
+      "quantity": 175,
+      "unit_price": 85.5,
+      "amount": 14962.5
+     },
+     {
+      "description": "Granite kitchen work surfaces",
+      "unit": "lm",
+      "quantity": 12,
+      "unit_price": 755.0,
+      "amount": 9060
+     }
+    ],
+    "taxable_amount": 102472.5,
+    "vat_amount": 5123.62,
+    "total": 107596.12,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_057.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0106",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100141414100003",
+    "supplier_name": "Naseem Air Conditioning LLC",
+    "supplier_address": "Warehouse 8, Mussafah M-37, Abu Dhabi, UAE, P.O. Box 70218",
+    "invoice_no": "NAC-2717",
+    "invoice_date": "2026-03-06",
+    "supply_date": "2026-03-03",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Noura Al Zaabi",
+    "recipient_address": "Villa on Plot AJM-5-208, Al Helio 2, Ajman",
+    "plot_no": "AJM-5-208",
+    "description": "Central air conditioning controls and thermostats; Ducted split air conditioning units, 5 TR; GI ducting with insulation; Wall mounted split units, 2 TR",
+    "line_items": [
+     {
+      "description": "Central air conditioning controls and thermostats",
+      "unit": "lot",
+      "quantity": 1,
+      "unit_price": 4045.0,
+      "amount": 4045
+     },
+     {
+      "description": "Ducted split air conditioning units, 5 TR",
+      "unit": "no",
+      "quantity": 5,
+      "unit_price": 11690.0,
+      "amount": 58450
+     },
+     {
+      "description": "GI ducting with insulation",
+      "unit": "m2",
+      "quantity": 148,
+      "unit_price": 147.0,
+      "amount": 21756.0
+     },
+     {
+      "description": "Wall mounted split units, 2 TR",
+      "unit": "no",
+      "quantity": 3,
+      "unit_price": 3015.0,
+      "amount": 9045
+     }
+    ],
+    "taxable_amount": 93296.0,
+    "vat_amount": 4664.8,
+    "total": 97960.8,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_058.pdf",
+   "folder": "Good invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "STRONG",
+    "defect": "None: compliant full tax invoice, eligible items",
+    "rules": ""
+   },
+   "fields": {
+    "supplier_trn": "100131313100003",
+    "supplier_name": "Bayt Al Rukham Marble & Tiles LLC",
+    "supplier_address": "Warehouse 31, Ras Al Khor Industrial 2, Dubai, UAE, P.O. Box 83410",
+    "invoice_no": "BRM-2652",
+    "invoice_date": "2026-04-02",
+    "supply_date": "2026-03-29",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Fatima Al Ketbi",
+    "recipient_address": "Villa on Plot AUH-12-0098, Mohamed Bin Zayed City, Abu Dhabi",
+    "plot_no": "AUH-12-0098",
+    "description": "Marble flooring to entrance hall and stairs; Granite kitchen work surfaces; Porcelain floor tiles 60 x 60 cm, supplied and fixed; Ceramic wall tiles to bathrooms",
+    "line_items": [
+     {
+      "description": "Marble flooring to entrance hall and stairs",
+      "unit": "m2",
+      "quantity": 156,
+      "unit_price": 316.0,
+      "amount": 49296.0
+     },
+     {
+      "description": "Granite kitchen work surfaces",
+      "unit": "lm",
+      "quantity": 17,
+      "unit_price": 695.0,
+      "amount": 11815
+     },
+     {
+      "description": "Porcelain floor tiles 60 x 60 cm, supplied and fixed",
+      "unit": "m2",
+      "quantity": 347,
+      "unit_price": 138.5,
+      "amount": 48059.5
+     },
+     {
+      "description": "Ceramic wall tiles to bathrooms",
+      "unit": "m2",
+      "quantity": 205,
+      "unit_price": 94.5,
+      "amount": 19372.5
+     }
+    ],
+    "taxable_amount": 128543.0,
+    "vat_amount": 6427.15,
+    "total": 134970.15,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_059.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0104",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Supplier TRN is missing from the invoice",
+    "rules": "TI-02, TI-03"
+   },
+   "fields": {
+    "supplier_trn": "",
+    "supplier_name": "Al Noor Building Contracting LLC",
+    "supplier_address": "Warehouse 14, Al Quoz Industrial Area 3, Dubai, UAE, P.O. Box 114502",
+    "invoice_no": "ANB-4292",
+    "invoice_date": "2026-08-08",
+    "supply_date": "2026-08-06",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Mariam Al Nuaimi",
+    "recipient_address": "Villa on Plot RAK-9-77, Al Dhait South, Ras Al Khaimah",
+    "plot_no": "RAK-9-77",
+    "description": "Internal plastering to walls and ceilings; Concrete works to ground floor slab, grade C40",
+    "line_items": [
+     {
+      "description": "Internal plastering to walls and ceilings",
+      "unit": "m2",
+      "quantity": 1270,
+      "unit_price": 31.5,
+      "amount": 40005.0
+     },
+     {
+      "description": "Concrete works to ground floor slab, grade C40",
+      "unit": "m3",
+      "quantity": 120,
+      "unit_price": 321.0,
+      "amount": 38520.0
+     }
+    ],
+    "taxable_amount": 78525.0,
+    "vat_amount": 3926.25,
+    "total": 82451.25,
+    "for_applicant_statement": false
+   }
+  },
+  {
+   "file": "invoice_060.pdf",
+   "folder": "Bad invoices",
+   "maskan_ref": "MSK-2026-0102",
+   "expected": {
+    "rating": "FAIL",
+    "defect": "Total including VAT does not equal taxable amount plus VAT",
+    "rules": "TI-07"
+   },
+   "fields": {
+    "supplier_trn": "100333333300003",
+    "supplier_name": "Desert Rose Electrical Works",
+    "supplier_address": "Shed 6, Industrial Area 6, Sharjah, UAE, P.O. Box 30418",
+    "invoice_no": "DRE-3838",
+    "invoice_date": "2026-05-27",
+    "supply_date": "2026-05-18",
+    "title": "Tax Invoice",
+    "invoice_type": "FULL",
+    "currency": "AED",
+    "recipient_name": "Fatima Al Ketbi",
+    "recipient_address": "Villa on Plot AUH-12-0098, Mohamed Bin Zayed City, Abu Dhabi",
+    "plot_no": "AUH-12-0098",
+    "description": "Supply and installation of concealed electrical wiring; LED light fittings, recessed downlight",
+    "line_items": [
+     {
+      "description": "Supply and installation of concealed electrical wiring",
+      "unit": "point",
+      "quantity": 145,
+      "unit_price": 117.0,
+      "amount": 16965.0
+     },
+     {
+      "description": "LED light fittings, recessed downlight",
+      "unit": "no",
+      "quantity": 173,
+      "unit_price": 60.0,
+      "amount": 10380.0
+     }
+    ],
+    "taxable_amount": 27345.0,
+    "vat_amount": 1367.25,
+    "total": 30212.25,
+    "for_applicant_statement": false
+   }
+  }
+ ]
+}
