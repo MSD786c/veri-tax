@@ -79,8 +79,8 @@ function Outcome({ invoice }: { invoice: Invoice }) {
   if (invoice.status === "DISPUTED")
     return <Banner tone="serious" title="Recorded: you did not issue this invoice">The FTA will follow up with the applicant. No further action is needed from you.</Banner>;
   return (
-    <Banner tone="warning" title="Recorded and sent to the FTA for review">
-      Some of your answers differ from what the applicant submitted, or are incomplete. An FTA officer will review them.
+    <Banner tone="warning" title="Recorded — an FTA officer will review this invoice">
+      Your answers, or other checks on the invoice, need a person to look at them. No further action is needed from you unless the FTA contacts you.
     </Banner>
   );
 }

@@ -1,7 +1,7 @@
 // One vocabulary for every status chip in the portal. Tone maps to the reserved status colours
 // (good / warning / serious / critical) or to in-progress (info) and neutral; the label and icon
 // always travel with the colour so meaning never rests on colour alone.
-import type { ApplicationStatus, Decision, InvoiceStatus, RequestStatus, RuleOutcome } from "../api/types.ts";
+import type { ApplicationStatus, Decision, InvoiceDecisionValue, InvoiceStatus, Rating, RequestStatus, RuleOutcome, TrustTier } from "../api/types.ts";
 
 export type Tone = "good" | "warning" | "serious" | "critical" | "info" | "neutral";
 
@@ -56,13 +56,36 @@ const DECISION: Record<Decision, StatusInfo> = {
   REJECTED: APPLICATION.REJECTED,
 };
 
+const RATING: Record<Rating | "PENDING", StatusInfo> = {
+  STRONG: { label: "Strong", tone: "good", hint: "Agent: every check passed and the supplier confirmed it" },
+  WEAK: { label: "Weak", tone: "warning", hint: "Agent: something needs a person to look at it" },
+  FAIL: { label: "Fail", tone: "critical", hint: "Agent: a hard rule failed or the supplier disputes it" },
+  PENDING: { label: "No rating yet", tone: "info", hint: "Waiting for the supplier to confirm" },
+};
+
+const TRUST: Record<TrustTier, StatusInfo> = {
+  TRUSTED: { label: "Trusted", tone: "good", hint: "Several earlier invoices confirmed and verified" },
+  STANDARD: { label: "Standard", tone: "neutral" },
+  WATCH: { label: "Watch list", tone: "warning", hint: "Repeated corrections or missed responses, or flagged by an officer" },
+};
+
+const INVOICE_DECISION: Record<InvoiceDecisionValue, StatusInfo> = {
+  APPROVED: { label: "Officer approved", tone: "good" },
+  REJECTED: { label: "Officer rejected", tone: "critical" },
+};
+
 export const statusInfo = {
   invoice: (s: InvoiceStatus) => INVOICE[s] ?? { label: s, tone: "neutral" },
   application: (s: ApplicationStatus) => APPLICATION[s] ?? { label: s, tone: "neutral" },
   request: (s: RequestStatus) => REQUEST[s] ?? { label: s, tone: "neutral" },
   rule: (s: RuleOutcome) => RULE[s] ?? { label: s, tone: "neutral" },
   decision: (s: Decision) => DECISION[s] ?? { label: s, tone: "neutral" },
+  rating: (s: Rating | "PENDING" | null | undefined) => RATING[s ?? "PENDING"] ?? { label: String(s), tone: "neutral" },
+  trust: (s: TrustTier) => TRUST[s] ?? { label: s, tone: "neutral" },
+  invoiceDecision: (s: InvoiceDecisionValue) => INVOICE_DECISION[s] ?? { label: s, tone: "neutral" },
 };
+
+export const RATING_ORDER: (Rating | "PENDING")[] = ["STRONG", "WEAK", "FAIL", "PENDING"];
 
 /** Pipeline order for application status charts and filters. */
 export const APPLICATION_ORDER: ApplicationStatus[] = [

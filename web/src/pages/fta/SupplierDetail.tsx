@@ -4,7 +4,7 @@ import { Card, Chip, Empty, ErrorBanner, KeyValues, Loading, PageHeader, RuleChi
 import { aed, fmtDate, num, pct } from "../../lib/format.ts";
 import { statusInfo } from "../../lib/status.ts";
 import { useApi } from "../../lib/useApi.ts";
-import { needsAttention } from "./Suppliers.tsx";
+import { SupplierStanding } from "./Suppliers.tsx";
 
 export default function SupplierDetail() {
   const { trn } = useParams();
@@ -12,7 +12,7 @@ export default function SupplierDetail() {
   if (loading && !s) return <Loading />;
   if (!s) return <ErrorBanner error={error} />;
 
-  const problems = s.invoices.filter((i) => ["AUTO_REJECTED", "REJECTED", "DISPUTED", "FLAGGED"].includes(i.status));
+  const problems = s.invoices.filter((i) => ["AUTO_REJECTED", "REJECTED", "DISPUTED", "FLAGGED", "NO_SUPPLIER_RESPONSE"].includes(i.status));
 
   return (
     <>
@@ -20,11 +20,13 @@ export default function SupplierDetail() {
         back={{ to: "/fta/suppliers", label: "Suppliers" }}
         title={s.legal_name}
         subtitle={`TRN ${s.trn}${s.emirate ? ` · ${s.emirate}` : ""}`}
-        actions={needsAttention(s) ? <Chip tone="warning" label="Needs review" /> : undefined}
+        actions={<SupplierStanding s={s} />}
       >
         <KeyValues
           items={[
             ["Address", s.address || "—"],
+            ["FTA registry", s.registry_verified ? `${s.status === "DEREGISTERED" ? `Deregistered ${fmtDate(s.deregistered_on)}` : "Active"}${s.registered_from ? `, registered ${fmtDate(s.registered_from)}` : ""}` : "Not found"],
+            ["Track record", `${s.trust.confirmed} confirmed · ${s.trust.corrected} corrected · ${s.trust.no_response} no response · ${s.trust.disputed} disputed`],
             ["EmaraTax account", s.emaratax_account_id ?? "—"],
             ["Declared VAT periods", s.declared_vat_periods.length ? s.declared_vat_periods.join(", ") : "—"],
             ["Response rate", pct(s.response_rate)],
@@ -53,7 +55,8 @@ export default function SupplierDetail() {
                   <th className="num">VAT</th>
                   <th className="num">Eligible</th>
                   <th>VAT period</th>
-                  <th>Failed rules</th>
+                  <th>Rule findings</th>
+                  <th>Rating</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -77,6 +80,9 @@ export default function SupplierDetail() {
                       <div className="chip-list">
                         {i.failed_rules.length ? i.failed_rules.map((r) => <RuleChip key={r} id={r} />) : <span className="muted">None</span>}
                       </div>
+                    </td>
+                    <td>
+                      <Chip {...statusInfo.rating(i.rating)} />
                     </td>
                     <td>
                       <Chip {...statusInfo.invoice(i.status)} />

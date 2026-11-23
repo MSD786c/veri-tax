@@ -1402,6 +1402,50 @@ input[type="radio"] {
   color: var(--muted);
 }
 
+.assessment {
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  margin-top: 12px;
+}
+.assessment-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.assessment h3 {
+  margin: 12px 0 4px;
+}
+.reasons {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 13px;
+}
+.invoice-decision,
+.officer-record {
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-top: 12px;
+}
+.invoice-decision h3,
+.officer-record h3 {
+  margin-top: 0;
+}
+.invoice-decision .form-actions {
+  margin-top: 10px;
+}
+.rule-row {
+  margin-top: 4px;
+}
+.rating-note {
+  margin: 12px 0 0;
+}
+
 /* ---------- home ---------- */
 .home {
   max-width: 1120px;

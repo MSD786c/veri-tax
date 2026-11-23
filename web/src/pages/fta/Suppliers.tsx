@@ -4,7 +4,7 @@ import type { SupplierStats } from "../../api/types.ts";
 import { FilterBar, SearchInput, useFilters } from "../../components/Filters.tsx";
 import { Card, Chip, Empty, ErrorBanner, Loading, PageHeader, TableWrap } from "../../components/ui.tsx";
 import { aed, num, pct } from "../../lib/format.ts";
-import { EMIRATES } from "../../lib/status.ts";
+import { EMIRATES, statusInfo } from "../../lib/status.ts";
 import { useApi } from "../../lib/useApi.ts";
 
 const KEYS = ["q", "emirate", "sort"] as const;
@@ -12,11 +12,19 @@ const SORTS: Record<string, [string, (a: SupplierStats, b: SupplierStats) => num
   claimed: ["Most VAT claimed", (a, b) => b.vat_claimed - a.vat_claimed],
   rejected: ["Most VAT rejected", (a, b) => b.vat_rejected - a.vat_rejected],
   response: ["Lowest response rate", (a, b) => (a.response_rate ?? 2) - (b.response_rate ?? 2)],
+  watch: ["Watch list first", (a, b) => Number(b.trust.tier === "WATCH") - Number(a.trust.tier === "WATCH") || b.vat_rejected - a.vat_rejected],
   name: ["Name", (a, b) => a.legal_name.localeCompare(b.legal_name)],
 };
 
-export function needsAttention(s: SupplierStats): boolean {
-  return s.risk_flag || s.vat_rejected > 0 || (s.response_rate !== null && s.response_rate < 0.5);
+/** Trust lane plus what the FTA registry says, as chips (never colour alone). */
+export function SupplierStanding({ s }: { s: SupplierStats }) {
+  return (
+    <div className="chip-list">
+      <Chip {...statusInfo.trust(s.trust.tier)} />
+      {s.status === "DEREGISTERED" && <Chip tone="critical" label="Deregistered" hint={`Deregistered on ${s.deregistered_on ?? "unknown date"}`} />}
+      {!s.registry_verified && <Chip tone="warning" label="Not in registry" hint="TRN first seen on an invoice; not found in the FTA registry data" />}
+    </div>
+  );
 }
 
 export default function Suppliers() {
@@ -63,7 +71,7 @@ export default function Suppliers() {
                   <th className="num">Verified</th>
                   <th className="num">Rejected</th>
                   <th className="num">Response rate</th>
-                  <th>Risk</th>
+                  <th>Standing</th>
                 </tr>
               </thead>
               <tbody>
@@ -82,7 +90,9 @@ export default function Suppliers() {
                     <td className="num">{aed(s.vat_verified)}</td>
                     <td className="num">{s.vat_rejected ? aed(s.vat_rejected) : "—"}</td>
                     <td className="num">{pct(s.response_rate)}</td>
-                    <td>{needsAttention(s) ? <Chip tone="warning" label={s.risk_flag ? "Flagged" : "Review"} hint="Rejected VAT, a low response rate or a risk flag" /> : <Chip tone="neutral" label="None" />}</td>
+                    <td>
+                      <SupplierStanding s={s} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

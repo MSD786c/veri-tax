@@ -8,6 +8,7 @@ import Overview from "./pages/fta/Overview.tsx";
 import Rejections from "./pages/fta/Rejections.tsx";
 import SupplierDetail from "./pages/fta/SupplierDetail.tsx";
 import Suppliers from "./pages/fta/Suppliers.tsx";
+import ApplicantStatus from "./pages/maskan/ApplicantStatus.tsx";
 import MaskanSubmit from "./pages/maskan/Submit.tsx";
 import BulkUpload from "./pages/supplier/BulkUpload.tsx";
 import Queue from "./pages/supplier/Queue.tsx";
@@ -16,6 +17,10 @@ import RequestDetail from "./pages/supplier/RequestDetail.tsx";
 const SUPPLIER_NAV = [
   { to: "/supplier", label: "Confirmations", end: true },
   { to: "/supplier/upload", label: "CSV upload" },
+];
+const MASKAN_NAV = [
+  { to: "/maskan", label: "New application", end: true },
+  { to: "/maskan/status", label: "Applicant status" },
 ];
 const FTA_NAV = [
   { to: "/fta", label: "Overview", end: true },
@@ -55,8 +60,9 @@ export default function App() {
         <Route path="suppliers/:trn" element={<SupplierDetail />} />
         <Route path="rejections" element={<Rejections />} />
       </Route>
-      <Route path="/maskan" element={<Shell area="Maskan simulator" nav={[{ to: "/maskan", label: "New application", end: true }]} />}>
+      <Route path="/maskan" element={<Shell area="Maskan simulator" nav={MASKAN_NAV} />}>
         <Route index element={<MaskanSubmit />} />
+        <Route path="status" element={<ApplicantStatus />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

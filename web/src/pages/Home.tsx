@@ -7,15 +7,15 @@ import { Banner } from "../components/ui.tsx";
 
 // Synthetic suppliers from app/seed.py, offered as one-click demo sign-ins.
 const DEMO_SUPPLIERS = [
+  { trn: "100333333300003", name: "Desert Rose Electrical Works", note: "2 invoices waiting" },
   { trn: "100111111100003", name: "Al Noor Building Contracting LLC" },
   { trn: "100222222200003", name: "Gulf Steel & Cement Trading" },
-  { trn: "100333333300003", name: "Desert Rose Electrical Works" },
-  { trn: "100444444400003", name: "Emirates Home Furnishing LLC" },
+  { trn: "100555555500003", name: "Falcon Pools & Landscaping LLC" },
 ];
 
 const STEPS = [
   ["Maskan", "The applicant's refund claim and supplier invoices arrive from the Maskan app."],
-  ["Rule engine", "Each invoice is checked against tax invoice and New Residence eligibility rules."],
+  ["Rule engine", "Each invoice is checked against Article 59 and the New Residence rules, then rated strong, weak or fail."],
   ["Supplier", "Suppliers confirm issuance, particulars, consideration and the VAT return period."],
   ["FTA officer", "Officers review the reconciled evidence and approve or reject the refund."],
 ];
@@ -128,7 +128,10 @@ export default function Home() {
             {DEMO_SUPPLIERS.map((s) => (
               <button key={s.trn} type="button" className="demo-pick" disabled={busy} onClick={() => supplierSignIn(s.trn)}>
                 <strong>{s.name}</strong>
-                <span>{s.trn}</span>
+                <span>
+                  {s.trn}
+                  {s.note ? ` · ${s.note}` : ""}
+                </span>
               </button>
             ))}
           </div>
@@ -165,11 +168,17 @@ export default function Home() {
         <section className="card entry" aria-labelledby="maskan-entry">
           <h2 id="maskan-entry">Maskan simulator</h2>
           <p className="muted">
-            Stand in for the Maskan app: submit a refund application with its invoices and watch it move through verification.
+            Stand in for the Maskan app: submit a refund application with its invoices and watch it move through verification, or look up
+            what an applicant sees.
           </p>
-          <Link className="btn btn-secondary" to="/maskan">
-            Submit a test application
-          </Link>
+          <div className="input-row">
+            <Link className="btn btn-secondary" to="/maskan">
+              Submit a test application
+            </Link>
+            <Link className="btn btn-ghost" to="/maskan/status">
+              Applicant status
+            </Link>
+          </div>
         </section>
       </div>
 

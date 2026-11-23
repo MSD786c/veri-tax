@@ -6,7 +6,7 @@ import { DateRange, FilterBar, SearchInput, useFilters } from "../../components/
 import { Card, Chip, Empty, ErrorBanner, Loading, PageHeader, RuleChip, TableWrap } from "../../components/ui.tsx";
 import { aed, fmtDate, num } from "../../lib/format.ts";
 import { useRules } from "../../lib/rules.tsx";
-import { APPLICATION_ORDER, EMIRATES, statusInfo } from "../../lib/status.ts";
+import { APPLICATION_ORDER, EMIRATES, RATING_ORDER, statusInfo } from "../../lib/status.ts";
 import { useApi } from "../../lib/useApi.ts";
 
 const KEYS = ["q", "status", "emirate", "rule_failed", "submitted_from", "submitted_to", "min_vat", "max_vat"] as const;
@@ -101,7 +101,7 @@ export default function Applications() {
                   <th className="num">Invoices</th>
                   <th className="num">VAT claimed</th>
                   <th className="num">VAT eligible</th>
-                  <th>Issues</th>
+                  <th>Agent ratings · rule findings</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -125,8 +125,17 @@ export default function Applications() {
                     <td className="num">{aed(a.vat_eligible)}</td>
                     <td>
                       <div className="chip-list">
-                        {a.failed_rules.length ? a.failed_rules.map((r) => <RuleChip key={r} id={r} />) : <span className="muted">None</span>}
+                        {RATING_ORDER.filter((r) => a.invoices_by_rating[r]).map((r) => (
+                          <Chip key={r} {...statusInfo.rating(r === "PENDING" ? null : r)} label={`${a.invoices_by_rating[r]} ${statusInfo.rating(r === "PENDING" ? null : r).label.toLowerCase()}`} />
+                        ))}
                       </div>
+                      {a.failed_rules.length > 0 && (
+                        <div className="chip-list rule-row">
+                          {a.failed_rules.map((r) => (
+                            <RuleChip key={r} id={r} />
+                          ))}
+                        </div>
+                      )}
                     </td>
                     <td>
                       <Chip {...statusInfo.application(a.status)} />

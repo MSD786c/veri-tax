@@ -1,9 +1,16 @@
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Link, useParams } from "react-router-dom";
 import { post } from "../../api/client.ts";
-import type { ApplicationDetail as Detail, Decision, InvoiceDetail, OfficerDecision, RuleResult } from "../../api/types.ts";
+import type {
+  ApplicationDetail as Detail,
+  Decision,
+  InvoiceDecisionValue,
+  InvoiceDetail,
+  OfficerDecision,
+  RuleResult,
+} from "../../api/types.ts";
 import { Banner, Card, Chip, ErrorBanner, Field, KeyValues, Loading, PageHeader, RuleChip, StatTile, TableWrap } from "../../components/ui.tsx";
-import { aed, fmtDate, fmtDateTime, humanize, num, parseUtc } from "../../lib/format.ts";
+import { aed, fmtDate, fmtDateTime, humanize, num, parseUtc, plural } from "../../lib/format.ts";
 import { useRules } from "../../lib/rules.tsx";
 import { statusInfo } from "../../lib/status.ts";
 import { useApi } from "../../lib/useApi.ts";
@@ -11,8 +18,10 @@ import { useApi } from "../../lib/useApi.ts";
 const GROUPS: [string, string][] = [
   ["TI-", "Tax invoice validity"],
   ["NR-", "Refund eligibility"],
+  ["CS-", "Common-sense checks"],
   ["SC-", "Supplier confirmation"],
 ];
+const DECIDED = new Set(["APPROVED", "PARTIALLY_APPROVED", "REJECTED"]);
 
 export default function ApplicationDetail() {
   const { id } = useParams();
@@ -25,10 +34,10 @@ export default function ApplicationDetail() {
   const claimed = invoices.reduce((s, i) => s + i.invoice.vat_amount, 0);
   const eligible = invoices.reduce((s, i) => s + i.invoice.eligible_vat_amount, 0);
   const count = (pred: (i: InvoiceDetail) => boolean) => invoices.filter(pred).length;
-  const verified = count((i) => i.invoice.status === "VERIFIED");
   const awaiting = count((i) => i.invoice.status === "AWAITING_SUPPLIER");
-  const problems = invoices.length - verified - awaiting;
+  const undecided = count((i) => i.invoice.rating !== "STRONG" && i.invoice.rating !== null && !i.invoice.officer_decision);
   const daysSinceCompletion = Math.floor((Date.now() - parseUtc(a.completion_date).getTime()) / 86_400_000);
+  const appDecided = DECIDED.has(a.status);
 
   return (
     <>
@@ -46,25 +55,32 @@ export default function ApplicationDetail() {
             ["Plot", a.plot_no],
             ["Emirate", a.emirate],
             ["Claim type", humanize(a.claim_type)],
+            ["Building permit", fmtDate(a.permit_date)],
             ["Completion date", `${fmtDate(a.completion_date)} (${num(daysSinceCompletion)} days ago)`],
+            ["Contract value", a.contract_value ? aed(a.contract_value) : "—"],
             ["Submitted", fmtDateTime(a.submitted_at)],
           ]}
         />
       </PageHeader>
       <ErrorBanner error={error} />
+      {a.flags.map((f) => (
+        <Banner key={f} tone="warning" title="Application flag">
+          {f}
+        </Banner>
+      ))}
 
       <div className="stat-row">
-        <StatTile label="VAT claimed" value={aed(claimed)} sub={`${invoices.length} invoices`} />
-        <StatTile label="VAT eligible" tone="good" value={aed(eligible)} sub={`${verified} verified`} />
-        <StatTile label="Awaiting suppliers" tone="info" value={awaiting} />
-        <StatTile label="Flagged, disputed or rejected" tone={problems ? "critical" : undefined} value={problems} />
+        <StatTile label="VAT claimed" value={aed(claimed)} sub={plural(invoices.length, "invoice")} />
+        <StatTile label="VAT eligible so far" tone="good" value={aed(eligible)} sub={`${count((i) => i.invoice.status === "VERIFIED")} verified`} />
+        <StatTile label="Rated strong · weak · fail" value={`${count((i) => i.invoice.rating === "STRONG")} · ${count((i) => i.invoice.rating === "WEAK")} · ${count((i) => i.invoice.rating === "FAIL")}`} sub={awaiting ? `${awaiting} awaiting the supplier` : undefined} />
+        <StatTile label="Invoices for you to decide" tone={undecided ? "warning" : undefined} value={undecided} sub="Rated weak or fail, no officer decision yet" />
       </div>
 
-      <DecisionPanel detail={data} claimed={claimed} eligible={eligible} awaiting={awaiting} decision={decision} onDecided={reload} />
+      <DecisionPanel detail={data} claimed={claimed} eligible={eligible} awaiting={awaiting} undecided={undecided} decision={decision} onDecided={reload} />
 
       <h2 className="section-title">Invoices</h2>
       {invoices.map((inv) => (
-        <InvoiceCard key={inv.invoice.id} detail={inv} />
+        <InvoiceCard key={inv.invoice.id} detail={inv} locked={appDecided} onDecided={reload} />
       ))}
 
       <Card title="Audit trail" subtitle="Append-only record of every automated and human step on this application and its invoices.">
@@ -78,7 +94,7 @@ export default function ApplicationDetail() {
                   by <code>{e.actor}</code>
                   {Object.entries(e.detail).map(([k, v]) => (
                     <span key={k} className="audit-detail">
-                      {humanize(k)}: {String(v)}
+                      {humanize(k)}: {v === null ? "—" : String(v)}
                     </span>
                   ))}
                 </div>
@@ -92,20 +108,22 @@ export default function ApplicationDetail() {
 }
 
 function recommend(details: InvoiceDetail[], eligible: number): { decision: Decision; amount: number; why: string } {
-  if (eligible <= 0) return { decision: "REJECTED", amount: 0, why: "No invoice passed verification." };
-  if (details.every((d) => d.invoice.status === "VERIFIED")) return { decision: "APPROVED", amount: eligible, why: "Every invoice passed the rules and was confirmed by its supplier." };
+  if (eligible <= 0) return { decision: "REJECTED", amount: 0, why: "No invoice is verified or approved." };
+  if (details.every((d) => d.invoice.status === "VERIFIED"))
+    return { decision: "APPROVED", amount: eligible, why: "Every invoice is verified: rated strong, or approved by an officer." };
   return {
     decision: "PARTIALLY_APPROVED",
     amount: eligible,
-    why: "Some invoices were flagged, disputed or rejected; only the verified VAT is recommended.",
+    why: "Some invoices are flagged, disputed or rejected; only the verified VAT is recommended.",
   };
 }
 
-function DecisionPanel({ detail, claimed, eligible, awaiting, decision, onDecided }: {
+function DecisionPanel({ detail, claimed, eligible, awaiting, undecided, decision, onDecided }: {
   detail: Detail;
   claimed: number;
   eligible: number;
   awaiting: number;
+  undecided: number;
   decision: OfficerDecision | null;
   onDecided: () => void;
 }) {
@@ -125,13 +143,20 @@ function DecisionPanel({ detail, claimed, eligible, awaiting, decision, onDecide
   if (detail.application.status !== "READY_FOR_DECISION")
     return (
       <Banner tone="info" title="Not ready for a decision yet">
-        Waiting for {awaiting} supplier confirmation{awaiting === 1 ? "" : "s"}. The application moves to the decision queue when every invoice has an outcome.
+        Waiting for {plural(awaiting, "supplier confirmation")}. Suppliers have 5 business days; after that the invoice comes to you rated weak.
+        You can still decide individual invoices below.
       </Banner>
     );
-  return <DecisionForm detail={detail} claimed={claimed} eligible={eligible} onDecided={onDecided} />;
+  return <DecisionForm detail={detail} claimed={claimed} eligible={eligible} undecided={undecided} onDecided={onDecided} />;
 }
 
-function DecisionForm({ detail, claimed, eligible, onDecided }: { detail: Detail; claimed: number; eligible: number; onDecided: () => void }) {
+function DecisionForm({ detail, claimed, eligible, undecided, onDecided }: {
+  detail: Detail;
+  claimed: number;
+  eligible: number;
+  undecided: number;
+  onDecided: () => void;
+}) {
   const rec = recommend(detail.invoices, eligible);
   const [decision, setDecision] = useState<Decision>(rec.decision);
   const [amount, setAmount] = useState(rec.amount.toFixed(2));
@@ -144,7 +169,7 @@ function DecisionForm({ detail, claimed, eligible, onDecided }: { detail: Detail
   let problem: string | null = null;
   if (decision === "REJECTED" && value !== 0) problem = "A rejection approves AED 0.";
   else if (decision !== "REJECTED" && !(value > 0)) problem = "Enter the amount to approve.";
-  else if (value > claimed + 0.05) problem = `Cannot exceed the VAT claimed (${aed(claimed)}).`;
+  else if (value > claimed + 0.01) problem = `Cannot exceed the VAT claimed (${aed(claimed)}).`;
   else if (deviates && !comments.trim()) problem = "Explain why you are departing from the recommendation.";
 
   async function submit(e: FormEvent) {
@@ -163,7 +188,12 @@ function DecisionForm({ detail, claimed, eligible, onDecided }: { detail: Detail
   }
 
   return (
-    <Card className="decision-card" title="Decision" subtitle="Agents and rules recommend. Only an officer approves or rejects a refund.">
+    <Card className="decision-card" title="Application decision" subtitle="Agents and rules recommend. Only an officer approves or rejects a refund.">
+      {undecided > 0 && (
+        <Banner tone="warning" title={`${plural(undecided, "invoice")} rated weak or fail without your decision`}>
+          Decide them below first if you want their VAT counted; until then only verified VAT is recommended.
+        </Banner>
+      )}
       <div className="recommendation">
         <span className="stat-label">Recommended</span>
         <div>
@@ -206,8 +236,9 @@ function DecisionForm({ detail, claimed, eligible, onDecided }: { detail: Detail
 }
 
 function Evidence({ evidence }: { evidence: Record<string, unknown> }) {
-  const entries = Object.entries(evidence);
-  if (!entries.length) return <span className="muted">—</span>;
+  const entries = Object.entries(evidence).filter(([k]) => k !== "lines");
+  const lines = Array.isArray(evidence.lines) ? (evidence.lines as { text?: string; verdict?: string; reason?: string }[]) : [];
+  if (!entries.length && !lines.length) return <span className="muted">—</span>;
   return (
     <span className="evidence">
       {entries.map(([k, v]) => (
@@ -216,12 +247,26 @@ function Evidence({ evidence }: { evidence: Record<string, unknown> }) {
           {v === null || v === undefined || (Array.isArray(v) && !v.length) ? "—" : typeof v === "object" ? JSON.stringify(v) : String(v)}
         </span>
       ))}
+      {lines.map((l, i) => (
+        <span key={i}>
+          <span className="muted">{l.verdict ? humanize(l.verdict) : "Line"}:</span> {l.text}
+          {l.reason ? ` (${l.reason})` : ""}
+        </span>
+      ))}
     </span>
   );
 }
 
+/** Rules re-run as evidence arrives (a duplicate, a supplier answer); show the latest result per rule. */
+function latest(results: RuleResult[]): RuleResult[] {
+  const byRule = new Map<string, RuleResult>();
+  for (const r of [...results].sort((x, y) => x.id - y.id)) byRule.set(r.rule_id, r);
+  return [...byRule.values()].sort((x, y) => x.rule_id.localeCompare(y.rule_id));
+}
+
 function RuleTable({ results }: { results: RuleResult[] }) {
   const { rule } = useRules();
+  const rows = latest(results);
   return (
     <TableWrap>
       <table className="table compact">
@@ -234,15 +279,15 @@ function RuleTable({ results }: { results: RuleResult[] }) {
           </tr>
         </thead>
         {GROUPS.map(([prefix, label]) => {
-          const rows = results.filter((r) => r.rule_id.startsWith(prefix));
-          if (!rows.length) return null;
+          const group = rows.filter((r) => r.rule_id.startsWith(prefix));
+          if (!group.length) return null;
           return (
             <tbody key={prefix}>
               <tr className="group-row">
                 <th colSpan={4}>{label}</th>
               </tr>
-              {rows.map((r) => (
-                <tr key={r.id} className={r.result === "FAIL" ? "row-fail" : ""}>
+              {group.map((r) => (
+                <tr key={r.id} className={r.result === "FAIL" ? "row-fail" : r.result === "UNCERTAIN" ? "row-mismatch" : ""}>
                   <td>
                     <RuleChip id={r.rule_id} />
                   </td>
@@ -276,8 +321,7 @@ const COMPARE: { key: "invoice_no" | "invoice_date" | "taxable_amount" | "vat_am
 
 function Comparison({ detail }: { detail: InvoiceDetail }) {
   const { invoice, supplier_response: r } = detail;
-  const show = (v: unknown, c: (typeof COMPARE)[number]) =>
-    c.money ? aed(Number(v)) : c.date ? fmtDate(String(v)) : String(v);
+  const show = (v: unknown, c: (typeof COMPARE)[number]) => (c.money ? aed(Number(v)) : c.date ? fmtDate(String(v)) : String(v));
   return (
     <TableWrap>
       <table className="table compact comparison">
@@ -291,7 +335,7 @@ function Comparison({ detail }: { detail: InvoiceDetail }) {
         <tbody>
           {COMPARE.map((c) => {
             const corrected = r && c.key in r.corrections;
-            let supplierCell: ReactNode = <span className="muted">Awaiting response</span>;
+            let supplierCell: ReactNode = <span className="muted">{detail.confirmation_request ? "Awaiting response" : "Not sent to supplier"}</span>;
             if (r && !r.issued) supplierCell = <span className="muted">Not issued</span>;
             else if (corrected) supplierCell = <strong className="mismatch">{show(r.corrections[c.key], c)}</strong>;
             else if (r) supplierCell = r.particulars_confirmed ? show(invoice[c.key], c) : <span className="muted">Not confirmed</span>;
@@ -308,16 +352,142 @@ function Comparison({ detail }: { detail: InvoiceDetail }) {
           })}
         </tbody>
       </table>
-      <p className="muted small table-note">An OCR column joins this comparison once document extraction (roadmap phase 1) is live.</p>
+      <p className="muted small table-note">An OCR column joins this comparison once document extraction is live.</p>
     </TableWrap>
   );
 }
 
-function InvoiceCard({ detail }: { detail: InvoiceDetail }) {
-  const { invoice: inv, supplier, supplier_response: r, confirmation_request: req } = detail;
-  const failed = detail.rule_results.filter((x) => x.result === "FAIL" || x.result === "UNCERTAIN");
+/** The agent's recommendation: rating, reasons, what would fix it, trust lane and precedents. */
+function Assessment({ detail }: { detail: InvoiceDetail }) {
+  const { invoice: inv, supplier_trust: trust, precedents } = detail;
+  const partial = inv.suggested_eligible_vat !== null && Math.abs(inv.suggested_eligible_vat - inv.vat_amount) > 0.005;
   return (
-    <details className="card invoice-card" open={inv.status !== "VERIFIED"}>
+    <div className="assessment">
+      <div className="assessment-head">
+        <span className="stat-label">Agent rating</span>
+        <Chip {...statusInfo.rating(inv.rating)} />
+        <span className="muted small">Supplier lane</span>
+        <Chip {...statusInfo.trust(trust.tier)} />
+        <span className="muted small">
+          Other invoices: {trust.confirmed} confirmed · {trust.corrected} corrected · {trust.no_response} no response · {trust.disputed} disputed
+        </span>
+      </div>
+      {inv.rating_reasons.length > 0 && (
+        <>
+          <h3>Why</h3>
+          <ul className="reasons">
+            {inv.rating_reasons.map((r) => (
+              <li key={r}>{r}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {partial && (
+        <p className="small">
+          Eligible VAT suggested by the item check: <strong>{aed(inv.suggested_eligible_vat)}</strong> of {aed(inv.vat_amount)}.
+        </p>
+      )}
+      {inv.fix_guidance.length > 0 && (
+        <>
+          <h3>What the applicant is told they can do</h3>
+          <ul className="reasons">
+            {inv.fix_guidance.map((f) => (
+              <li key={f}>{f}</li>
+            ))}
+          </ul>
+        </>
+      )}
+      {precedents.length > 0 && (
+        <>
+          <h3>Precedents: earlier decisions with the same findings</h3>
+          <ul className="reasons">
+            {precedents.map((p) => (
+              <li key={p.id}>
+                <Chip {...statusInfo.invoiceDecision(p.decision)} /> {aed(p.approved_vat_amount)} by {p.officer_id}, {fmtDate(p.decided_at)}
+                {p.comment ? ` — “${p.comment}”` : ""}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
+}
+
+function InvoiceDecisionForm({ detail, onDecided }: { detail: InvoiceDetail; onDecided: () => void }) {
+  const inv = detail.invoice;
+  const suggested = inv.suggested_eligible_vat ?? inv.vat_amount;
+  const [decision, setDecision] = useState<InvoiceDecisionValue>(inv.rating === "FAIL" ? "REJECTED" : "APPROVED");
+  const [amount, setAmount] = useState(suggested.toFixed(2));
+  const [comment, setComment] = useState("");
+  const [error, setError] = useState<Error | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const value = Number(amount);
+  const overrides = (inv.rating === "FAIL" && decision === "APPROVED") || (inv.rating === "STRONG" && decision === "REJECTED");
+  let problem: string | null = null;
+  if (decision === "APPROVED" && !(value >= 0)) problem = "Enter the VAT to approve.";
+  else if (decision === "APPROVED" && value > inv.vat_amount + 0.01) problem = `Cannot exceed the VAT on the invoice (${aed(inv.vat_amount)}).`;
+  else if ((overrides || decision === "REJECTED") && !comment.trim()) problem = overrides ? "Explain why you are going against the agent's rating." : "Give the reason for rejecting.";
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (problem) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await post(`/fta/invoices/${inv.id}/decision`, {
+        decision,
+        approved_vat_amount: decision === "APPROVED" ? value : null,
+        comment: comment.trim(),
+      });
+      onDecided();
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="invoice-decision" onSubmit={submit}>
+      <h3>Your decision on this invoice</h3>
+      <ErrorBanner error={error} />
+      <div className="choice-row" role="radiogroup" aria-label={`Decision on ${inv.invoice_no}`}>
+        {(["APPROVED", "REJECTED"] as const).map((d) => (
+          <label key={d} className={`choice ${decision === d ? "on" : ""}`}>
+            <input type="radio" name={`decide-${inv.id}`} checked={decision === d} onChange={() => setDecision(d)} />
+            {d === "APPROVED" ? "Approve" : "Reject"}
+          </label>
+        ))}
+      </div>
+      <div className="form-grid">
+        {decision === "APPROVED" && (
+          <Field label="VAT to approve (AED)" htmlFor={`amt-${inv.id}`} hint={`Invoice VAT ${aed(inv.vat_amount)}`}>
+            <input id={`amt-${inv.id}`} type="number" step="0.01" min="0" max={inv.vat_amount} value={amount} onChange={(e) => setAmount(e.target.value)} />
+          </Field>
+        )}
+        <Field label={overrides || decision === "REJECTED" ? "Comment (required)" : "Comment"} htmlFor={`cmt-${inv.id}`}>
+          <input id={`cmt-${inv.id}`} value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Stored as a precedent for similar invoices" />
+        </Field>
+      </div>
+      <div className="form-actions">
+        {overrides && !problem && <p className="warn-text">This goes against the agent's rating and will be recorded as an override.</p>}
+        {problem && <p className="warn-text">{problem}</p>}
+        <button className={`btn btn-sm ${decision === "REJECTED" ? "btn-danger" : "btn-primary"}`} disabled={!!problem || busy}>
+          {busy ? "Saving…" : decision === "REJECTED" ? "Reject invoice" : `Approve ${aed(value || 0)}`}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function InvoiceCard({ detail, locked, onDecided }: { detail: InvoiceDetail; locked: boolean; onDecided: () => void }) {
+  const { invoice: inv, supplier, supplier_response: r, confirmation_request: req, officer_decision: od } = detail;
+  const failed = latest(detail.rule_results).filter((x) => x.result === "FAIL" || x.result === "UNCERTAIN");
+  const needsOfficer = !od && !locked && inv.rating !== "STRONG";
+  return (
+    <details className="card invoice-card" open={needsOfficer && inv.rating !== null}>
       <summary>
         <div className="invoice-summary">
           <div>
@@ -327,6 +497,7 @@ function InvoiceCard({ detail }: { detail: InvoiceDetail }) {
               · <Link to={`/fta/suppliers/${supplier.trn}`}>{supplier.legal_name}</Link> · {fmtDate(inv.invoice_date)}
             </span>
             <div className="small">{inv.description}</div>
+            {inv.rating_reasons[0] && inv.rating !== "STRONG" && <div className="small muted">{inv.rating_reasons[0]}</div>}
           </div>
           <div className="invoice-figures">
             <span>
@@ -338,11 +509,30 @@ function InvoiceCard({ detail }: { detail: InvoiceDetail }) {
             {failed.map((f) => (
               <RuleChip key={f.id} id={f.rule_id} outcome={f.result} />
             ))}
-            <Chip {...statusInfo.invoice(inv.status)} />
+            <Chip {...statusInfo.rating(inv.rating)} />
+            {od ? <Chip {...statusInfo.invoiceDecision(od.decision)} /> : <Chip {...statusInfo.invoice(inv.status)} />}
           </div>
         </div>
       </summary>
       <div className="invoice-body">
+        <Assessment detail={detail} />
+        {od ? (
+          <div className="officer-record">
+            <h3>Officer decision</h3>
+            <KeyValues
+              items={[
+                ["Decision", <Chip key="d" {...statusInfo.invoiceDecision(od.decision)} />],
+                ["VAT approved", aed(od.approved_vat_amount)],
+                ["Agent rating at the time", od.agent_rating ? statusInfo.rating(od.agent_rating).label : "—"],
+                ["Override", od.overrode_agent ? "Yes, against the agent" : "No"],
+                ["By", `${od.officer_id} · ${fmtDateTime(od.decided_at)}`],
+                ["Comment", od.comment || "—"],
+              ]}
+            />
+          </div>
+        ) : (
+          !locked && <InvoiceDecisionForm detail={detail} onDecided={onDecided} />
+        )}
         <div className="split">
           <div>
             <h3>Rule results</h3>
@@ -369,10 +559,11 @@ function InvoiceCard({ detail }: { detail: InvoiceDetail }) {
               />
             ) : req ? (
               <p className="muted">
-                Requested {fmtDateTime(req.sent_at)}, due {fmtDate(req.due_at)}. {req.reminders ? `${req.reminders} reminders sent.` : ""}
+                Requested {fmtDateTime(req.sent_at)}, due {fmtDate(req.due_at)} ({statusInfo.request(req.status).label.toLowerCase()}).
+                {req.reminders ? ` ${req.reminders} reminders sent.` : ""}
               </p>
             ) : (
-              <p className="muted">No confirmation was requested: the invoice failed automatic checks.</p>
+              <p className="muted">Not sent to the supplier: the agent rated it fail on the document checks.</p>
             )}
           </div>
         </div>

@@ -1,4 +1,4 @@
-"""FTA officer dashboard API. Read-mostly; the decision endpoint is the only write.
+"""FTA officer dashboard API. Read-mostly; the decision endpoints are the only writes.
 
 ponytail: identity is the X-Officer-Id header. Replace with FTA SSO before real data.
 ponytail: aggregates computed in Python over full scans — move to SQL GROUP BY when volumes grow.
@@ -12,6 +12,8 @@ from fastapi import APIRouter, Depends, Header, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, col, or_, select
 
+from app import pipeline
+from app.assessment import precedents, trust_tier
 from app.db import audit, get_session
 from app.models import (
     Application,
@@ -20,19 +22,27 @@ from app.models import (
     ConfirmationRequest,
     Decision,
     Invoice,
+    InvoiceDecision,
     InvoiceStatus,
     OfficerDecision,
+    Rating,
     RequestStatus,
     RuleOutcome,
     RuleResult,
     Supplier,
     SupplierResponse,
 )
-from app.schemas import DecisionIn
+from app.schemas import DecisionIn, InvoiceDecisionIn
 
 router = APIRouter(prefix="/fta", tags=["FTA dashboard"])
 REJECTED_INV = {InvoiceStatus.REJECTED, InvoiceStatus.AUTO_REJECTED, InvoiceStatus.DISPUTED}
-TOLERANCE = 0.05  # AED
+NEEDS_ATTENTION = REJECTED_INV | {InvoiceStatus.FLAGGED, InvoiceStatus.NO_SUPPLIER_RESPONSE}
+TOLERANCE = 0.01  # AED
+
+
+def _not_refundable(inv: Invoice) -> bool:
+    """Rejected by an officer, disputed by the supplier, or rated FAIL and not yet decided."""
+    return inv.status in REJECTED_INV or (inv.rating == Rating.FAIL and inv.officer_decision is None)
 
 
 def _utc(dt: datetime) -> datetime:
@@ -41,8 +51,10 @@ def _utc(dt: datetime) -> datetime:
 
 
 def _failed_rules(session: Session, invoice_id: int) -> list[str]:
-    return list(session.exec(select(RuleResult.rule_id).where(
-        RuleResult.invoice_id == invoice_id, col(RuleResult.result).in_([RuleOutcome.FAIL, RuleOutcome.UNCERTAIN]))).all())
+    """Rules whose latest result on this invoice is FAIL or UNCERTAIN (rules re-run as evidence arrives)."""
+    rows = session.exec(select(RuleResult).where(RuleResult.invoice_id == invoice_id).order_by(RuleResult.id)).all()
+    latest = {r.rule_id: r.result for r in rows}
+    return sorted(r for r, res in latest.items() if res in (RuleOutcome.FAIL, RuleOutcome.UNCERTAIN))
 
 
 def officer(x_officer_id: str = Header()) -> str:
@@ -51,6 +63,7 @@ def officer(x_officer_id: str = Header()) -> str:
 
 @router.get("/overview")
 def overview(_: str = Depends(officer), session: Session = Depends(get_session)):
+    pipeline.expire_overdue(session)
     apps = session.exec(select(Application)).all()
     invs = session.exec(select(Invoice)).all()
     reqs = session.exec(select(ConfirmationRequest)).all()
@@ -68,11 +81,13 @@ def overview(_: str = Depends(officer), session: Session = Depends(get_session))
         "applications_by_status": Counter(a.status for a in apps),
         "invoices_total": len(invs),
         "invoices_by_status": Counter(i.status for i in invs),
+        "invoices_by_rating": Counter(i.rating or "PENDING" for i in invs),
         "refund_requested_aed": round(sum(i.vat_amount for i in invs), 2),
         "refund_verified_aed": round(sum(i.eligible_vat_amount for i in invs), 2),
         "refund_approved_aed": round(sum(d.approved_amount for d in decisions), 2),
         "rejected_applications": sum(a.status == ApplicationStatus.REJECTED for a in apps),
-        "rejected_refund_aed": round(sum(i.vat_amount for i in invs if i.status in REJECTED_INV), 2),
+        "rejected_refund_aed": round(sum(i.vat_amount for i in invs if _not_refundable(i)), 2),
+        "officer_overrides": len(session.exec(select(InvoiceDecision).where(InvoiceDecision.overrode_agent)).all()),
         "supplier_requests_total": len(reqs),
         "supplier_requests_pending": sum(r.status == RequestStatus.PENDING for r in reqs),
         "supplier_response_rate": round(len(responded) / len(reqs), 3) if reqs else None,
@@ -85,6 +100,7 @@ def _application_rows(session: Session, status: ApplicationStatus | None = None,
                       q: str | None = None, supplier_trn: str | None = None, rule_failed: str | None = None,
                       submitted_from: date | None = None, submitted_to: date | None = None,
                       min_vat: float | None = None, max_vat: float | None = None) -> list[dict]:
+    pipeline.expire_overdue(session)
     stmt = select(Application)
     if status:
         stmt = stmt.where(Application.status == status)
@@ -108,9 +124,10 @@ def _application_rows(session: Session, status: ApplicationStatus | None = None,
         if (min_vat is not None and claimed < min_vat) or (max_vat is not None and claimed > max_vat):
             continue
         out.append({**a.model_dump(exclude={"emirates_id_hash"}), "invoice_count": len(invs),
+                    "invoices_by_rating": Counter(i.rating or "PENDING" for i in invs),
                     "vat_claimed": claimed,
                     "vat_eligible": round(sum(i.eligible_vat_amount for i in invs), 2),
-                    "issue_count": sum(i.status not in {InvoiceStatus.VERIFIED, InvoiceStatus.AWAITING_SUPPLIER} for i in invs),
+                    "issue_count": sum(i.status in NEEDS_ATTENTION for i in invs),
                     "failed_rules": sorted(failed)})
     return out
 
@@ -139,6 +156,10 @@ def get_application(app_id: int, _: str = Depends(officer), session: Session = D
             "rule_results": session.exec(select(RuleResult).where(RuleResult.invoice_id == inv.id)).all(),
             "confirmation_request": req,
             "supplier_response": resp,
+            "supplier_trust": trust_tier(session, inv.supplier_trn, exclude_invoice_id=inv.id),
+            "precedents": precedents(session, inv),
+            "officer_decision": session.exec(select(InvoiceDecision).where(InvoiceDecision.invoice_id == inv.id)
+                                             .order_by(col(InvoiceDecision.decided_at).desc())).first(),
         })
     entities = ([f"application:{app_id}"] + [f"invoice:{i['invoice'].id}" for i in invoices]
                 + [f"request:{i['confirmation_request'].id}" for i in invoices if i["confirmation_request"]])
@@ -157,13 +178,13 @@ def decide(app_id: int, body: DecisionIn, officer_id: str = Depends(officer), se
         raise HTTPException(404, "application not found")
     if app.status != ApplicationStatus.READY_FOR_DECISION:
         raise HTTPException(409, f"application is {app.status}, not READY_FOR_DECISION")
-    claimed = sum(i.vat_amount for i in session.exec(select(Invoice).where(Invoice.application_id == app_id)).all())
+    claimed = round(sum(i.vat_amount for i in session.exec(select(Invoice).where(Invoice.application_id == app_id)).all()), 2)
     if body.decision == Decision.REJECTED and body.approved_amount != 0:
         raise HTTPException(422, "a rejection approves AED 0")
     if body.decision != Decision.REJECTED and body.approved_amount <= 0:
         raise HTTPException(422, "an approval needs an approved amount above 0")
     if body.approved_amount > claimed + TOLERANCE:
-        raise HTTPException(422, f"approved amount exceeds the VAT claimed (AED {claimed:,.2f})")
+        raise HTTPException(422, f"approved amount exceeds the VAT claimed (AED {claimed})")
     decision = OfficerDecision(application_id=app_id, officer_id=officer_id, **body.model_dump())
     app.status = ApplicationStatus(body.decision.value)
     session.add(decision)
@@ -171,6 +192,36 @@ def decide(app_id: int, body: DecisionIn, officer_id: str = Depends(officer), se
     session.commit()
     session.refresh(decision)
     return decision
+
+
+@router.post("/invoices/{invoice_id}/decision", response_model=InvoiceDecision)
+def decide_invoice(invoice_id: int, body: InvoiceDecisionIn, officer_id: str = Depends(officer), session: Session = Depends(get_session)):
+    """Approve or reject one invoice. The agent's rating is a recommendation; this is the decision."""
+    inv = session.get(Invoice, invoice_id)
+    if not inv:
+        raise HTTPException(404, "invoice not found")
+    app = session.get(Application, inv.application_id)
+    if app.status in pipeline.DECIDED:
+        raise HTTPException(409, f"application is already {app.status}")
+    if body.approved_vat_amount is not None and body.approved_vat_amount > inv.vat_amount + TOLERANCE:
+        raise HTTPException(422, f"approved amount exceeds the VAT on the invoice (AED {inv.vat_amount})")
+    record = pipeline.decide_invoice(session, inv, officer_id, body.decision, body.comment, body.approved_vat_amount)
+    session.commit()
+    session.refresh(record)
+    return record
+
+
+@router.post("/requests/expire-overdue")
+def expire_overdue(as_of: datetime | None = None, officer_id: str = Depends(officer), session: Session = Depends(get_session)):
+    """Close supplier requests past their time limit; those invoices go forward rated WEAK.
+
+    Runs automatically when the dashboard loads. `as_of` lets a demo move the clock forward.
+    """
+    expired = pipeline.expire_overdue(session, as_of)
+    if expired:
+        audit(session, f"officer:{officer_id}", "expire-overdue", "requests", expired=expired, as_of=str(as_of))
+        session.commit()
+    return {"expired": expired}
 
 
 def _supplier_stats(session: Session, s: Supplier) -> dict:
@@ -182,7 +233,8 @@ def _supplier_stats(session: Session, s: Supplier) -> dict:
         "invoice_count": len(invs),
         "vat_claimed": round(sum(i.vat_amount for i in invs), 2),
         "vat_verified": round(sum(i.eligible_vat_amount for i in invs), 2),
-        "vat_rejected": round(sum(i.vat_amount for i in invs if i.status in REJECTED_INV), 2),
+        "vat_rejected": round(sum(i.vat_amount for i in invs if _not_refundable(i)), 2),
+        "trust": trust_tier(session, s.trn),
         "response_rate": round(sum(r.status == RequestStatus.RESPONDED for r in reqs) / len(reqs), 3) if reqs else None,
     }
 
@@ -225,10 +277,15 @@ def get_supplier(trn: str, _: str = Depends(officer), session: Session = Depends
 
 @router.get("/rejections")
 def rejections(rule_id: str | None = None, supplier_trn: str | None = None, emirate: str | None = None,
-               status: InvoiceStatus | None = None, _: str = Depends(officer), session: Session = Depends(get_session)):
-    stmt = select(Invoice).where(col(Invoice.status).in_(REJECTED_INV | {InvoiceStatus.FLAGGED}))
+               status: InvoiceStatus | None = None, rating: Rating | None = None,
+               _: str = Depends(officer), session: Session = Depends(get_session)):
+    """Invoices that need an officer: rejected, disputed, flagged or without a supplier response."""
+    pipeline.expire_overdue(session)
+    stmt = select(Invoice).where(col(Invoice.status).in_(NEEDS_ATTENTION))
     if status:
         stmt = stmt.where(Invoice.status == status)
+    if rating:
+        stmt = stmt.where(Invoice.rating == rating)
     if supplier_trn:
         stmt = stmt.where(Invoice.supplier_trn == supplier_trn)
     out = []
@@ -256,6 +313,8 @@ def export_csv(status: ApplicationStatus | None = None, emirate: str | None = No
     if rows:
         w = csv.DictWriter(buf, fieldnames=list(rows[0].keys()))
         w.writeheader()
-        w.writerows({**r, "failed_rules": " ".join(r["failed_rules"])} for r in rows)
+        w.writerows({**r, "failed_rules": " ".join(r["failed_rules"]), "flags": " | ".join(r.get("flags") or []),
+                     "invoices_by_rating": " ".join(f"{k}:{v}" for k, v in sorted(r["invoices_by_rating"].items()))}
+                    for r in rows)
     return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv",
                              headers={"Content-Disposition": "attachment; filename=applications.csv"})

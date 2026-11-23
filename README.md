@@ -17,8 +17,8 @@ uv run uvicorn app.main:app --reload --port 8000
 ```
 
 - Interactive API docs: http://localhost:8000/docs
-- On first start the database (SQLite, `veritax.db`) is seeded with 3 synthetic applications and 4 suppliers (`app/seed.py`). Delete `veritax.db` to reseed.
-- Mock auth: supplier endpoints take an `X-Supplier-TRN` header (e.g. `100111111100003`); FTA endpoints take an `X-Officer-Id` header.
+- On first start the database (SQLite, `veritax.db`) is seeded with 3 synthetic applications, 8 suppliers and 14 invoices covering every rating (`app/seed.py`). Delete `veritax.db` to reseed. A local file from an older schema is rebuilt automatically.
+- Mock auth: supplier endpoints take an `X-Supplier-TRN` header (e.g. `100111111100003`); FTA endpoints take an `X-Officer-Id` header; the applicant status endpoint takes `X-Emirates-Id`.
 - Tests: `uv run pytest`
 
 ### The portal (`web/`)
@@ -37,8 +37,8 @@ cd web && npm run dev
 
 - Sign in on the home page with a demo supplier (the seeded TRNs) or the demo officer. Sign-in is a stand-in for EmaraTax / UAE PASS and FTA SSO: it only sets the mock headers above.
 - **Supplier portal** (`/portal/supplier`): queue of confirmation requests under the supplier's TRN; the four questions plus the declaration per invoice; bulk confirm for invoices issued and paid as submitted; CSV template download and upload, checked row by row in the browser and saved all-or-nothing.
-- **FTA dashboard** (`/portal/fta`): overview (refund totals, new applications, applications by status, invoice outcomes, top rule failures, supplier response rate and time); applications with filters held in the URL and CSV export; application detail with rule results and evidence, the submitted-vs-confirmed comparison, a recommended outcome, the officer decision and the audit trail; supplier search and detail; rejections by rule, status, supplier and emirate.
-- **Maskan simulator** (`/portal/maskan`): submit a test application with invoices and watch it go through the pipeline.
+- **FTA dashboard** (`/portal/fta`): overview (refund totals, new applications, applications by status, agent ratings and officer overrides, top rule failures, supplier response rate and time); applications with filters held in the URL, rating counts and CSV export; application detail with each invoice's rating, reasons, fix guidance, supplier trust lane and precedents, a per-invoice approve or reject (recorded as an override when it goes against the rating), rule results and evidence, the submitted-vs-confirmed comparison, application flags, a recommended outcome, the application decision and the audit trail; supplier search and detail with trust lane and registry status; rejections and flags by rating, rule, status, supplier and emirate.
+- **Maskan simulator** (`/portal/maskan`): submit a test application with full Article 59 particulars, permit date and contract value, and watch it go through the pipeline; **Applicant status** (`/portal/maskan/status`) shows what Maskan tells the applicant (`GET /maskan/applications/{ref}/status`).
 - Portal checks: `npm test` (unit tests for CSV, VAT period and formatting helpers) and `npm run build` (type check + bundle).
 
 | Path | What |
@@ -46,16 +46,19 @@ cd web && npm run dev
 | `app/main.py` | FastAPI app, CORS, router wiring |
 | `app/models.py` | Tables and status enums (the [data model](#data-model)) |
 | `app/schemas.py` | Request bodies (API contract) |
-| `app/rules.py` | Versioned rule engine: `TI-*`, `NR-*`, `SC-*` |
-| `app/pipeline.py` | Ingest → rules → confirmation requests → reconcile → application rollup |
-| `app/api/maskan.py` | `POST /maskan/applications` (Maskan ingestion) |
+| `app/rules.py` | Versioned rule engine: `TI-*`, `NR-*`, `CS-*`, `SC-*` |
+| `app/eligibility.py` | Eligible / not eligible / review catalogue from VATGRH1 Appendix 1 (rule `NR-02`) |
+| `app/assessment.py` | The rating (STRONG, WEAK, FAIL), reasons, fix guidance, supplier trust lane, precedents |
+| `app/pipeline.py` | Ingest → rules → confirmation requests → reconcile → rating → application rollup |
+| `app/agent.py` | Interface for the reasoning agent (OCR, second opinion). Not wired to a model yet |
+| `app/api/maskan.py` | `POST /maskan/applications` (Maskan ingestion), `GET /maskan/applications/{ref}/status` (applicant view) |
 | `app/api/supplier.py` | `/supplier/*` (EmaraTax supplier portal) |
 | `app/api/fta.py` | `/fta/*` (FTA officer dashboard) |
 | `app/api/meta.py` | `GET /meta/rules`: the rule catalog the portal uses to label rule IDs |
 | `app/seed.py` | Synthetic fixtures |
 | `web/src/pages/supplier/` | Supplier portal: queue, confirmation form, CSV upload |
 | `web/src/pages/fta/` | FTA dashboard: overview, applications, application detail, suppliers, rejections |
-| `web/src/pages/maskan/` | Maskan simulator |
+| `web/src/pages/maskan/` | Maskan simulator and the applicant status view |
 | `web/src/lib/` | API-independent helpers (CSV, VAT periods, formatting, status vocabulary) |
 
 Working on the repo: see [CONTRIBUTING.md](CONTRIBUTING.md) for branches (`Suhayl`, `Haaziq`, `Aaron`) and the PR flow.
@@ -68,6 +71,7 @@ Working on the repo: see [CONTRIBUTING.md](CONTRIBUTING.md) for branches (`Suhay
 2. [End-to-end flow](#end-to-end-flow)
 3. [Components](#components)
 4. [Verification rules](#verification-rules)
+   - [Rating: strong, weak or fail](#rating-strong-weak-or-fail)
 5. [Supplier confirmation (EmaraTax portal)](#supplier-confirmation-emaratax-portal)
 6. [FTA dashboard](#fta-dashboard)
 7. [Statuses](#statuses)
@@ -184,7 +188,7 @@ flowchart LR
 
 ## Verification rules
 
-Rules are grouped and versioned so the engine can show which rule set a decision was made under. The list below is the starting set; each rule must be confirmed against the current FTA guide (VATGRH1, revised April 2026) and the VAT Executive Regulation before it goes live.
+Rules are grouped and versioned so the engine can show which rule set a decision was made under. The list below is the starting set; each rule must be confirmed against the current FTA guide (VATGRH1, June 2026, which includes the items added by FTA Decision No. 5 of 2026) and the VAT Executive Regulation before it goes live.
 
 ### A. Tax invoice validity
 
@@ -192,26 +196,38 @@ Rules are grouped and versioned so the engine can show which rule set a decision
 |----|-------|
 | `TI-01` | The document is a tax invoice: it is titled "Tax Invoice", not a quotation, proforma or receipt. |
 | `TI-02` | It shows the supplier's name, address and TRN. |
-| `TI-03` | The supplier TRN is valid and was active on the invoice date. |
+| `TI-03` | The supplier TRN is 15 digits starting with 100, is in the FTA registry, and was active on the invoice date. |
 | `TI-04` | It shows the invoice number and the date of issue. |
 | `TI-05` | It describes the goods or services supplied. |
 | `TI-06` | It shows the taxable amount, the VAT rate and VAT amount, and the total, in AED. |
 | `TI-07` | The arithmetic adds up: taxable amount × rate = VAT amount, and taxable amount + VAT = total, within a rounding tolerance. |
 | `TI-08` | The recipient is the applicant. If the invoice is addressed to a contractor, consultant, agent or related party, it states that it is for the applicant's use and shows the plot or address. |
+| `TI-09` | It is a **full** tax invoice (Executive Regulation Article 59(1)). A **simplified** tax invoice (Article 59(2), five particulars) fails: the scheme does not accept it (VATGRH1 section 5.1). If the full particulars were not all captured, the result is `UNCERTAIN`, never a guess. |
 
 ### B. Refund eligibility (New Residence)
 
 | ID | Check |
 |----|-------|
 | `NR-01` | The invoice shows the plot number or residence address, and it matches the application. |
-| `NR-02` | The goods or services are eligible: building works or materials for the residence, not excluded items such as furniture or electrical appliances. |
+| `NR-02` | The goods or services are eligible under VATGRH1 Appendix 1, checked line by line (`app/eligibility.py`). Items the guide treats both ways (CCTV, intelligent lighting), mixed invoices and unrecognised descriptions return `UNCERTAIN` for a person to decide. Items added from 1 January 2026 (pools, gym, garage, landscaping, smart and security systems) are included. |
 | `NR-03` | The invoice date falls within the construction period and before completion, except retention invoices. |
 | `NR-04` | The claim is lodged within 12 months of the residence's completion date (Executive Regulation Article 66(3)). |
-| `NR-05` | The invoice has not been claimed in another application. This catches duplicates across applications and across applicants. |
+| `NR-05` | The invoice has not been claimed in another application. The later claim fails; the earlier claim of the same invoice is flagged too (`UNCERTAIN`), because either could be the genuine one. |
 | `NR-06` | Where an intermediary is the recipient, it confirms that it is not recovering input VAT on the invoice. |
 | `NR-07` | Retention invoices are only accepted in a retention claim and need proof of payment. |
 
-### C. Supplier confirmation and reconciliation
+### C. Common-sense checks on the values
+
+| ID | Check |
+|----|-------|
+| `CS-01` | The invoices in an application total no more than the construction contract value plus 10%. Raised as a flag on the application. |
+| `CS-02` | No single invoice is larger than the whole construction contract. |
+| `CS-03` | The invoice total is positive and below AED 20 million. |
+| `CS-04` | No other invoice in the application has the same supplier, date and amount under a different number. |
+
+These never fail an invoice on their own. They return `UNCERTAIN` so an officer looks.
+
+### D. Supplier confirmation and reconciliation
 
 | ID | Check |
 |----|-------|
@@ -223,6 +239,24 @@ Rules are grouped and versioned so the engine can show which rule set a decision
 | `SC-06` | Optional, once FTA data access is agreed: the declared period's return has been filed. |
 
 Each rule returns `PASS`, `FAIL`, `UNCERTAIN` or `NOT_APPLICABLE`, together with its evidence.
+
+### Rating: strong, weak or fail
+
+Every invoice gets one rating from the agent, with reasons. It is a recommendation; the FTA officer decides.
+
+| Rating | When |
+|--------|------|
+| **STRONG** | Every check passed and the supplier confirmed the invoice. |
+| **WEAK** | Something needs a person: an `UNCERTAIN` result, a supplier correction or an inconsistent return period (`SC-02` to `SC-05`), no supplier response within 5 business days, the same invoice claimed later elsewhere, or a supplier on the watch list. |
+| **FAIL** | A hard rule failed, or the supplier says it did not issue the invoice. |
+
+- **No recommendation before the supplier step closes.** Until the supplier answers or the time limit passes, the rating is empty, unless a hard rule has already failed.
+- **Supplier confirmation is evidence, not proof.** Every earlier check still counts after the supplier confirms.
+- **Supplier silence does not block the applicant.** After 5 business days the request expires and the invoice goes forward as WEAK.
+- **Nothing is rejected automatically.** A FAIL invoice is `FLAGGED` for the officer and is not sent to the supplier.
+- **Fix guidance.** Each WEAK or FAIL invoice carries plain-language steps that would make it strong. The applicant sees them through `GET /maskan/applications/{ref}/status`, which shows nothing a supplier declared about its own tax affairs.
+- **Supplier trust lane.** `TRUSTED` after 3 confirmed and verified invoices; `WATCH` after repeated corrections or missed responses, or when an officer flags the supplier. Invoices from a `WATCH` supplier are never rated above WEAK. A dispute does not count against the supplier.
+- **Precedents.** Each officer decision on an invoice is stored with the agent's rating and the findings it was based on. Later invoices with the same findings show those decisions to the officer. Precedents inform; they never change a rating on their own.
 
 ---
 
@@ -238,13 +272,13 @@ Suppliers see a queue of invoices issued under their TRN that are awaiting confi
 4. **VAT return period.** The tax period in which the invoice was included in the supplier's VAT return, for example `2026-Q2` or `Apr-2026`.
 5. **Declaration.** The supplier confirms that the information is correct, and the response is timestamped and tied to the signed-in EmaraTax user.
 
-Suppliers can respond to invoices one by one or in bulk, with a CSV upload for large contractors. Requests expire after a set SLA; after the reminders run out, an expired invoice is flagged `NO_SUPPLIER_RESPONSE`.
+Suppliers can respond to invoices one by one or in bulk, with a CSV upload for large contractors. Requests expire after 5 business days. An expired invoice is flagged `NO_SUPPLIER_RESPONSE`, rated WEAK and passed to the officer, so a silent supplier does not block the applicant.
 
 ---
 
 ## FTA dashboard
 
-The dashboard is for FTA officers only and is read-mostly; the officer's approve and reject actions are the only writes.
+The dashboard is for FTA officers only and is read-mostly; the officer's approve and reject actions are the only writes. An officer can decide each invoice (`POST /fta/invoices/{id}/decision`) and then the application.
 
 ### Overview
 
@@ -351,7 +385,7 @@ veri-tax/
 
 ## Security and audit
 
-- **Data protection.** Applicant and supplier data is personal and tax-confidential. It is encrypted in transit and at rest, hosted in the UAE, and kept for a defined retention period.
+- **Data protection.** Applicant and supplier data is personal and tax-confidential. Emirates IDs are stored only as a keyed hash. The applicant never sees a supplier's declarations, and a supplier never sees the applicant's ID. It is encrypted in transit and at rest, hosted in the UAE, and kept for a defined retention period.
 - **Identity.** Suppliers sign in through EmaraTax / UAE PASS, and FTA officers through FTA single sign-on. Access is role-based: a supplier sees only invoices under its own TRN.
 - **Human in the loop.** Agents and the rule engine recommend; only an FTA officer approves or rejects a refund.
 - **Explainability.** Every outcome links to the rule IDs and versions, the extracted fields with confidence scores, and the supplier response it used.
@@ -379,7 +413,9 @@ veri-tax/
 - **Maskan integration.** Is there an API with webhooks, or do we poll? What is the document format, and does Maskan pass application metadata (plot, completion date)?
 - **EmaraTax integration.** Will the supplier portal be embedded in EmaraTax, linked from it, or standalone with EmaraTax / UAE PASS sign-in?
 - **VAT return data.** Can veri-tax check a supplier's filed returns (`SC-06`), or does it rely only on the supplier's declaration?
-- **Supplier SLA.** How long does a supplier have to respond, and what happens when it doesn't?
+- **Supplier SLA.** Set to 5 business days, after which the invoice goes forward as WEAK. To be confirmed with the FTA.
+- **Decision No. 5 effective date.** Do the items added from 1 January 2026 apply by invoice date or by completion date? Invoices dated before 2026 for those items go to a person for now.
+- **Reasoning agent.** Which model provider runs OCR and the second opinion on review items (`app/agent.py`)?
 - **Rule source of truth.** Which FTA team signs off the rule set and its updates?
 - **Hosting.** UAE cloud region and data residency requirements.
 
@@ -388,6 +424,7 @@ veri-tax/
 ## References
 
 - FTA: [VAT Refund for UAE Nationals Building New Residences (service page)](https://tax.gov.ae/en/services/vat.refund.for.uae.nationals.homebuilders.aspx)
+- FTA: [VAT Guide VATGRH1, June 2026](https://tax.gov.ae/en/content/vat.refund.for.uae.nationals.building.new.residences.2026.aspx)
 - FTA: [UAE Nationals Building New Residences](https://tax.gov.ae/en/taxes/Vat/refunds/uae.nationals.building.new.residences.aspx)
 - PwC: [VAT Guide VATGRH1, VAT Refund for UAE Nationals Building Residences (2026)](https://www.pwc.com/m1/en/services/tax/middle-east-tax-news-alerts/2026/uae-vat-refund-nationals-building-residences.html)
 - Crowe: [FTA issues revised VAT refund guide for UAE nationals building new residences](https://www.crowe.com/ae/news/fta-issues-revised-vat-refund-guide-for-uae-nationals-building-new-residences)

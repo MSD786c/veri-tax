@@ -9,8 +9,8 @@ import { useRules } from "../../lib/rules.tsx";
 import { EMIRATES, statusInfo } from "../../lib/status.ts";
 import { useApi } from "../../lib/useApi.ts";
 
-const KEYS = ["rule_id", "status", "emirate", "supplier_trn"] as const;
-const STATUSES: InvoiceStatus[] = ["AUTO_REJECTED", "DISPUTED", "FLAGGED", "REJECTED"];
+const KEYS = ["rating", "rule_id", "status", "emirate", "supplier_trn"] as const;
+const STATUSES: InvoiceStatus[] = ["FLAGGED", "NO_SUPPLIER_RESPONSE", "DISPUTED", "REJECTED"];
 
 export default function Rejections() {
   const { values: f, set, clear, active } = useFilters(KEYS);
@@ -29,9 +29,20 @@ export default function Rejections() {
 
   return (
     <>
-      <PageHeader title="Rejections" subtitle="Invoices that were rejected automatically, disputed by their supplier, or flagged for review." />
+      <PageHeader
+        title="Rejections and flags"
+        subtitle="Invoices that need an officer: flagged by the agent, without a supplier response, disputed by the supplier, or rejected by an officer."
+      />
       <ErrorBanner error={error} />
       <FilterBar onClear={clear} active={active}>
+        <select aria-label="Rating" value={f.rating} onChange={(e) => set({ rating: e.target.value })}>
+          <option value="">Any rating</option>
+          {(["FAIL", "WEAK", "STRONG"] as const).map((r) => (
+            <option key={r} value={r}>
+              Rated {statusInfo.rating(r).label.toLowerCase()}
+            </option>
+          ))}
+        </select>
         <select aria-label="Rule" value={f.rule_id} onChange={(e) => set({ rule_id: e.target.value })}>
           <option value="">Any rule</option>
           {ids.map((id) => (
@@ -41,7 +52,7 @@ export default function Rejections() {
           ))}
         </select>
         <select aria-label="Status" value={f.status} onChange={(e) => set({ status: e.target.value })}>
-          <option value="">Rejected, disputed or flagged</option>
+          <option value="">Any status</option>
           {STATUSES.map((s) => (
             <option key={s} value={s}>
               {statusInfo.invoice(s).label}
@@ -68,6 +79,7 @@ export default function Rejections() {
         <div className="stat-row stat-row-stack">
           <StatTile label="Invoices" value={num(rows.length)} tone="critical" />
           <StatTile label="VAT at stake" value={aedCompact(total)} sub={aed(total)} />
+          <StatTile label="Awaiting an officer" tone="warning" value={num(rows.filter((r) => !r.invoice.officer_decision && r.invoice.status !== "DISPUTED").length)} sub="Flagged or no response, not yet decided" />
         </div>
         <Card title="VAT at stake by supplier">
           <BarList
@@ -95,7 +107,8 @@ export default function Rejections() {
                   <th>Supplier</th>
                   <th>Application</th>
                   <th className="num">VAT</th>
-                  <th>Reasons</th>
+                  <th>Findings</th>
+                  <th>Rating</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -127,10 +140,14 @@ export default function Rejections() {
                             <RuleChip id={id} /> {rule(id)?.title}
                           </li>
                         ))}
+                        {r.invoice.status === "NO_SUPPLIER_RESPONSE" && <li className="muted">Supplier did not respond within 5 business days</li>}
                       </ul>
                     </td>
                     <td>
-                      <Chip {...statusInfo.invoice(r.invoice.status)} />
+                      <Chip {...statusInfo.rating(r.invoice.rating)} />
+                    </td>
+                    <td>
+                      {r.invoice.officer_decision ? <Chip {...statusInfo.invoiceDecision(r.invoice.officer_decision)} /> : <Chip {...statusInfo.invoice(r.invoice.status)} />}
                     </td>
                   </tr>
                 ))}

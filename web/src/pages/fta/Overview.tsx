@@ -1,21 +1,14 @@
 import { Link } from "react-router-dom";
-import type { ApplicationRow, InvoiceStatus, Overview as OverviewData } from "../../api/types.ts";
+import type { ApplicationRow, Overview as OverviewData } from "../../api/types.ts";
 import { BarList, Meter, SegmentedBar, type Segment } from "../../components/charts.tsx";
 import { Card, Chip, Empty, ErrorBanner, Loading, PageHeader, StatTile, TableWrap } from "../../components/ui.tsx";
 import { aed, aedCompact, fmtDate, hours, num, pct, plural } from "../../lib/format.ts";
 import { useRules } from "../../lib/rules.tsx";
-import { APPLICATION_ORDER, statusInfo } from "../../lib/status.ts";
+import { APPLICATION_ORDER, RATING_ORDER, statusInfo } from "../../lib/status.ts";
 import { useApi } from "../../lib/useApi.ts";
 
-// Invoice outcomes as one whole. Four parts on purpose: warning and serious side by side fail the
-// palette validator's normal-vision floor, and the API already counts disputes as rejections
-// (rejected_refund_aed). Statuses not listed fold into "Other".
-const OUTCOMES: { label: string; tone: Segment["tone"]; statuses: InvoiceStatus[] }[] = [
-  { label: "Verified", tone: "good", statuses: ["VERIFIED", "AUTO_VERIFIED"] },
-  { label: "Awaiting supplier", tone: "info", statuses: ["AWAITING_SUPPLIER", "NEEDS_SUPPLIER", "SUPPLIER_CONFIRMED", "RECONCILED"] },
-  { label: "Flagged for review", tone: "warning", statuses: ["FLAGGED", "NO_SUPPLIER_RESPONSE"] },
-  { label: "Rejected or disputed", tone: "critical", statuses: ["AUTO_REJECTED", "REJECTED", "DISPUTED"] },
-];
+// The agent's rating per invoice, as one whole (validated colour order: good, warning, critical, info).
+const RATING_PARTS = RATING_ORDER.map((r) => ({ key: r, ...statusInfo.rating(r) }));
 
 export default function Overview() {
   const { data, error, loading } = useApi<OverviewData>("/fta/overview");
@@ -25,17 +18,10 @@ export default function Overview() {
   if (loading && !data) return <Loading />;
   if (!data) return <ErrorBanner error={error} />;
 
-  const known = new Set(OUTCOMES.flatMap((o) => o.statuses));
-  const parts: Segment[] = OUTCOMES.map((o) => ({
-    key: o.label,
-    label: o.label,
-    tone: o.tone,
-    value: o.statuses.reduce((s, st) => s + (data.invoices_by_status[st] ?? 0), 0),
-  }));
-  const other = Object.entries(data.invoices_by_status).reduce((s, [k, v]) => s + (known.has(k as InvoiceStatus) ? 0 : (v ?? 0)), 0);
-  if (other) parts.push({ key: "other", label: "Other", tone: "neutral", value: other });
+  const parts: Segment[] = RATING_PARTS.map((p) => ({ key: p.key, label: p.label, tone: p.tone, value: data.invoices_by_rating[p.key] ?? 0 }));
 
-  const responded = data.supplier_requests_total - data.supplier_requests_pending;
+  const responded = Math.round((data.supplier_response_rate ?? 0) * data.supplier_requests_total);
+  const expired = data.supplier_requests_total - data.supplier_requests_pending - responded; // past the 5-business-day limit
 
   return (
     <>
@@ -53,7 +39,7 @@ export default function Overview() {
         <div className="stat-row stat-row-3">
           <StatTile label="Verified (approx.)" tone="good" value={aedCompact(data.refund_verified_aed)} sub={`${pct(data.refund_requested_aed ? data.refund_verified_aed / data.refund_requested_aed : null)} of requested`} />
           <StatTile label="Approved by officers" value={aedCompact(data.refund_approved_aed)} sub={plural((data.applications_by_status.APPROVED ?? 0) + (data.applications_by_status.PARTIALLY_APPROVED ?? 0), "application")} />
-          <StatTile label="Rejected or disputed" tone="critical" value={aedCompact(data.rejected_refund_aed)} sub={`${plural(data.rejected_applications, "application")} rejected`} />
+          <StatTile label="Rejected, disputed or rated fail" tone="critical" value={aedCompact(data.rejected_refund_aed)} sub={`${plural(data.rejected_applications, "application")} rejected`} />
         </div>
       </section>
 
@@ -77,8 +63,16 @@ export default function Overview() {
           />
         </Card>
 
-        <Card title="Invoice outcomes" subtitle={`${num(data.invoices_total)} invoices`}>
+        <Card
+          title="Agent ratings"
+          subtitle={`${plural(data.invoices_total, "invoice")}. A recommendation only: officers decide.`}
+          actions={<Link to="/fta/rejections?rating=FAIL">Fails →</Link>}
+        >
           <SegmentedBar parts={parts} unit="invoices" />
+          <p className="muted small rating-note">
+            {plural(data.officer_overrides, "officer decision")} went against the agent's rating. Those decisions become precedents for similar
+            invoices.
+          </p>
         </Card>
 
         <Card title="Most common rule failures" subtitle="Invoices failing each rule. Select a rule to see the rejections.">
@@ -102,7 +96,10 @@ export default function Overview() {
           <div className="meter-block">
             <div className="meter-head">
               <span className="meter-value">{pct(data.supplier_response_rate)}</span>
-              <span className="muted">responded · {num(responded)} of {num(data.supplier_requests_total)}</span>
+              <span className="muted">
+                responded · {num(responded)} of {num(data.supplier_requests_total)}
+                {expired > 0 ? ` · ${num(expired)} expired without an answer` : ""}
+              </span>
             </div>
             <Meter value={data.supplier_response_rate} label="Supplier response rate" />
           </div>
