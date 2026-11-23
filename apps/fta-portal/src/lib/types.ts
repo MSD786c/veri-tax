@@ -33,11 +33,65 @@ export interface SupplierResponse {
 export interface InvoiceRow {
   invoice: Invoice;
   supplier: { legal_name: string } | null;
-  rule_results: { rule_id: string; result: "PASS" | "FAIL" | "UNCERTAIN" | "NOT_APPLICABLE" }[];
+  /** Every run of every rule, oldest first. loadAll keeps only the latest result per rule_id. */
+  rule_results: { id: number; rule_id: string; result: "PASS" | "FAIL" | "UNCERTAIN" | "NOT_APPLICABLE" }[];
   confirmation_request: { sent_at: string; status: string } | null;
   supplier_response: SupplierResponse | null;
   supplier_trust: string | { tier: string };
   officer_decision: OfficerInvoiceDecision | null;
+  document: DocumentMeta | null;
+  extraction: Extraction | null;
+  agent_runs: AgentRun<ComplianceOutput>[];
+}
+
+// ── original documents and advisory agents (v0.2) ──
+export interface DocumentMeta {
+  id: number;
+  filename: string;
+  content_type: string;
+  size: number;
+  source: string;
+  status: string; // UPLOADED | STORED | EXTRACTING | EXTRACTED | FAILED
+  error: string | null;
+  label: string | null;
+  uploaded_at: string;
+}
+
+export interface Extraction {
+  document_type: string;
+  model: string;
+  created_at: string;
+  fields: Record<string, { value: unknown; confidence: number }>;
+}
+
+export interface DocumentRow {
+  document: DocumentMeta;
+  extraction: Extraction | null;
+  linked_invoices: { invoice_id: number; invoice_no: string; status: string; maskan_ref: string }[];
+}
+
+export interface AgentRun<T> {
+  id: number;
+  kind: string;
+  model: string;
+  at: string;
+  error: string | null;
+  output: T | null;
+}
+
+export interface ComplianceOutput {
+  recommendations?: { rule_id: string; recommendation: string; reason: string }[];
+  eligible_goods?: boolean;
+  notes?: string;
+}
+
+export interface BriefOutput {
+  recommended_decision?: string;
+  recommended_amount?: number;
+  summary?: string;
+  reasons?: string[];
+  risks?: string[];
+  follow_up?: string[];
 }
 
 export interface AuditEvent {
@@ -70,6 +124,7 @@ export interface ApplicationDetail {
   invoices: InvoiceRow[];
   decision: { decision: string; approved_amount: number; officer_id: string; decided_at: string; comments: string } | null;
   audit: AuditEvent[];
+  agent_runs: AgentRun<BriefOutput>[];
 }
 
 export interface SupplierStat {

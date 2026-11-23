@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from app import agents, db, documents, llm
 from app.api import fta, maskan, maskan_portal, meta, supplier
@@ -45,6 +46,7 @@ app.include_router(supplier.router)
 app.include_router(fta.router)
 app.include_router(maskan_portal.router)
 app.include_router(meta.router)
+app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")  # fonts for the intake page
 
 
 @app.get("/health", tags=["meta"])

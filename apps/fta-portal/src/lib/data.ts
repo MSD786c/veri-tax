@@ -47,6 +47,10 @@ export async function loadAll(): Promise<Loaded> {
     const [label, tone] = APP_STATUS[a.status] ?? [nice(a.status), "neutral" as Tone];
     const view = { ...a, detail: d, label, tone, decided: DECIDED.has(a.status), invoices: [] as FlatInvoice[] } as AppView;
     for (const row of d.invoices) {
+      // Rules re-run (e.g. EX-01 once the original document is read), so keep only the latest result per rule.
+      const latest = new Map(row.rule_results.map((x) => [x.rule_id, x] as const));
+      for (const x of row.rule_results) if (x.id > latest.get(x.rule_id)!.id) latest.set(x.rule_id, x);
+      row.rule_results = [...latest.values()];
       const inv = row.invoice;
       const od = row.officer_decision;
       const status_ui: InvStatus = od ? (od.decision === "APPROVED" ? "approved" : "rejected") : RATING[inv.rating ?? ""] ?? "pending";

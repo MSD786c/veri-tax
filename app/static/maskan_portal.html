@@ -1,112 +1,208 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:,">
-<title>Maskan Invoice Portal</title>
+<link rel="preload" href="/static/fonts/newsreader-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<title>Maskan · Invoice intake</title>
 <style>
+  /* Same fonts and tokens as the FTA verification portal (apps/fta-portal base.css + portal.css), so the portals read as one family. */
+  @font-face { font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900; src: url('/static/fonts/inter-latin-wght-normal.woff2') format('woff2-variations'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900; src: url('/static/fonts/inter-latin-ext-wght-normal.woff2') format('woff2-variations'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+  @font-face { font-family: 'Newsreader Variable'; font-style: normal; font-display: swap; font-weight: 200 800; src: url('/static/fonts/newsreader-latin-wght-normal.woff2') format('woff2-variations'); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'Newsreader Variable'; font-style: normal; font-display: swap; font-weight: 200 800; src: url('/static/fonts/newsreader-latin-ext-wght-normal.woff2') format('woff2-variations'); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
   :root {
-    --gold:#B68A35; --gold-dark:#8C6A28; --gold-soft:#F6EFE1;
-    --navy:#0F2A3F; --navy-2:#17384F;
-    --ink:#1C2127; --muted:#5B6470; --line:#E3E0D8; --bg:#F4F3EF; --surface:#FFFFFF;
-    --ok:#1F7A4D; --ok-bg:#E5F3EB; --warn:#8A5A00; --warn-bg:#FBF0D6; --bad:#A3302A; --bad-bg:#FBE8E6;
-    --info:#1F5F8B; --info-bg:#E6EFF6; --neutral:#5B6470; --neutral-bg:#EEEDEA;
-    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Arabic", sans-serif;
-    --r-card:8px; --r-ctl:6px; --shadow:0 1px 2px rgba(16,24,40,.06);
+    --ink: #0f1f3d; --ink-2: #2b3a5a; --muted: #6d6b66; --line: #e7e2d3; --line-2: #e0dac8; --soft: #faf8f2; --tint: #f6f2e6;
+    --gold: #b8913a; --gold-d: #8d6a21; --gold-l: #f4dd9a; --gold-grad: linear-gradient(135deg, #f6e3a6 0%, #d4ad54 52%, #9a742a 100%);
+    --ok: #0a7d54; --ok-bg: #e7f5ee; --warn: #8a5d00; --warn-bg: #fcf1d6; --bad: #c0243d; --bad-bg: #fdebee;
+    --paper: #f5f1e7; --paper-2: #faf7ef; --navy: #0f1f3d; --navy-2: #1b3159;
+    --mint: #d7efdf; --peach: #f8dcc3; --lilac: #e6dcf7; --sky: #d3e2fb; --blush: #fbd3d3; --sand: #f3e5c0;
+    --r-card: 30px; --r-md: 20px;
+    --display: 'Newsreader Variable', 'Newsreader', Georgia, 'Times New Roman', serif;
+    --ui: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --tint-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 30px 44px -36px rgba(15, 31, 61, .38);
+    --ease-out: cubic-bezier(.22, 1, .36, 1); --spring: cubic-bezier(.22, 1.2, .36, 1);
   }
-  * { box-sizing:border-box }
-  html, body { overflow-x:hidden }
-  body { margin:0; font:14px/1.5 var(--font); color:var(--ink); background:var(--bg); min-height:100vh; display:flex; flex-direction:column }
-  .gov { background:var(--navy); color:var(--surface); font-size:12px; height:32px; display:flex; align-items:center; padding:0 24px; letter-spacing:.01em }
-  .gov span { opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  header { background:var(--surface); border-bottom:3px solid var(--gold); }
-  .hd { max-width:1280px; margin:0 auto; padding:16px 24px; display:flex; align-items:center; gap:12px; flex-wrap:wrap }
-  .mono { width:36px; height:36px; border-radius:6px; background:var(--gold); color:var(--surface); display:grid; place-items:center; font-weight:700; font-size:18px; flex:none }
-  .brand { display:flex; flex-direction:column; line-height:1.2 }
-  .brand b { font-size:20px; font-weight:700; color:var(--ink); letter-spacing:-.01em }
-  .brand span { color:var(--muted); font-size:13px }
-  .hd .note { margin-inline-start:auto; color:var(--muted); font-size:12px; border:1px solid var(--line); border-radius:999px; padding:4px 12px; background:var(--bg) }
-  main { width:100%; max-width:1280px; margin:0 auto; padding:32px 24px 40px; display:grid; grid-template-columns:minmax(0,1fr); gap:24px; flex:1 }
-  .intro h1 { margin:0 0 4px; font-size:24px; font-weight:700; letter-spacing:-.01em }
-  .intro p { margin:0; color:var(--muted); max-width:720px }
-  .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:24px; box-shadow:var(--shadow) }
-  h2 { margin:0 0 4px; font-size:16px; font-weight:600 } p.sub { margin:0 0 16px; color:var(--muted) }
-  #drop { border:1.5px dashed var(--line); border-radius:var(--r-card); padding:32px 16px; text-align:center; color:var(--muted); cursor:pointer; transition:background .15s, border-color .15s; background:var(--surface); overflow-wrap:anywhere }
-  #drop::before { content:"\2191"; display:block; width:40px; height:40px; margin:0 auto 8px; border-radius:999px; background:var(--gold-soft); color:var(--gold-dark); font-size:20px; line-height:40px; font-weight:700 }
-  #drop.over, #drop:hover { border-color:var(--gold); background:var(--gold-soft); color:var(--ink) }
-  #drop:focus-visible, input:focus-visible, button:focus-visible, a:focus-visible { outline:2px solid var(--gold); outline-offset:2px }
-  .row { display:flex; gap:12px; margin-top:16px; flex-wrap:wrap }
-  input[type=text] { flex:1; min-width:0; flex-basis:220px; height:40px; padding:0 12px; border:1px solid var(--line); border-radius:var(--r-ctl); font:inherit; color:var(--ink); background:var(--surface) }
-  input[type=text]::placeholder { color:var(--muted) }
-  input[type=text]:focus { border-color:var(--gold); outline:none; box-shadow:0 0 0 3px var(--gold-soft) }
-  button { height:40px; padding:0 20px; border:1px solid var(--gold); border-radius:var(--r-ctl); background:var(--gold); color:var(--surface); font:inherit; font-weight:600; cursor:pointer; transition:background .15s }
-  button:hover:not(:disabled) { background:var(--gold-dark); border-color:var(--gold-dark) }
-  button:disabled { opacity:.45; cursor:default }
-  button.ghost { height:auto; padding:4px 12px; background:var(--surface); color:var(--ink); border:1px solid var(--line); font-size:12px }
-  button.ghost:hover:not(:disabled) { background:var(--gold-soft); border-color:var(--gold); color:var(--ink) }
-  #msg { margin-top:12px; color:var(--muted); min-height:1.5em; overflow-wrap:anywhere }
-  .scroll { overflow-x:auto; margin:0 -24px; padding:0 24px }
-  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums }
-  th { text-align:start; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); padding:8px; border-bottom:1px solid var(--line); white-space:nowrap; background:var(--surface) }
-  td { padding:12px 8px; border-bottom:1px solid var(--line); vertical-align:top }
-  td.num { text-align:end; white-space:nowrap } th.num { text-align:end }
-  tr.main { cursor:pointer } tr.main:hover td { background:var(--gold-soft) }
-  tr.main.is-open td { background:var(--gold-soft); border-bottom-color:transparent }
-  .pill::first-letter { text-transform:uppercase }
-  .pill { display:inline-block; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:600; line-height:18px; text-transform:lowercase; white-space:nowrap; background:var(--neutral-bg); color:var(--neutral) }
-  .EXTRACTED,.VERIFIED,.TAX_INVOICE { background:var(--ok-bg); color:var(--ok) }
-  .UPLOADED,.EXTRACTING,.RECEIVED { background:var(--info-bg); color:var(--info) }
-  .FLAGGED,.NO_SUPPLIER_RESPONSE,.AWAITING_SUPPLIER,.AWAITING_SUPPLIERS { background:var(--warn-bg); color:var(--warn) }
-  .FAILED,.REJECTED,.AUTO_REJECTED,.DISPUTED,.QUOTATION,.PROFORMA,.RECEIPT,.OTHER { background:var(--bad-bg); color:var(--bad) }
-  .detail td { background:var(--bg); padding:16px 12px 20px }
-  .fields { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px 24px }
-  .f { overflow-wrap:anywhere } .f small { color:var(--muted); display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em }
-  .conf { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums } .conf.low { color:var(--bad); font-weight:600 }
-  .meta { margin:16px 0 0; padding-top:12px; border-top:1px solid var(--line) }
-  .err { color:var(--bad) } a { color:var(--gold-dark); text-underline-offset:2px } a:hover { color:var(--ink) }
-  td a { font-weight:500; word-break:break-word }
-  td.file { min-width:160px; max-width:220px } td.sup { min-width:130px } td.nw { white-space:nowrap }
-  table { min-width:1000px }
-  footer { border-top:1px solid var(--line); background:var(--surface); color:var(--muted); font-size:12px }
-  footer div { max-width:1280px; margin:0 auto; padding:16px 24px }
-  @media (max-width:600px) {
-    .gov, .hd, footer div { padding-inline:16px } .gov { height:auto; min-height:32px; padding-block:8px; line-height:16px } .gov span { white-space:normal } main { padding:24px 16px 32px } .card { padding:16px }
-    .scroll { margin:0 -16px; padding:0 16px } .hd .note { margin-inline-start:0 } .intro h1 { font-size:20px }
+  *, *::before, *::after { box-sizing: border-box }
+  html { font-synthesis: none; font-family: var(--ui); }
+  html, body { margin: 0; overflow-x: hidden; color: var(--ink) }
+  body { min-height: 100vh; font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+    background: radial-gradient(900px 560px at 100% -8%, rgba(209, 171, 77, .16), transparent 62%), radial-gradient(720px 460px at -6% 104%, rgba(15, 31, 61, .07), transparent 60%), var(--paper) fixed; }
+  body::after { content: ''; position: fixed; inset: 0; z-index: 400; pointer-events: none; opacity: .045; mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  h1, h2, p { margin: 0 }
+  button, input { font: inherit; color: inherit }
+  a { color: inherit }
+  :focus-visible { outline: 3px solid color-mix(in srgb, var(--gold) 70%, #fff); outline-offset: 2px; border-radius: 10px }
+  td, .num, .stat b { font-variant-numeric: tabular-nums lining-nums }
+  h1, h2 { text-wrap: balance } p { text-wrap: pretty }
+
+  .wrap { width: 100%; max-width: 1440px; margin: 0 auto; padding-inline: 32px }
+
+  /* top bar: wordmark left, access note right */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding-block: 26px 10px }
+  .brand b { display: block; font-family: var(--display); font-weight: 500; font-size: 1.45rem; letter-spacing: -.02em; line-height: 1.1; color: var(--navy) }
+  .brand small { display: block; color: var(--muted); font-size: .8rem; margin-top: 2px }
+  .brand::after { content: ''; display: block; width: 34px; height: 3px; border-radius: 3px; background: var(--gold-grad); margin-top: 12px }
+  .note { display: inline-flex; align-items: center; gap: 10px; height: 44px; padding-inline: 8px 18px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(255, 255, 255, .8); font-size: .86rem; font-weight: 500; color: var(--ink-2) }
+  .note i { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: var(--navy); color: #e2c777 }
+
+  main { padding-block: 34px 0 }
+  .page-h { margin-bottom: 30px }
+  .eyebrow { font-size: .74rem; font-weight: 600; letter-spacing: .09em; text-transform: uppercase; color: var(--gold-d) }
+  .page-h h1 { font-family: var(--display); font-weight: 450; font-optical-sizing: auto; font-size: clamp(2.7rem, 4.1vw, 4.2rem); line-height: .96; letter-spacing: -.045em; color: var(--navy); margin: 10px 0 14px }
+  .lead { font-size: 1.04rem; color: #5f5c55; max-width: 58ch }
+
+  /* pastel stat cards */
+  .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 20px }
+  .stat { display: grid; gap: 6px; padding: 20px 24px; border-radius: 28px; background: var(--sky); box-shadow: var(--tint-shadow); transition: transform .45s var(--ease-out) }
+  .stat:hover { transform: translateY(-3px) }
+  .stat span { color: #4a4740; font-weight: 500; font-size: .9rem }
+  .stat b { font-family: var(--display); font-weight: 500; font-size: 2.3rem; letter-spacing: -.02em; line-height: 1.05 }
+  .stat.reading { background: var(--lilac) } .stat.matched { background: var(--mint) } .stat.failed { background: var(--sand) } .stat.failed.has { background: var(--blush) }
+
+  .card { background: rgba(255, 255, 255, .78); backdrop-filter: blur(3px); border-radius: var(--r-card); box-shadow: var(--tint-shadow); padding: 28px; min-width: 0; margin-bottom: 20px }
+  .card.nopad { padding: 0; overflow: hidden }
+  .card-h { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px }
+  .nopad .card-h { padding: 26px 28px 0; margin-bottom: 14px }
+  .card-h h2 { font-family: var(--display); font-weight: 500; font-size: 1.5rem; letter-spacing: -.025em; color: var(--navy) }
+  .card-h p { color: var(--muted); font-size: .9rem; margin-top: 4px; max-width: 70ch }
+  .live { display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 12px; border-radius: 999px; background: var(--tint); color: var(--ink-2); font-size: .78rem; font-weight: 600; white-space: nowrap }
+  .live::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #1c9b6c; box-shadow: 0 0 0 3px rgba(28, 155, 108, .18) }
+
+  /* upload */
+  #drop { display: grid; justify-items: center; gap: 4px; text-align: center; padding: 34px 20px; border-radius: 24px; border: 1.5px dashed #d6cdb3; background: var(--paper-2); cursor: pointer; overflow-wrap: anywhere; transition: border-color .2s, background .2s }
+  #drop:hover, #drop.over { border-color: var(--navy); background: #fff }
+  #drop .ic { display: grid; place-items: center; width: 52px; height: 52px; border-radius: 50%; background: var(--navy); color: #e2c777; margin-bottom: 10px; transition: transform .35s var(--spring) }
+  #drop:hover .ic, #drop.over .ic { transform: translateY(-3px) }
+  #drop b { font-weight: 600; color: var(--ink) }
+  #drop small { color: var(--muted); font-size: .84rem }
+  .row { display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap }
+  .field { flex: 1 1 260px; min-width: 0; display: flex; align-items: center; height: 50px; padding-inline: 20px; border-radius: 999px; border: 1px solid var(--line-2); background: #fff; transition: border-color .2s, box-shadow .2s }
+  .field:focus-within { border-color: var(--navy); box-shadow: 0 0 0 4px rgba(209, 171, 77, .3) }
+  .field input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; height: 100% }
+  .field input::placeholder { color: #8c897f }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 50px; padding: 0 30px; border-radius: 999px; border: 1px solid transparent; background: var(--navy); color: #fff; font-weight: 600; white-space: nowrap; cursor: pointer; transition: transform .3s var(--spring), box-shadow .3s, background .25s }
+  .btn:hover:not(:disabled) { background: var(--navy-2); box-shadow: 0 12px 24px -14px rgba(15, 31, 61, .6) }
+  .btn:active:not(:disabled) { transform: scale(.97) }
+  .btn:disabled { opacity: .45; cursor: not-allowed }
+  .btn.ghost { height: 34px; padding: 0 16px; font-size: .84rem; background: #fff; color: var(--ink); border-color: var(--line-2) }
+  .btn.ghost:hover:not(:disabled) { background: #fff; border-color: var(--navy); box-shadow: none }
+  #msg { margin-top: 12px; min-height: 1.5em; color: var(--muted); font-size: .9rem; overflow-wrap: anywhere }
+  .err { color: var(--bad) }
+
+  /* table */
+  .scroll { overflow-x: auto; border-top: 1px solid var(--line); container-type: inline-size }
+  table { width: 100%; min-width: 980px; border-collapse: collapse; font-size: .9rem }
+  th { text-align: start; font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .09em; color: var(--muted); padding: 14px 12px; border-bottom: 1px solid var(--line); white-space: nowrap }
+  td { padding: 16px 12px; border-bottom: 1px solid #f1ecdc; vertical-align: top }
+  th:first-child, td:first-child { padding-inline-start: 28px } th:last-child, td:last-child { padding-inline-end: 28px }
+  th.num, td.num { text-align: end; white-space: nowrap }
+  tr.main { cursor: pointer; transition: background .15s }
+  tr.main:hover td { background: #fcfaf3 }
+  tr.main.is-open td { background: var(--paper-2); border-bottom-color: transparent }
+  td.file { min-width: 170px; max-width: 230px }
+  td.stc { max-width: 220px }
+  td.file a { font-weight: 600; color: var(--navy); text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 4px }
+  td.file a:hover { text-decoration-color: var(--navy) }
+  td.sup { min-width: 160px } td.nw { white-space: nowrap }
+  small.nw { white-space: nowrap }
+  td small { display: block; margin-top: 4px; font-size: .78rem; color: var(--muted) }
+  td small.err { color: var(--bad); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere }
+  .link-row { display: grid; justify-items: start; gap: 6px; white-space: nowrap }
+  .link-row + .link-row { margin-top: 10px }
+  .empty { padding: 44px 28px; text-align: center; color: var(--muted) }
+
+  /* pill badges, same palette as the FTA portal */
+  .pill { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 11px; border-radius: 999px; font-size: .76rem; font-weight: 600; white-space: nowrap; background: #f1eee4; color: var(--ink-2); text-transform: lowercase }
+  .pill::first-letter { text-transform: uppercase }
+  .pill.st::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex: none }
+  .EXTRACTED, .VERIFIED, .TAX_INVOICE { background: var(--ok-bg); color: var(--ok) }
+  .UPLOADED, .EXTRACTING, .RECEIVED { background: var(--sky); color: var(--navy-2) }
+  .FLAGGED, .NO_SUPPLIER_RESPONSE, .AWAITING_SUPPLIER, .AWAITING_SUPPLIERS { background: var(--warn-bg); color: var(--warn) }
+  .FAILED, .REJECTED, .AUTO_REJECTED, .DISPUTED, .QUOTATION, .PROFORMA, .RECEIPT, .OTHER { background: var(--bad-bg); color: var(--bad) }
+  .EXTRACTING.st::before { animation: blink 1.2s ease-in-out infinite }
+  @keyframes blink { 50% { opacity: .25 } }
+
+  /* expanded row */
+  .detail td { background: var(--paper-2); padding: 4px 0 24px }
+  .detail .inner { position: sticky; left: 0; width: 100cqi; padding-inline: 28px } /* stays in view while the table scrolls sideways */
+  .fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; align-items: start }
+  .f { display: grid; gap: 4px; padding: 12px 16px; border-radius: 18px; background: #fff; border: 1px solid var(--line); overflow-wrap: anywhere }
+  .f small { color: var(--muted); font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em }
+  .f div { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-weight: 500 }
+  .conf { flex: none; font-size: .72rem; font-weight: 600; color: var(--ok); font-variant-numeric: tabular-nums }
+  .conf.low { color: var(--bad) }
+  .meta { margin-top: 14px; color: var(--muted); font-size: .8rem; overflow-wrap: anywhere }
+
+  footer { margin-top: 36px; padding-block: 22px 40px; border-top: 1px solid rgba(15, 31, 61, .08); color: var(--muted); font-size: .82rem }
+
+  @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)) } }
+  @media (max-width: 600px) {
+    .wrap { padding-inline: 16px }
+    .top { padding-top: 20px } .note { height: 38px; font-size: .8rem } .note i { width: 26px; height: 26px }
+    main { padding-top: 24px }
+    .stats { gap: 10px } .stat { padding: 16px 18px; border-radius: 24px } .stat b { font-size: 1.9rem }
+    .card { padding: 20px; border-radius: 26px } .nopad .card-h { padding: 20px 20px 0 }
+    th:first-child, td:first-child { padding-inline-start: 20px } .detail td { padding-inline: 0 } .detail .inner { padding-inline: 20px }
+    .btn { flex: 1 1 100% }
   }
+  @media (prefers-reduced-motion: reduce) { *, *::before { animation: none !important; transition: none !important } }
 </style>
 </head>
 <body>
-<div class="gov"><span>United Arab Emirates &middot; Maskan housing services &middot; veri-tax intake</span></div>
-<header><div class="hd">
-  <div class="mono" aria-hidden="true">M</div>
-  <div class="brand"><b>Maskan</b><span>Invoice intake &middot; veri-tax</span></div>
-  <span class="note">Private link &ndash; do not share outside the team</span>
-</div></header>
-<main>
-  <div class="intro"><h1>Invoice intake</h1><p>Send supplier invoices to veri-tax for VAT verification. Uploaded files are read, matched to Maskan records and tracked below.</p></div>
-  <section class="card">
-    <h2>Upload invoices</h2>
-    <p class="sub">PDF, JPEG, PNG or WebP, up to 15&nbsp;MB each. Each file is read by the vision model and matched to Maskan invoices by supplier TRN and invoice number.</p>
-    <div id="drop" tabindex="0" role="button" aria-label="Choose files to upload">Drop invoice files here, or click to choose</div>
-    <input id="file" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp" hidden>
-    <div class="row">
-      <input id="label" type="text" placeholder="Optional note, e.g. 'Al Noor batch 1' or 'Arabic sample'">
-      <button id="go" disabled>Upload</button>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><b>Maskan</b><small>Invoice intake &middot; veri-tax</small></div>
+    <span class="note"><i aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></i>Private link &middot; keep within the team</span>
+  </header>
+
+  <main>
+    <div class="page-h">
+      <p class="eyebrow">Original tax invoices</p>
+      <h1>Invoice intake</h1>
+      <p class="lead">Send supplier invoices to veri-tax for VAT verification. Each file is read, matched to a Maskan record by supplier TRN and invoice number, and tracked below.</p>
     </div>
-    <div id="msg" aria-live="polite"></div>
-  </section>
-  <section class="card">
-    <h2>Uploaded invoices</h2>
-    <p class="sub">Click a row to see every extracted field with its confidence. Refreshes automatically.</p>
-    <div class="scroll"><table>
-      <thead><tr><th>File</th><th>Status</th><th>Type</th><th>Supplier</th><th>TRN</th><th>Invoice no</th><th>Date</th><th class="num">VAT</th><th class="num">Total</th><th>Matched to</th><th></th></tr></thead>
-      <tbody id="rows"><tr><td colspan="11">Loading&hellip;</td></tr></tbody>
-    </table></div>
-  </section>
-</main>
-<footer><div>Hackathon prototype &ndash; not an official government service. Synthetic data only.</div></footer>
+
+    <section class="stats" aria-label="Summary">
+      <div class="stat"><span>Uploaded</span><b id="s-all">&ndash;</b></div>
+      <div class="stat reading"><span>Being read</span><b id="s-reading">&ndash;</b></div>
+      <div class="stat matched"><span>Matched to Maskan</span><b id="s-matched">&ndash;</b></div>
+      <div class="stat failed" id="s-failed-card"><span>Need a retry</span><b id="s-failed">&ndash;</b></div>
+    </section>
+
+    <section class="card">
+      <div class="card-h"><div><h2>Upload invoices</h2><p>PDF, JPEG, PNG or WebP, up to 15&nbsp;MB each. Upload several at once if you like.</p></div></div>
+      <div id="drop" tabindex="0" role="button" aria-label="Choose files to upload">
+        <span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></span>
+        <b id="dropText">Drop invoice files here, or click to choose</b>
+        <small>Originals work best: scans and phone photos are fine, Arabic or English.</small>
+      </div>
+      <input id="file" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp" hidden>
+      <div class="row">
+        <label class="field"><input id="label" type="text" aria-label="Optional note" placeholder="Optional note, e.g. 'Al Noor batch 1' or 'Arabic sample'"></label>
+        <button id="go" class="btn" disabled>Upload</button>
+      </div>
+      <div id="msg" aria-live="polite"></div>
+    </section>
+
+    <section class="card nopad">
+      <div class="card-h">
+        <div><h2>Uploaded invoices</h2><p>Select a row to see every extracted field with its confidence.</p></div>
+        <span class="live">Updates live</span>
+      </div>
+      <div class="scroll"><table>
+        <thead><tr><th>File</th><th>Status</th><th>Type</th><th>Supplier</th><th>Invoice</th><th class="num">VAT</th><th class="num">Total</th><th>Matched to</th><th></th></tr></thead>
+        <tbody id="rows"><tr><td colspan="9" class="empty">Loading&hellip;</td></tr></tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <footer>Prototype for Maskan invoice intake. Synthetic data only. Not an official government service.</footer>
+</div>
 <script>
 const base = location.pathname.replace(/\/$/, "");
 const $ = id => document.getElementById(id);
@@ -122,7 +218,7 @@ $("drop").addEventListener("drop", e => pick([...e.dataTransfer.files]));
 
 function pick(files) {
   chosen = files;
-  $("drop").textContent = files.length ? files.map(f => f.name).join(", ") : "Drop invoice files here, or click to choose";
+  $("dropText").textContent = files.length ? files.map(f => f.name).join(", ") : "Drop invoice files here, or click to choose";
   $("go").disabled = !files.length;
 }
 
@@ -143,20 +239,30 @@ $("go").onclick = async () => {
 const val = (x, k) => x?.fields?.[k]?.value;
 const fmt = v => v == null || v === "" ? "–" : (typeof v === "number" ? v.toLocaleString("en-AE", {minimumFractionDigits: 2}) : esc(typeof v === "object" ? JSON.stringify(v) : v));
 
+function stats(items) {
+  const n = s => items.filter(({document: d}) => s.includes(d.status)).length;
+  $("s-all").textContent = items.length;
+  $("s-reading").textContent = n(["UPLOADED", "EXTRACTING"]);
+  $("s-matched").textContent = items.filter(i => i.linked_invoices.length).length;
+  $("s-failed").textContent = n(["FAILED"]);
+  $("s-failed-card").classList.toggle("has", n(["FAILED"]) > 0);
+}
+
 function render(items) {
-  if (!items.length) { $("rows").innerHTML = `<tr><td colspan="11">No invoices uploaded yet.</td></tr>`; return; }
+  stats(items);
+  if (!items.length) { $("rows").innerHTML = `<tr><td colspan="9" class="empty">No invoices uploaded yet. Files you upload above appear here.</td></tr>`; return; }
   $("rows").innerHTML = items.map(({document: d, extraction: x, linked_invoices: links}) => {
     const main = `<tr class="main${open.has(d.id) ? " is-open" : ""}" data-id="${d.id}">
-      <td class="file"><a href="${base}/documents/${d.id}/file" target="_blank" onclick="event.stopPropagation()">${esc(d.filename)}</a>${d.label ? `<br><small class="conf">${esc(d.label)}</small>` : ""}</td>
-      <td><span class="pill ${d.status}">${d.status.replaceAll("_"," ")}</span>${d.error ? `<br><small class="err">${esc(d.error.slice(0,120))}</small>` : ""}</td>
+      <td class="file"><a href="${base}/documents/${d.id}/file" target="_blank" onclick="event.stopPropagation()">${esc(d.filename).replace(/([_.-])/g, "$1<wbr>")}</a>${d.label ? `<small>${esc(d.label)}</small>` : ""}</td>
+      <td class="stc"><span class="pill st ${d.status}">${d.status.replaceAll("_"," ")}</span>${d.error ? `<small class="err" title="${esc(d.error)}">${esc(/\b429\b/.test(d.error) ? "Service busy. Retry in a minute." : d.error.slice(0,120))}</small>` : ""}</td>
       <td>${x ? `<span class="pill ${x.document_type}">${x.document_type.replace("_"," ")}</span>` : "–"}</td>
-      <td class="sup">${fmt(val(x,"supplier_name"))}</td><td class="nw">${fmt(val(x,"supplier_trn"))}</td><td>${fmt(val(x,"invoice_no"))}</td>
-      <td class="nw">${fmt(val(x,"invoice_date"))}</td><td class="num">${fmt(val(x,"vat_amount"))}</td><td class="num">${fmt(val(x,"total"))}</td>
-      <td>${links.length ? links.map(l => `${esc(l.maskan_ref)} / ${esc(l.invoice_no)} <span class="pill ${l.status}">${l.status.replaceAll("_"," ")}</span>`).join("<br>") : "–"}</td>
-      <td>${d.status === "FAILED" ? `<button class="ghost" onclick="event.stopPropagation(); retry(${d.id})">Retry</button>` : ""}</td></tr>`;
-    const detail = open.has(d.id) && x ? `<tr class="detail"><td colspan="11"><div class="fields">${
-      Object.entries(x.fields).map(([k, f]) => `<div class="f"><small>${esc(k.replaceAll("_"," "))}</small>${fmt(f.value)} <span class="conf ${f.confidence < 0.7 ? "low" : ""}">${Math.round(f.confidence*100)}%</span></div>`).join("")
-    }</div><p class="conf meta">Model ${esc(x.model)} &middot; prompt ${esc(x.prompt_version)} &middot; sha256 ${esc(d.sha256.slice(0,16))}…</p></td></tr>` : "";
+      <td class="sup">${fmt(val(x,"supplier_name"))}${val(x,"supplier_trn") ? `<small class="nw">TRN ${fmt(val(x,"supplier_trn"))}</small>` : ""}</td>
+      <td class="nw">${fmt(val(x,"invoice_no"))}${val(x,"invoice_date") ? `<small>${fmt(val(x,"invoice_date"))}</small>` : ""}</td><td class="num">${fmt(val(x,"vat_amount"))}</td><td class="num">${fmt(val(x,"total"))}</td>
+      <td>${links.length ? links.map(l => `<div class="link-row"><span>${esc(l.maskan_ref)} / ${esc(l.invoice_no)}</span><span class="pill ${l.status}">${l.status.replaceAll("_"," ")}</span></div>`).join("") : "–"}</td>
+      <td>${d.status === "FAILED" ? `<button class="btn ghost" onclick="event.stopPropagation(); retry(${d.id})">Retry</button>` : ""}</td></tr>`;
+    const detail = open.has(d.id) && x ? `<tr class="detail"><td colspan="9"><div class="inner"><div class="fields">${
+      Object.entries(x.fields).map(([k, f]) => `<div class="f"><small>${esc(k.replaceAll("_"," "))}</small><div><span>${fmt(f.value)}</span><span class="conf ${f.confidence < 0.7 ? "low" : ""}">${Math.round(f.confidence*100)}%</span></div></div>`).join("")
+    }</div><p class="meta">Model ${esc(x.model)} &middot; prompt ${esc(x.prompt_version)} &middot; sha256 ${esc(d.sha256.slice(0,16))}…</p></div></td></tr>` : "";
     return main + detail;
   }).join("");
   document.querySelectorAll("tr.main").forEach(tr => tr.onclick = () => {

@@ -29,6 +29,9 @@ const ICONS: Record<string, string> = {
   mail: "M3 6h18v12H3z M3 7l9 6 9-6",
   refresh: "M20 11a8 8 0 1 0-2.3 5.7 M20 5v6h-6",
   lock: "M6 11h12v9H6z M8 11V8a4 4 0 0 1 8 0v3",
+  folder: "M3 7a1 1 0 0 1 1-1h5l2 2h9a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z",
+  external: "M14 4h6v6 M20 4l-9 9 M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5",
+  spark: "M12 3v4 M12 17v4 M3 12h4 M17 12h4 M6 6l2.5 2.5 M15.5 15.5 18 18 M6 18l2.5-2.5 M15.5 8.5 18 6",
   pin: "M12 21s7-6 7-11a7 7 0 1 0-14 0c0 5 7 11 7 11z M12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z",
 };
 
