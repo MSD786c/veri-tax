@@ -7,39 +7,84 @@
 <link rel="icon" href="data:,">
 <title>Maskan Invoice Portal</title>
 <style>
-  :root { --gold:#B68A35; --gold-soft:#f6efe1; --ink:#232528; --muted:#6b6f76; --line:#e3e1dc; --bg:#f4f3f1; --card:#fff;
-          --ok:#1f7a4d; --ok-bg:#e5f4ec; --bad:#a8322c; --bad-bg:#fbe9e7; --warn:#8a6100; --warn-bg:#fdf3d8; }
+  :root {
+    --gold:#B68A35; --gold-dark:#8C6A28; --gold-soft:#F6EFE1;
+    --navy:#0F2A3F; --navy-2:#17384F;
+    --ink:#1C2127; --muted:#5B6470; --line:#E3E0D8; --bg:#F4F3EF; --surface:#FFFFFF;
+    --ok:#1F7A4D; --ok-bg:#E5F3EB; --warn:#8A5A00; --warn-bg:#FBF0D6; --bad:#A3302A; --bad-bg:#FBE8E6;
+    --info:#1F5F8B; --info-bg:#E6EFF6; --neutral:#5B6470; --neutral-bg:#EEEDEA;
+    --font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Arabic", sans-serif;
+    --r-card:8px; --r-ctl:6px; --shadow:0 1px 2px rgba(16,24,40,.06);
+  }
   * { box-sizing:border-box }
-  body { margin:0; font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:var(--bg) }
-  header { background:#fff; border-bottom:3px solid var(--gold); padding:14px 24px; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap }
-  header b { color:var(--gold); font-size:20px } header span { color:var(--muted) }
-  main { max-width:1100px; margin:24px auto; padding:0 16px; display:grid; grid-template-columns:minmax(0,1fr); gap:20px }
-  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:20px }
-  h2 { margin:0 0 4px; font-size:16px } p.sub { margin:0 0 16px; color:var(--muted) }
-  #drop { border:2px dashed var(--line); border-radius:8px; padding:28px; text-align:center; color:var(--muted); cursor:pointer; transition:.15s }
+  html, body { overflow-x:hidden }
+  body { margin:0; font:14px/1.5 var(--font); color:var(--ink); background:var(--bg); min-height:100vh; display:flex; flex-direction:column }
+  .gov { background:var(--navy); color:var(--surface); font-size:12px; height:32px; display:flex; align-items:center; padding:0 24px; letter-spacing:.01em }
+  .gov span { opacity:.9; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
+  header { background:var(--surface); border-bottom:3px solid var(--gold); }
+  .hd { max-width:1280px; margin:0 auto; padding:16px 24px; display:flex; align-items:center; gap:12px; flex-wrap:wrap }
+  .mono { width:36px; height:36px; border-radius:6px; background:var(--gold); color:var(--surface); display:grid; place-items:center; font-weight:700; font-size:18px; flex:none }
+  .brand { display:flex; flex-direction:column; line-height:1.2 }
+  .brand b { font-size:20px; font-weight:700; color:var(--ink); letter-spacing:-.01em }
+  .brand span { color:var(--muted); font-size:13px }
+  .hd .note { margin-inline-start:auto; color:var(--muted); font-size:12px; border:1px solid var(--line); border-radius:999px; padding:4px 12px; background:var(--bg) }
+  main { width:100%; max-width:1280px; margin:0 auto; padding:32px 24px 40px; display:grid; grid-template-columns:minmax(0,1fr); gap:24px; flex:1 }
+  .intro h1 { margin:0 0 4px; font-size:24px; font-weight:700; letter-spacing:-.01em }
+  .intro p { margin:0; color:var(--muted); max-width:720px }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:var(--r-card); padding:24px; box-shadow:var(--shadow) }
+  h2 { margin:0 0 4px; font-size:16px; font-weight:600 } p.sub { margin:0 0 16px; color:var(--muted) }
+  #drop { border:1.5px dashed var(--line); border-radius:var(--r-card); padding:32px 16px; text-align:center; color:var(--muted); cursor:pointer; transition:background .15s, border-color .15s; background:var(--surface); overflow-wrap:anywhere }
+  #drop::before { content:"\2191"; display:block; width:40px; height:40px; margin:0 auto 8px; border-radius:999px; background:var(--gold-soft); color:var(--gold-dark); font-size:20px; line-height:40px; font-weight:700 }
   #drop.over, #drop:hover { border-color:var(--gold); background:var(--gold-soft); color:var(--ink) }
-  .row { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap }
-  input[type=text] { flex:1; min-width:200px; padding:9px 12px; border:1px solid var(--line); border-radius:6px; font:inherit }
-  button { padding:9px 16px; border:0; border-radius:6px; background:var(--gold); color:#fff; font:inherit; font-weight:600; cursor:pointer }
-  button:disabled { opacity:.5; cursor:default } button.ghost { background:none; color:var(--gold); padding:4px 8px }
-  #msg { margin-top:10px; color:var(--muted); min-height:1.5em }
-  table { width:100%; border-collapse:collapse } .scroll { overflow-x:auto }
-  th { text-align:start; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); padding:8px; border-bottom:1px solid var(--line); white-space:nowrap }
-  td { padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top }
-  tr.main { cursor:pointer } tr.main:hover td { background:#faf9f7 }
-  .pill { display:inline-block; padding:1px 8px; border-radius:99px; font-size:11px; font-weight:700; white-space:nowrap }
+  #drop:focus-visible, input:focus-visible, button:focus-visible, a:focus-visible { outline:2px solid var(--gold); outline-offset:2px }
+  .row { display:flex; gap:12px; margin-top:16px; flex-wrap:wrap }
+  input[type=text] { flex:1; min-width:0; flex-basis:220px; height:40px; padding:0 12px; border:1px solid var(--line); border-radius:var(--r-ctl); font:inherit; color:var(--ink); background:var(--surface) }
+  input[type=text]::placeholder { color:var(--muted) }
+  input[type=text]:focus { border-color:var(--gold); outline:none; box-shadow:0 0 0 3px var(--gold-soft) }
+  button { height:40px; padding:0 20px; border:1px solid var(--gold); border-radius:var(--r-ctl); background:var(--gold); color:var(--surface); font:inherit; font-weight:600; cursor:pointer; transition:background .15s }
+  button:hover:not(:disabled) { background:var(--gold-dark); border-color:var(--gold-dark) }
+  button:disabled { opacity:.45; cursor:default }
+  button.ghost { height:auto; padding:4px 12px; background:var(--surface); color:var(--ink); border:1px solid var(--line); font-size:12px }
+  button.ghost:hover:not(:disabled) { background:var(--gold-soft); border-color:var(--gold); color:var(--ink) }
+  #msg { margin-top:12px; color:var(--muted); min-height:1.5em; overflow-wrap:anywhere }
+  .scroll { overflow-x:auto; margin:0 -24px; padding:0 24px }
+  table { width:100%; border-collapse:collapse; font-variant-numeric:tabular-nums }
+  th { text-align:start; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); padding:8px; border-bottom:1px solid var(--line); white-space:nowrap; background:var(--surface) }
+  td { padding:12px 8px; border-bottom:1px solid var(--line); vertical-align:top }
+  td.num { text-align:end; white-space:nowrap } th.num { text-align:end }
+  tr.main { cursor:pointer } tr.main:hover td { background:var(--gold-soft) }
+  tr.main.is-open td { background:var(--gold-soft); border-bottom-color:transparent }
+  .pill { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; line-height:16px; white-space:nowrap; background:var(--neutral-bg); color:var(--neutral) }
   .EXTRACTED,.VERIFIED,.TAX_INVOICE { background:var(--ok-bg); color:var(--ok) }
-  .FAILED,.AUTO_REJECTED,.DISPUTED,.QUOTATION,.PROFORMA,.RECEIPT,.OTHER { background:var(--bad-bg); color:var(--bad) }
-  .UPLOADED,.EXTRACTING,.AWAITING_SUPPLIER,.FLAGGED { background:var(--warn-bg); color:var(--warn) }
-  .detail td { background:#faf9f7 } .fields { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px 16px }
-  .f small { color:var(--muted); display:block } .low { color:var(--bad) }
-  .conf { font-size:11px; color:var(--muted) } .err { color:var(--bad) } a { color:var(--gold) }
-  footer { text-align:center; color:var(--muted); font-size:12px; padding:16px }
+  .UPLOADED,.EXTRACTING,.RECEIVED { background:var(--info-bg); color:var(--info) }
+  .FLAGGED,.NO_SUPPLIER_RESPONSE,.AWAITING_SUPPLIER,.AWAITING_SUPPLIERS { background:var(--warn-bg); color:var(--warn) }
+  .FAILED,.REJECTED,.AUTO_REJECTED,.DISPUTED,.QUOTATION,.PROFORMA,.RECEIPT,.OTHER { background:var(--bad-bg); color:var(--bad) }
+  .detail td { background:var(--bg); padding:16px 12px 20px }
+  .fields { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px 24px }
+  .f { overflow-wrap:anywhere } .f small { color:var(--muted); display:block; font-size:11px; text-transform:uppercase; letter-spacing:.04em }
+  .conf { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums } .conf.low { color:var(--bad); font-weight:600 }
+  .meta { margin:16px 0 0; padding-top:12px; border-top:1px solid var(--line) }
+  .err { color:var(--bad) } a { color:var(--gold-dark); text-underline-offset:2px } a:hover { color:var(--ink) }
+  td a { font-weight:500; word-break:break-word }
+  td.file { min-width:160px; max-width:220px } td.sup { min-width:130px } td.nw { white-space:nowrap }
+  table { min-width:1000px }
+  footer { border-top:1px solid var(--line); background:var(--surface); color:var(--muted); font-size:12px }
+  footer div { max-width:1280px; margin:0 auto; padding:16px 24px }
+  @media (max-width:600px) {
+    .gov, .hd, footer div { padding-inline:16px } main { padding:24px 16px 32px } .card { padding:16px }
+    .scroll { margin:0 -16px; padding:0 16px } .hd .note { margin-inline-start:0 } .intro h1 { font-size:20px }
+  }
 </style>
 </head>
 <body>
-<header><b>Maskan Portal</b><span>veri-tax invoice intake &middot; private link, do not share outside the team</span></header>
+<div class="gov"><span>United Arab Emirates &middot; Maskan housing services &middot; veri-tax intake</span></div>
+<header><div class="hd">
+  <div class="mono" aria-hidden="true">M</div>
+  <div class="brand"><b>Maskan</b><span>Invoice intake &middot; veri-tax</span></div>
+  <span class="note">Private link &ndash; do not share outside the team</span>
+</div></header>
 <main>
+  <div class="intro"><h1>Invoice intake</h1><p>Send supplier invoices to veri-tax for VAT verification. Uploaded files are read, matched to Maskan records and tracked below.</p></div>
   <section class="card">
     <h2>Upload invoices</h2>
     <p class="sub">PDF, JPEG, PNG or WebP, up to 15&nbsp;MB each. Each file is read by the vision model and matched to Maskan invoices by supplier TRN and invoice number.</p>
@@ -55,12 +100,12 @@
     <h2>Uploaded invoices</h2>
     <p class="sub">Click a row to see every extracted field with its confidence. Refreshes automatically.</p>
     <div class="scroll"><table>
-      <thead><tr><th>File</th><th>Status</th><th>Type</th><th>Supplier</th><th>TRN</th><th>Invoice no</th><th>Date</th><th>VAT</th><th>Total</th><th>Matched to</th><th></th></tr></thead>
+      <thead><tr><th>File</th><th>Status</th><th>Type</th><th>Supplier</th><th>TRN</th><th>Invoice no</th><th>Date</th><th class="num">VAT</th><th class="num">Total</th><th>Matched to</th><th></th></tr></thead>
       <tbody id="rows"><tr><td colspan="11">Loading&hellip;</td></tr></tbody>
     </table></div>
   </section>
 </main>
-<footer>Hackathon prototype &ndash; not an official FTA service. Synthetic data only.</footer>
+<footer><div>Hackathon prototype &ndash; not an official government service. Synthetic data only.</div></footer>
 <script>
 const base = location.pathname.replace(/\/$/, "");
 const $ = id => document.getElementById(id);
@@ -95,22 +140,22 @@ $("go").onclick = async () => {
 };
 
 const val = (x, k) => x?.fields?.[k]?.value;
-const fmt = v => v == null || v === "" ? "–" : (typeof v === "number" ? v.toLocaleString("en-AE", {minimumFractionDigits: 2}) : esc(v));
+const fmt = v => v == null || v === "" ? "–" : (typeof v === "number" ? v.toLocaleString("en-AE", {minimumFractionDigits: 2}) : esc(typeof v === "object" ? JSON.stringify(v) : v));
 
 function render(items) {
   if (!items.length) { $("rows").innerHTML = `<tr><td colspan="11">No invoices uploaded yet.</td></tr>`; return; }
   $("rows").innerHTML = items.map(({document: d, extraction: x, linked_invoices: links}) => {
-    const main = `<tr class="main" data-id="${d.id}">
-      <td><a href="${base}/documents/${d.id}/file" target="_blank" onclick="event.stopPropagation()">${esc(d.filename)}</a>${d.label ? `<br><small class="conf">${esc(d.label)}</small>` : ""}</td>
-      <td><span class="pill ${d.status}">${d.status}</span>${d.error ? `<br><small class="err">${esc(d.error.slice(0,120))}</small>` : ""}</td>
+    const main = `<tr class="main${open.has(d.id) ? " is-open" : ""}" data-id="${d.id}">
+      <td class="file"><a href="${base}/documents/${d.id}/file" target="_blank" onclick="event.stopPropagation()">${esc(d.filename)}</a>${d.label ? `<br><small class="conf">${esc(d.label)}</small>` : ""}</td>
+      <td><span class="pill ${d.status}">${d.status.replaceAll("_"," ")}</span>${d.error ? `<br><small class="err">${esc(d.error.slice(0,120))}</small>` : ""}</td>
       <td>${x ? `<span class="pill ${x.document_type}">${x.document_type.replace("_"," ")}</span>` : "–"}</td>
-      <td>${fmt(val(x,"supplier_name"))}</td><td>${fmt(val(x,"supplier_trn"))}</td><td>${fmt(val(x,"invoice_no"))}</td>
-      <td>${fmt(val(x,"invoice_date"))}</td><td>${fmt(val(x,"vat_amount"))}</td><td>${fmt(val(x,"total"))}</td>
+      <td class="sup">${fmt(val(x,"supplier_name"))}</td><td class="nw">${fmt(val(x,"supplier_trn"))}</td><td>${fmt(val(x,"invoice_no"))}</td>
+      <td class="nw">${fmt(val(x,"invoice_date"))}</td><td class="num">${fmt(val(x,"vat_amount"))}</td><td class="num">${fmt(val(x,"total"))}</td>
       <td>${links.length ? links.map(l => `${esc(l.maskan_ref)} / ${esc(l.invoice_no)} <span class="pill ${l.status}">${l.status.replaceAll("_"," ")}</span>`).join("<br>") : "–"}</td>
       <td>${d.status === "FAILED" ? `<button class="ghost" onclick="event.stopPropagation(); retry(${d.id})">Retry</button>` : ""}</td></tr>`;
     const detail = open.has(d.id) && x ? `<tr class="detail"><td colspan="11"><div class="fields">${
       Object.entries(x.fields).map(([k, f]) => `<div class="f"><small>${esc(k.replaceAll("_"," "))}</small>${fmt(f.value)} <span class="conf ${f.confidence < 0.7 ? "low" : ""}">${Math.round(f.confidence*100)}%</span></div>`).join("")
-    }</div><p class="conf">Model ${esc(x.model)} &middot; prompt ${esc(x.prompt_version)} &middot; sha256 ${esc(d.sha256.slice(0,16))}…</p></td></tr>` : "";
+    }</div><p class="conf meta">Model ${esc(x.model)} &middot; prompt ${esc(x.prompt_version)} &middot; sha256 ${esc(d.sha256.slice(0,16))}…</p></td></tr>` : "";
     return main + detail;
   }).join("");
   document.querySelectorAll("tr.main").forEach(tr => tr.onclick = () => {
