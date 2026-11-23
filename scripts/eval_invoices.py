@@ -81,7 +81,11 @@ def read(data: bytes) -> dict:
     fixed = cache.with_suffix(".trn.json")  # second TRN look for readings cached before it existed
     if fixed.exists():
         return json.loads(fixed.read_text())
-    raw = documents.fix_trn(documents.page_images(data, "application/pdf"), raw)
+    try:
+        raw = documents.fix_trn(documents.page_images(data, "application/pdf"), raw)
+    except Exception as e:  # noqa: BLE001 — e.g. Groq daily quota: score the first reading, retry the fix next run
+        print(f"  (TRN second look skipped: {str(e)[:80]})")
+        return raw
     fixed.write_text(json.dumps(raw))
     return raw
 
