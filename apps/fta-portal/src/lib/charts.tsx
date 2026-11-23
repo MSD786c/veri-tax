@@ -24,7 +24,7 @@ export function ChartEmpty({ text }: { text: string }) {
 
 export function AreaChart({ monthly }: { monthly: { month: string; claimed: number; verified: number; invoices: number }[] }) {
   if (!monthly.length) return <ChartEmpty text="No invoices in this range" />;
-  const W = 680, H = 280, L = 56, R = 20, T = 20, B = 44;
+  const W = 680, H = 350, L = 56, R = 20, T = 20, B = 44;
   const top = niceMax(Math.max(...monthly.map((m) => Math.max(m.claimed, m.verified))));
   const n = monthly.length;
   const x = (i: number) => L + ((W - L - R) * (i + 0.5)) / n;

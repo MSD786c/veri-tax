@@ -276,3 +276,46 @@ a.ent2 > footer { display: flex; justify-content: space-between; gap: 10px; padd
 .login-split .login-art .brand { align-self: flex-start; padding: 0; }
 .login-split .login-copy { max-width: 520px; }
 .login-split .login-foot { align-self: flex-start; }
+
+/* ───────── design refinement pass ───────── */
+:root { --tint-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 30px 44px -36px rgba(15, 31, 61, .38); --ease-out: cubic-bezier(.22, 1, .36, 1); }
+
+/* typography: tabular figures for every number, balanced headings, no orphans */
+.num, .stat b, .kpi-c b, .task b, .pipe b, .aud-stat b, .ent-nums dd, .sr-val, .over-nums dd, td, .legend b, .legend small, .hbars b, time, .q-n { font-variant-numeric: tabular-nums lining-nums; }
+h1, h2, h3, .lead, .empty h3, .err-card h1 { text-wrap: balance; }
+p, li, .muted, .hint, dd { text-wrap: pretty; }
+.page-h .lead, .login-box .lead { max-width: 58ch; }
+.eyebrow, .tbl thead th, .aud-day h3, .qv-sub, .sec { letter-spacing: .09em; }
+
+/* surfaces: one tinted light source, quieter borders, a whisper of grain */
+.card, .stat.static, .kpi-c, .aud-stat, a.ent2, .sk-panel { border-color: transparent; box-shadow: var(--tint-shadow); }
+.card.dark, .task.t-apps { box-shadow: 0 34px 50px -34px rgba(15, 31, 61, .6), inset 0 1px 0 rgba(255, 255, 255, .12); }
+.card:hover, a.ent2:hover { box-shadow: 0 1px 0 rgba(255, 255, 255, .9) inset, 0 40px 56px -34px rgba(15, 31, 61, .45); }
+body::after { content: ''; position: fixed; inset: 0; z-index: 400; pointer-events: none; opacity: .045; mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+/* layout: the dashboard leads with one big card instead of three equals; more air between sections */
+.tasks { grid-template-columns: 1.35fr 1fr 1fr; align-items: stretch; }
+.tasks .task.t-apps { padding-block: 30px; } .tasks .task.t-apps b { font-size: 5.2rem; }
+@media (max-width: 1000px) { .tasks { grid-template-columns: 1fr; } }
+.analytics { margin-top: 56px; } .work { margin-top: 28px; }
+.page-h { margin-bottom: 36px; }
+.tbl tbody td { padding-block: 17px; } .tbl thead th { padding-block: 14px; }
+.tbl .num, .tbl th.num { text-align: end; }
+
+/* micro-interactions on transform and opacity only */
+.btn, .stat, .kpi-c, .pipe, a.ent2, .aud-item, .mini-list a, .queue-row { transition-timing-function: var(--ease-out); }
+.kpi-c { transition: transform .45s var(--ease-out); } .kpi-c:hover { transform: translateY(-3px); }
+.stat:active, .pipe:active, a.ent2:active { transform: translateY(0) scale(.99); }
+.queue a.queue-row:hover .q-go { transform: translateX(4px); } .q-go { transition: transform .35s var(--ease-out); }
+
+/* quiet footer line on every page */
+.content::after { content: 'Prototype for the FTA verification body. Demo data only. Not an official FTA service.'; display: block; margin-top: 56px; padding-top: 22px; border-top: 1px solid rgba(15, 31, 61, .08); color: var(--muted); font-size: .82rem; }
+
+/* editorial headlines: larger, tighter, a touch of weight contrast */
+.page-h h1 { font-size: clamp(2.7rem, 4.1vw, 4.2rem); letter-spacing: -.045em; line-height: .96; font-weight: 450; }
+.hello h1 { font-size: clamp(2.4rem, 3.6vw, 3.7rem); }
+.an-head h2 { letter-spacing: -.04em; font-weight: 450; }
+.card-h h2 { letter-spacing: -.025em; }
+.login-copy h1, .login-box h2 { letter-spacing: -.045em; line-height: .98; font-weight: 450; }
+.an-grid .an-wide .chart { margin-top: 6px; }
