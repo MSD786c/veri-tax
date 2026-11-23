@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { openFile } from "../../api/client.ts";
 import type { ApplicationRow, Extraction, InvoiceDocument } from "../../api/types.ts";
-import { Chip, Empty, ErrorBanner, Loading, PageHeader, TableWrap } from "../../components/ui.tsx";
+import { Card, Chip, Empty, ErrorBanner, Loading, PageHeader, TableWrap } from "../../components/ui.tsx";
 import { aed, fmtDateTime, humanize } from "../../lib/format.ts";
 import { useApi } from "../../lib/useApi.ts";
 
@@ -36,6 +36,7 @@ export default function Documents() {
       {loading && !data && <Loading />}
       {data && data.length === 0 && <Empty title="No documents yet" />}
       {data && data.length > 0 && (
+        <Card flush>
         <TableWrap>
           <table className="table">
             <thead>
@@ -84,6 +85,7 @@ export default function Documents() {
             </tbody>
           </table>
         </TableWrap>
+        </Card>
       )}
     </>
   );
