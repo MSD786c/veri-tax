@@ -41,7 +41,7 @@ body { background: radial-gradient(900px 560px at 100% -8%, rgba(209, 171, 77, .
 .menu-btn { cursor: pointer; }
 .menu-scrim { display: none; cursor: pointer; }
 @media (max-width: 1000px) {
-  .menu-toggle:checked ~ .side { transform: none; }
+  .menu-toggle:checked ~ .side { transform: none; visibility: visible; transition: transform .4s var(--ease), visibility 0s; }
   .menu-toggle:checked ~ .menu-scrim { display: block; }
 }
 .search-trigger { cursor: text; }
@@ -252,3 +252,27 @@ a.ent2 > footer { display: flex; justify-content: space-between; gap: 10px; padd
 .pop-btn { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border-radius: 16px; font: inherit; font-weight: 500; background: none; border: 0; cursor: pointer; text-align: start; color: inherit; transition: background .2s; }
 .pop-btn:hover { background: #f6f1e0; }
 .pop form { margin: 0; }
+
+/* mobile: the search box stays a real input, the drawer opens, and nothing is hidden behind the dock */
+@media (max-width: 1000px) {
+  .search-trigger { flex: 1 1 auto; width: auto; min-width: 0; max-width: none; }
+  .search-trigger input { min-width: 0; width: 100%; text-overflow: ellipsis; }
+  .content { padding-bottom: 120px; }
+}
+
+/* ── sign-in: breathing room, and the brand when the navy panel is hidden ── */
+.login-box { display: grid; gap: 0; }
+.login-box .lead { margin: 0 0 28px; font-size: 1.04rem; color: #5f5c55; }
+.login-box .field { margin-bottom: 18px; }
+.login-box .field label { margin-bottom: 8px; }
+.login-box .btn.full { margin-top: 4px; }
+.login-box button.link.demo { margin-top: 22px; }
+.login-brand { display: none; margin-bottom: 36px; }
+.login-brand b { display: block; font-family: var(--display); font-weight: 500; font-size: 1.5rem; letter-spacing: -.02em; color: var(--navy); }
+.login-brand small { color: var(--muted); }
+.login-brand::after { content: ''; display: block; width: 34px; height: 3px; border-radius: 3px; background: var(--gold-grad); margin-top: 12px; }
+@media (max-width: 1000px) { .login-brand { display: block; } }
+.login-split .login-art { align-items: stretch; justify-items: stretch; text-align: start; }
+.login-split .login-art .brand { align-self: flex-start; padding: 0; }
+.login-split .login-copy { max-width: 520px; }
+.login-split .login-foot { align-self: flex-start; }

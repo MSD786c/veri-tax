@@ -23,6 +23,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       </section>
       <section className="login-form">
         <div className="login-box">
+          <div className="login-brand"><b>Federal Tax Authority</b><small>Verification Portal</small></div>
           <h2>Sign in</h2>
           <p className="lead">Use your official email to continue to the portal.</p>
           <form action={loginAction} noValidate>
