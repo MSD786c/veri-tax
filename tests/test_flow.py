@@ -172,3 +172,18 @@ def test_common_sense_and_invoice_particulars():
         assert res["THIRD-1"]["TI-08"] == "FAIL"  # issued to the contractor without the required statement
         assert res["UNK-1"]["NR-02"] == "UNCERTAIN"  # not recognised: a person decides
         assert res["TRN-1"]["TI-03"] == "FAIL"  # TRN is not 15 digits
+
+
+def test_analytics_endpoint_responds_to_filters():
+    from fastapi.testclient import TestClient
+    from app.main import app
+    with TestClient(app) as c:
+        h = {"X-Officer-Id": "T"}
+        full = c.get("/fta/analytics", headers=h).json()
+        assert full["totals"]["invoices"] == sum(full["ratings"].values())
+        assert full["monthly"] and sum(m["claimed"] for m in full["monthly"]) == full["totals"]["claimed"]
+        em = full["filters"]["emirates"][0]
+        one = c.get("/fta/analytics", params={"emirate": em}, headers=h).json()
+        assert one["totals"]["invoices"] <= full["totals"]["invoices"]
+        none = c.get("/fta/analytics", params={"date_from": "2099-01-01"}, headers=h).json()
+        assert none["totals"]["invoices"] == 0 and none["monthly"] == []

@@ -25,6 +25,7 @@ from app.models import (
     Document,
     Invoice,
     InvoiceDecision,
+    InvoiceDecisionValue,
     InvoiceStatus,
     OfficerDecision,
     Rating,
@@ -363,3 +364,81 @@ def run_summary(app_id: int, _: str = Depends(officer), session: Session = Depen
     if not app:
         raise HTTPException(404, "application not found")
     return agents.reconciliation_summary(session, app)
+
+
+@router.get("/analytics")
+def analytics(emirate: str | None = None, date_from: date | None = None, date_to: date | None = None,
+              _: str = Depends(officer), session: Session = Depends(get_session)):
+    """Everything the dashboard and reports charts need, filtered by emirate and invoice-date range.
+
+    ponytail: computed in Python over full scans, like /overview. Move to SQL GROUP BY when volumes grow.
+    """
+    pipeline.expire_overdue(session)
+    apps = {a.id: a for a in session.exec(select(Application)).all()}
+    suppliers = {s.trn: s for s in session.exec(select(Supplier)).all()}
+    all_invs = session.exec(select(Invoice)).all()
+
+    def in_range(i: Invoice) -> bool:
+        return (date_from is None or i.invoice_date >= date_from) and (date_to is None or i.invoice_date <= date_to)
+
+    invs = [i for i in all_invs if in_range(i) and (not emirate or apps[i.application_id].emirate == emirate)]
+    inv_ids = {i.id for i in invs}
+    app_ids = {i.application_id for i in invs} if (date_from or date_to) else {a.id for a in apps.values() if not emirate or a.emirate == emirate}
+
+    months: dict[str, dict] = {}
+    for i in invs:
+        m = months.setdefault(i.invoice_date.strftime("%Y-%m"), {"month": i.invoice_date.strftime("%Y-%m"), "claimed": 0.0, "verified": 0.0, "rejected": 0.0, "invoices": 0})
+        m["claimed"] += i.vat_amount
+        m["verified"] += i.eligible_vat_amount
+        m["rejected"] += i.vat_amount if _not_refundable(i) else 0
+        m["invoices"] += 1
+    monthly = [{**m, "claimed": round(m["claimed"], 2), "verified": round(m["verified"], 2), "rejected": round(m["rejected"], 2)} for _, m in sorted(months.items())]
+
+    ratings = Counter(i.rating or "PENDING" for i in invs)
+    decided = session.exec(select(InvoiceDecision).where(col(InvoiceDecision.invoice_id).in_(inv_ids or {-1}))).all()
+    status = Counter(apps[a].status for a in app_ids)
+
+    by_emirate: dict[str, dict] = {}
+    for i in all_invs:
+        if not in_range(i):
+            continue
+        e = apps[i.application_id].emirate
+        row = by_emirate.setdefault(e, {"emirate": e, "claimed": 0.0, "verified": 0.0, "invoices": 0})
+        row["claimed"] += i.vat_amount
+        row["verified"] += i.eligible_vat_amount
+        row["invoices"] += 1
+    by_emirate_rows = sorted(({**r, "claimed": round(r["claimed"], 2), "verified": round(r["verified"], 2)} for r in by_emirate.values()), key=lambda r: -r["claimed"])
+
+    per_supplier: dict[str, dict] = {}
+    for i in invs:
+        row = per_supplier.setdefault(i.supplier_trn, {"trn": i.supplier_trn, "name": suppliers[i.supplier_trn].legal_name, "claimed": 0.0, "rejected": 0.0, "invoices": 0})
+        row["claimed"] += i.vat_amount
+        row["rejected"] += i.vat_amount if _not_refundable(i) else 0
+        row["invoices"] += 1
+    top_suppliers = sorted(({**r, "claimed": round(r["claimed"], 2), "rejected": round(r["rejected"], 2)} for r in per_supplier.values()), key=lambda r: (-r["rejected"], -r["claimed"]))[:6]
+
+    fails = Counter(r for r in session.exec(select(RuleResult.rule_id).where(
+        col(RuleResult.invoice_id).in_(inv_ids or {-1}), col(RuleResult.result).in_([RuleOutcome.FAIL, RuleOutcome.UNCERTAIN]))).all())
+
+    days: dict[str, dict] = {}
+    for d in decided:
+        row = days.setdefault(d.decided_at.date().isoformat(), {"day": d.decided_at.date().isoformat(), "approved": 0, "rejected": 0})
+        row["approved" if d.decision == InvoiceDecisionValue.APPROVED else "rejected"] += 1
+
+    reqs = [r for r in session.exec(select(ConfirmationRequest)).all() if r.invoice_id in inv_ids]
+    responded = [r for r in reqs if r.status == RequestStatus.RESPONDED]
+    return {
+        "filters": {"emirate": emirate, "date_from": date_from, "date_to": date_to, "emirates": sorted({a.emirate for a in apps.values() if a.emirate})},
+        "totals": {"applications": len(app_ids), "invoices": len(invs), "claimed": round(sum(i.vat_amount for i in invs), 2),
+                   "verified": round(sum(i.eligible_vat_amount for i in invs), 2),
+                   "not_refundable": round(sum(i.vat_amount for i in invs if _not_refundable(i)), 2),
+                   "officer_decisions": len(decided), "overrides": sum(1 for d in decided if d.overrode_agent),
+                   "supplier_response_rate": round(len(responded) / len(reqs), 3) if reqs else None},
+        "monthly": monthly,
+        "ratings": {k: ratings.get(k, 0) for k in ("STRONG", "WEAK", "FAIL", "PENDING")},
+        "application_status": {k.value: status.get(k, 0) for k in ApplicationStatus},
+        "by_emirate": by_emirate_rows,
+        "top_suppliers": top_suppliers,
+        "rule_failures": [{"rule": r, "count": n} for r, n in fails.most_common(8)],
+        "decisions_daily": sorted(days.values(), key=lambda r: r["day"]),
+    }
