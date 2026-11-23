@@ -67,7 +67,7 @@ export function Pager({ p, pages, current, path }: { p: number; pages: number; c
 
 export function PageHead({ title, lead, actions }: { title: string; lead: ReactNode; actions?: ReactNode }) {
   return (
-    <header className="page-h">
+    <header className="page-h banner">
       <div><h1>{title}</h1><p className="lead">{lead}</p></div>
       {actions && <div className="page-actions">{actions}</div>}
     </header>

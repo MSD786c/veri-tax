@@ -296,7 +296,7 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 400; pointer-even
 
 /* layout: the dashboard leads with one big card instead of three equals; more air between sections */
 .tasks { grid-template-columns: 1.35fr 1fr 1fr; align-items: stretch; }
-.tasks .task.t-apps { padding-block: 30px; } .tasks .task.t-apps b { font-size: 5.2rem; }
+.tasks .task.t-apps b { font-size: 5.2rem; }
 @media (max-width: 1000px) { .tasks { grid-template-columns: 1fr; } }
 .analytics { margin-top: 56px; } .work { margin-top: 28px; }
 .page-h { margin-bottom: 36px; }
@@ -348,3 +348,20 @@ table.fields { width: 100%; border-collapse: separate; border-spacing: 0 4px; fo
 .brief-rec { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; } .brief-rec b { font-family: var(--display); font-weight: 500; font-size: 1.6rem; color: var(--navy); }
 .linked { display: flex; align-items: center; gap: 6px; } .linked + .linked { margin-top: 4px; } .linked .ic { color: var(--muted); }
 .mini-list span.badge { display: inline-flex; } /* base `.mini-list span {display:grid}` stacked the dot above the label */
+
+/* alignment: task cards share one baseline for number, caption and footer */
+.tasks .task { display: flex; flex-direction: column; }
+.tasks .task > b { margin-top: 6px; }
+.tasks .task > small { min-height: 2.6em; margin-top: 6px; }
+.tasks .task > footer { margin-top: auto; }
+.queue .q-main small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.queue .q-main { min-width: 0; }
+
+/* sign-in on large screens: the panel gets bigger type and the content stays composed */
+@media (min-width: 1500px) {
+  .login-split .login-art { padding: 64px 88px; }
+  .login-split .login-copy { max-width: 640px; }
+  .login-split .login-copy h1 { font-size: 4.9rem; }
+  .login-split .login-copy > p { font-size: 1.2rem; }
+  .login-box { width: min(460px, 100%); }
+}
