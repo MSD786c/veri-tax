@@ -30,3 +30,7 @@ Use `type: summary`, where type is one of `feat`, `fix`, `docs`, `chore`, `test`
 1. Implement it in `app/rules.py` (`check_invoice` or `check_supplier_response`), returning `(rule_id, RuleOutcome, evidence)`.
 2. Bump `RULESET_VERSION`.
 3. Add an assertion to `tests/test_flow.py`, or a new `tests/test_*.py`, that fails if the rule breaks.
+
+## Working on the portal
+
+The portal lives in `web/`. Before you open a PR, run `npm test` and `npm run build` there (CI runs both). Keep API types in `web/src/api/types.ts` in step with `app/models.py` and the response shapes in `app/api/*`.

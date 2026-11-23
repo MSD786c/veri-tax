@@ -1,0 +1,19 @@
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import App from "./App.tsx";
+import { AuthProvider } from "./auth.tsx";
+import { RulesProvider } from "./lib/rules.tsx";
+import "./styles.css";
+
+createRoot(document.getElementById("root")!).render(
+  <StrictMode>
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+      <AuthProvider>
+        <RulesProvider>
+          <App />
+        </RulesProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  </StrictMode>,
+);
