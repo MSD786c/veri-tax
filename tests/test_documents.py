@@ -7,6 +7,7 @@ import pypdfium2 as pdfium
 from PIL import Image
 
 from app import agent, documents, llm
+from tests.conftest import officer_sees_everything
 
 OFF = {"X-Officer-Id": "officer-1"}
 U = "/maskan/portal/test-token"
@@ -29,7 +30,9 @@ def ingest(client, ref: str, invoice_no: str) -> dict:
             "invoice_date": "2026-06-01", "taxable_amount": 1000, "vat_amount": 50, "total": 1050,
             "plot_no": "DXB-9", "description": "Concrete and block work"}]})
     assert r.status_code == 201, r.text
-    return client.get(f"/fta/applications/{r.json()['id']}", headers=OFF).json()["invoices"][0]
+    assert client.get(f"/fta/applications/{r.json()['id']}", headers=OFF).status_code == 404  # no document yet: not the FTA's
+    with officer_sees_everything():  # these tests inspect extraction/linking before the supplier step closes
+        return client.get(f"/fta/applications/{r.json()['id']}", headers=OFF).json()["invoices"][0]
 
 
 def reading(invoice_no: str, document_type: str = "TAX_INVOICE", **over) -> dict:
@@ -47,8 +50,9 @@ def latest(row: dict) -> dict:
 
 
 def find(client, ref: str) -> dict:
-    app = next(a for a in client.get("/fta/applications", headers=OFF).json() if a["maskan_ref"] == ref)
-    return client.get(f"/fta/applications/{app['id']}", headers=OFF).json()["invoices"][0]
+    with officer_sees_everything():
+        app = next(a for a in client.get("/fta/applications", headers=OFF).json() if a["maskan_ref"] == ref)
+        return client.get(f"/fta/applications/{app['id']}", headers=OFF).json()["invoices"][0]
 
 
 def use_agent(monkeypatch, read):

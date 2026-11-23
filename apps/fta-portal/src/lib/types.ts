@@ -186,3 +186,37 @@ export interface AppView extends ApplicationSummary {
 export interface AuditView extends AuditEvent {
   app_ref: string;
 }
+
+// ── projects: one Maskan application per building permit ──
+export interface Project {
+  permit_no: string;
+  application_id: number;
+  maskan_ref: string;
+  applicant_name: string;
+  plot_no: string;
+  emirate: string;
+  permit_date: string | null;
+  completion_date: string | null;
+  status: string;
+  invoice_count: number;
+  vat_claimed: number;
+  vat_eligible: number;
+  invoices_by_rating: Record<"STRONG" | "WEAK" | "FAIL" | "PENDING", number>;
+}
+
+export interface ProjectInvoice {
+  id: number;
+  invoice_no: string;
+  invoice_date: string;
+  supplier_trn: string;
+  supplier_name: string | null;
+  description: string | null;
+  total: number;
+  vat_amount: number;
+  eligible_vat_amount: number;
+  status: string;
+  rating: Rating | null;
+  officer_decision: unknown;
+  has_document: boolean;
+  supplier_responded: boolean;
+}

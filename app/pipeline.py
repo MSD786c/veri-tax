@@ -93,6 +93,7 @@ def ingest(session: Session, payload: IngestApplication, actor: str = "maskan") 
         plot_no=payload.plot_no,
         emirate=payload.emirate,
         completion_date=payload.completion_date,
+        permit_no=payload.permit_no.strip(),
         permit_date=payload.permit_date,
         contract_value=payload.contract_value,
         claim_type=payload.claim_type,
@@ -333,6 +334,20 @@ def link_document(session: Session, doc: Document, ext: ExtractedInvoice) -> lis
     for inv in linked:
         reverify(session, inv)
     return linked
+
+
+def officer_visible_ids(session: Session) -> set[int]:
+    """Applications an FTA officer may see: one of its invoices has its original document linked AND its
+    supplier responded, its request expired, or it is rated FAIL. Until then the case lives only in
+    Maskan / the supplier portal. Every /fta read goes through this."""
+    rows = session.exec(select(Invoice.application_id, Invoice.rating, ConfirmationRequest.status)
+                        .join(ConfirmationRequest, ConfirmationRequest.invoice_id == Invoice.id, isouter=True)
+                        .where(col(Invoice.document_hash).is_not(None))).all()
+    return {a for a, rating, req in rows if rating == Rating.FAIL or req in (RequestStatus.RESPONDED, RequestStatus.EXPIRED)}
+
+
+def officer_visible(session: Session, app: Application | None) -> bool:
+    return app is not None and app.id in officer_visible_ids(session)
 
 
 def ready_applications(session: Session, app_ids) -> list[int]:

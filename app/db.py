@@ -12,7 +12,7 @@ engine = create_engine(
 )
 
 
-SCHEMA_VERSION = 3  # bump when a table changes (3: Document, ExtractedInvoice, AgentRun)
+SCHEMA_VERSION = 4  # bump when a table changes (3: Document, ExtractedInvoice, AgentRun; 4: Application.permit_no)
 
 
 def init_db() -> None:

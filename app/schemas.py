@@ -2,9 +2,10 @@
 from datetime import date
 from typing import Any
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from app.models import ClaimType, ConsiderationStatus, Decision, InvoiceDecisionValue, InvoiceType
+from app.rules import PERIOD_RE
 
 
 class LineItem(BaseModel):
@@ -45,6 +46,7 @@ class IngestApplication(BaseModel):
     plot_no: str
     emirate: str
     completion_date: date
+    permit_no: str = Field("", description="Building permit number; the FTA groups claims into projects by it")
     permit_date: date | None = None
     contract_value: float | None = Field(None, ge=0, description="Construction contract value in AED, incl. VAT")
     claim_type: ClaimType = ClaimType.NEW_RESIDENCE
@@ -60,9 +62,17 @@ class SupplierResponseIn(BaseModel):
     received_date: date | None = None
     retention_amount: float | None = None
     retention_release_date: date | None = None
-    vat_return_period: str | None = Field(None, examples=["2026-Q2", "Apr-2026"])
+    vat_return_period: str | None = Field(None, examples=["2026-Q4", "Nov-2026"])
     declared_by: str
     declaration: bool = Field(description="Supplier confirms the information is correct")
+
+    @field_validator("vat_return_period")
+    @classmethod
+    def _period(cls, v: str | None) -> str | None:
+        v = (v or "").strip() or None
+        if v is not None and not PERIOD_RE.match(v):
+            raise ValueError(f"vat_return_period must be a quarter like 2026-Q4 or a month like Nov-2026, got {v!r}")
+        return v
 
     @model_validator(mode="after")
     def _declared(self):

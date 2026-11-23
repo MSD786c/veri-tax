@@ -78,7 +78,8 @@ def main() -> None:
         # What the applicant entered in Maskan for the three sample invoices.
         pipeline.ingest(s, IngestApplication(
             maskan_ref=REF, applicant_name="Tarek Mohammed", emirates_id="784-1988-9001000-1", plot_no="RAK-21-0450",
-            emirate="Ras Al Khaimah", completion_date=date(2026, 11, 23), permit_date=date(2025, 12, 1), contract_value=750_000,
+            emirate="Ras Al Khaimah", completion_date=date(2026, 11, 23), permit_no="RAK-BP-2025-04417", permit_date=date(2025, 12, 1),
+            contract_value=750_000,
             invoices=[inv("100000000000003", "MMB/2026/001", "Cement", 14285.71, 714.29, 15000.00),
                       inv("100000000000011", "MMB/2026/002", "Sanitary ware", 7619.05, 380.95, 8000.00, title="Invoice"),
                       inv("100000000000003", "MMB/2026/003", "Cement", 952380.95, 47619.05, 1000000.00)]))

@@ -67,11 +67,14 @@ def officer(x_officer_id: str = Header()) -> str:
 @router.get("/overview")
 def overview(_: str = Depends(officer), session: Session = Depends(get_session)):
     pipeline.expire_overdue(session)
-    apps = session.exec(select(Application)).all()
-    invs = session.exec(select(Invoice)).all()
-    reqs = session.exec(select(ConfirmationRequest)).all()
-    fails = session.exec(select(RuleResult.rule_id).where(RuleResult.result == RuleOutcome.FAIL)).all()
-    decisions = session.exec(select(OfficerDecision)).all()
+    visible = pipeline.officer_visible_ids(session)
+    apps = session.exec(select(Application).where(col(Application.id).in_(visible))).all()
+    invs = session.exec(select(Invoice).where(col(Invoice.application_id).in_(visible))).all()
+    inv_ids = [i.id for i in invs]
+    reqs = session.exec(select(ConfirmationRequest).where(col(ConfirmationRequest.invoice_id).in_(inv_ids))).all()
+    fails = session.exec(select(RuleResult.rule_id).where(RuleResult.result == RuleOutcome.FAIL,
+                                                          col(RuleResult.invoice_id).in_(inv_ids))).all()
+    decisions = session.exec(select(OfficerDecision).where(col(OfficerDecision.application_id).in_(visible))).all()
     responded = [r for r in reqs if r.status == RequestStatus.RESPONDED]
     sent = {r.id: r.sent_at for r in responded}
     responses = session.exec(select(SupplierResponse).where(col(SupplierResponse.request_id).in_(list(sent)))).all()
@@ -90,7 +93,8 @@ def overview(_: str = Depends(officer), session: Session = Depends(get_session))
         "refund_approved_aed": round(sum(d.approved_amount for d in decisions), 2),
         "rejected_applications": sum(a.status == ApplicationStatus.REJECTED for a in apps),
         "rejected_refund_aed": round(sum(i.vat_amount for i in invs if _not_refundable(i)), 2),
-        "officer_overrides": len(session.exec(select(InvoiceDecision).where(InvoiceDecision.overrode_agent)).all()),
+        "officer_overrides": len(session.exec(select(InvoiceDecision).where(
+            InvoiceDecision.overrode_agent, col(InvoiceDecision.invoice_id).in_(inv_ids))).all()),
         "supplier_requests_total": len(reqs),
         "supplier_requests_pending": sum(r.status == RequestStatus.PENDING for r in reqs),
         "supplier_response_rate": round(len(responded) / len(reqs), 3) if reqs else None,
@@ -104,7 +108,7 @@ def _application_rows(session: Session, status: ApplicationStatus | None = None,
                       submitted_from: date | None = None, submitted_to: date | None = None,
                       min_vat: float | None = None, max_vat: float | None = None) -> list[dict]:
     pipeline.expire_overdue(session)
-    stmt = select(Application)
+    stmt = select(Application).where(col(Application.id).in_(pipeline.officer_visible_ids(session)))
     if status:
         stmt = stmt.where(Application.status == status)
     if emirate:
@@ -146,8 +150,9 @@ def list_applications(status: ApplicationStatus | None = None, emirate: str | No
 
 @router.get("/applications/{app_id}")
 def get_application(app_id: int, _: str = Depends(officer), session: Session = Depends(get_session)):
+    pipeline.expire_overdue(session)
     app = session.get(Application, app_id)
-    if not app:
+    if not pipeline.officer_visible(session, app):
         raise HTTPException(404, "application not found")
     invoices = []
     for inv in session.exec(select(Invoice).where(Invoice.application_id == app_id)).all():
@@ -295,8 +300,9 @@ def rejections(rule_id: str | None = None, supplier_trn: str | None = None, emir
         stmt = stmt.where(Invoice.rating == rating)
     if supplier_trn:
         stmt = stmt.where(Invoice.supplier_trn == supplier_trn)
+    visible = pipeline.officer_visible_ids(session)
     out = []
-    for inv in session.exec(stmt).all():
+    for inv in session.exec(stmt.where(col(Invoice.application_id).in_(visible))).all():
         app = session.get(Application, inv.application_id)
         if emirate and app.emirate != emirate:
             continue
@@ -329,8 +335,13 @@ def export_csv(status: ApplicationStatus | None = None, emirate: str | None = No
 
 @router.get("/documents")
 def list_documents(_: str = Depends(officer), session: Session = Depends(get_session)):
-    """Every original document (upload link and Maskan), with its extraction and linked invoices."""
-    return [document_view(session, d) for d in session.exec(select(Document).order_by(col(Document.uploaded_at).desc())).all()]
+    """Original documents of officer-visible applications, plus uploads not linked to any invoice yet."""
+    visible = pipeline.officer_visible_ids(session)
+    linked: dict[str, set[int]] = {}
+    for h, a in session.exec(select(Invoice.document_hash, Invoice.application_id).where(col(Invoice.document_hash).is_not(None))).all():
+        linked.setdefault(h, set()).add(a)
+    docs = session.exec(select(Document).order_by(col(Document.uploaded_at).desc())).all()
+    return [document_view(session, d) for d in docs if d.sha256 not in linked or linked[d.sha256] & visible]
 
 
 @router.get("/documents/{doc_id}/file")
@@ -374,9 +385,10 @@ def analytics(emirate: str | None = None, date_from: date | None = None, date_to
     ponytail: computed in Python over full scans, like /overview. Move to SQL GROUP BY when volumes grow.
     """
     pipeline.expire_overdue(session)
-    apps = {a.id: a for a in session.exec(select(Application)).all()}
+    visible = pipeline.officer_visible_ids(session)
+    apps = {a.id: a for a in session.exec(select(Application).where(col(Application.id).in_(visible))).all()}
     suppliers = {s.trn: s for s in session.exec(select(Supplier)).all()}
-    all_invs = session.exec(select(Invoice)).all()
+    all_invs = session.exec(select(Invoice).where(col(Invoice.application_id).in_(visible))).all()
 
     def in_range(i: Invoice) -> bool:
         return (date_from is None or i.invoice_date >= date_from) and (date_to is None or i.invoice_date <= date_to)
@@ -442,3 +454,38 @@ def analytics(emirate: str | None = None, date_from: date | None = None, date_to
         "rule_failures": [{"rule": r, "count": n} for r, n in fails.most_common(8)],
         "decisions_daily": sorted(days.values(), key=lambda r: r["day"]),
     }
+
+
+# --- Projects: one building permit = one project (what the officer browses by) -----------------
+
+def _project_key(a: dict) -> str:
+    return a["permit_no"] or a["maskan_ref"]  # ponytail: claims ingested without a permit number fall back to the Maskan ref
+
+
+def _project(a: dict) -> dict:
+    return {"permit_no": _project_key(a), "application_id": a["id"],
+            **{k: a[k] for k in ("maskan_ref", "applicant_name", "plot_no", "emirate", "permit_date", "completion_date",
+                                 "status", "invoice_count", "vat_claimed", "vat_eligible")},
+            "invoices_by_rating": {k: a["invoices_by_rating"].get(k, 0) for k in ("STRONG", "WEAK", "FAIL", "PENDING")}}
+
+
+@router.get("/projects")
+def list_projects(_: str = Depends(officer), session: Session = Depends(get_session)):
+    """Officer-visible projects, newest first."""
+    return [_project(a) for a in _application_rows(session)]
+
+
+@router.get("/projects/{permit_no:path}")
+def get_project(permit_no: str, _: str = Depends(officer), session: Session = Depends(get_session)):
+    """One project and its invoices. Permit numbers contain slashes: URL-encode them."""
+    row = next((a for a in _application_rows(session) if _project_key(a) == permit_no), None)
+    if not row:
+        raise HTTPException(404, "project not found")
+    invoices = []
+    for inv in session.exec(select(Invoice).where(Invoice.application_id == row["id"]).order_by(Invoice.invoice_date)).all():
+        _, resp = pipeline.request_for(session, inv)
+        invoices.append({**inv.model_dump(include={"id", "invoice_no", "invoice_date", "supplier_trn", "description", "total",
+                                                   "vat_amount", "eligible_vat_amount", "status", "rating", "officer_decision"}),
+                         "supplier_name": session.get(Supplier, inv.supplier_trn).legal_name,
+                         "has_document": bool(inv.document_hash), "supplier_responded": resp is not None})
+    return {"project": _project(row), "invoices": invoices}

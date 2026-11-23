@@ -56,6 +56,8 @@ def ingested(c):
         "invoices": [inv("FGA-1", 60000, "Aluminium windows and doors"), inv("FGA-2", 20000, "Waterproofing and roof insulation"),
                      inv("FGA-3", 5000, "Dining table and chairs furniture")]})
     assert r.status_code == 201, r.text
+    from tests.conftest import link_stub_documents
+    link_stub_documents("MSK-TEST-PORTAL")  # documents linked + FGA-3 rated FAIL: visible to officers
     return r.json()
 
 

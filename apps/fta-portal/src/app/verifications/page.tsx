@@ -74,7 +74,7 @@ export default async function Verifications({ searchParams }: { searchParams: Pr
               </div>
               <dl className="kv">
                 <div><dt>Invoice number</dt><dd>{v.invoice_no}</dd></div><div><dt>Invoice date</dt><dd>{fdate(v.invoice_date)}</dd></div>
-                <div><dt>Supplier</dt><dd><Link className="link" href={`/entities?open=${v.supplier_trn}`}>{v.supplier_name}</Link></dd></div><div><dt>Supplier TRN</dt><dd className="mono">{v.supplier_trn}</dd></div>
+                <div><dt>Supplier</dt><dd><Link className="link" href={`/invoices?q=${v.supplier_trn}`}>{v.supplier_name}</Link></dd></div><div><dt>Supplier TRN</dt><dd className="mono">{v.supplier_trn}</dd></div>
                 <div><dt>Amount excl. VAT</dt><dd>{money(v.taxable_amount)}</dd></div><div><dt>VAT claimed</dt><dd>{money(v.vat_amount)}</dd></div>
                 <div><dt>Eligible VAT</dt><dd>{money(v.eligible_vat_amount)}</dd></div><div><dt>Supplier trust</dt><dd>{nice(typeof v.row.supplier_trust === "string" ? v.row.supplier_trust : v.row.supplier_trust.tier)}</dd></div>
               </dl>

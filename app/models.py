@@ -130,6 +130,7 @@ class Application(SQLModel, table=True):
     plot_no: str
     emirate: str
     completion_date: date
+    permit_no: str = Field(default="", index=True)  # building permit number: the FTA "project" key
     permit_date: date | None = None
     contract_value: float | None = None
     claim_type: ClaimType = ClaimType.NEW_RESIDENCE
