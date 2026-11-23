@@ -16,10 +16,10 @@ const INVOICE: Record<InvoiceStatus, StatusInfo> = {
   EXTRACTED: { label: "Extracted", tone: "neutral" },
   AUTO_VERIFIED: { label: "Auto-verified", tone: "good" },
   NEEDS_SUPPLIER: { label: "Needs supplier", tone: "info" },
-  AWAITING_SUPPLIER: { label: "Awaiting supplier", tone: "info", hint: "Sent to the supplier for confirmation" },
+  AWAITING_SUPPLIER: { label: "Awaiting supplier", tone: "warning", hint: "Sent to the supplier for confirmation" },
   SUPPLIER_CONFIRMED: { label: "Supplier confirmed", tone: "info" },
   DISPUTED: { label: "Disputed", tone: "serious", hint: "The supplier says it did not issue this invoice" },
-  NO_SUPPLIER_RESPONSE: { label: "No supplier response", tone: "serious" },
+  NO_SUPPLIER_RESPONSE: { label: "No supplier response", tone: "warning" },
   AUTO_REJECTED: { label: "Auto-rejected", tone: "critical", hint: "Failed a tax invoice or eligibility rule" },
   RECONCILED: { label: "Reconciled", tone: "info" },
   VERIFIED: { label: "Verified", tone: "good", hint: "Rules passed and the supplier confirmed it" },
@@ -61,7 +61,7 @@ const RATING: Record<Rating | "PENDING", StatusInfo> = {
   STRONG: { label: "Strong", tone: "good", hint: "Agent: every check passed and the supplier confirmed it" },
   WEAK: { label: "Weak", tone: "warning", hint: "Agent: something needs a person to look at it" },
   FAIL: { label: "Fail", tone: "critical", hint: "Agent: a hard rule failed or the supplier disputes it" },
-  PENDING: { label: "No rating yet", tone: "info", hint: "Waiting for the supplier to confirm" },
+  PENDING: { label: "No rating yet", tone: "neutral", hint: "Waiting for the supplier to confirm" },
 };
 
 const TRUST: Record<TrustTier, StatusInfo> = {

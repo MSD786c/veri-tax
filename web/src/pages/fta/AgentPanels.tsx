@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ApiError, openFile, post } from "../../api/client.ts";
 import type { AgentRun, InvoiceDetail } from "../../api/types.ts";
-import { Banner, Card, Chip } from "../../components/ui.tsx";
+import { Banner, Card, Chip, TableWrap } from "../../components/ui.tsx";
 import { aed, fmtDateTime, humanize } from "../../lib/format.ts";
 import { statusInfo } from "../../lib/status.ts";
 
@@ -70,24 +70,26 @@ export function OriginalDocument({ detail }: { detail: InvoiceDetail }) {
           <summary>
             What the model read ({humanize(extraction.document_type)}, {fields.length} fields)
           </summary>
-          <table className="table compact">
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Value</th>
-                <th className="num">Confidence</th>
-              </tr>
-            </thead>
-            <tbody>
-              {fields.map(([k, f]) => (
-                <tr key={k}>
-                  <td>{humanize(k)}</td>
-                  <td>{fieldValue(f!.value)}</td>
-                  <td className="num" style={f!.confidence !== undefined && f!.confidence < 0.7 ? { background: "#fff3cd", fontWeight: 600 } : undefined}>{f!.confidence !== undefined ? `${Math.round(f!.confidence * 100)}%` : "—"}</td>
+          <TableWrap>
+            <table className="table compact">
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Value</th>
+                  <th className="num">Confidence</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {fields.map(([k, f]) => (
+                  <tr key={k}>
+                    <td>{humanize(k)}</td>
+                    <td>{fieldValue(f!.value)}</td>
+                    <td className="num" style={f!.confidence !== undefined && f!.confidence < 0.7 ? { background: "var(--warning-wash)", fontWeight: 600 } : undefined}>{f!.confidence !== undefined ? `${Math.round(f!.confidence * 100)}%` : "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </TableWrap>
         </details>
       )}
     </div>

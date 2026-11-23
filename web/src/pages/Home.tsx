@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { ApiError, get } from "../api/client.ts";
 import type { Supplier } from "../api/types.ts";
 import { useAuth } from "../auth.tsx";
+import { GovBar, GovFooter } from "../components/Layout.tsx";
 import { Banner } from "../components/ui.tsx";
 
 // Synthetic suppliers from app/seed.py, offered as one-click demo sign-ins.
@@ -20,7 +21,7 @@ const STEPS = [
   ["FTA officer", "Officers review the reconciled evidence and approve or reject the refund."],
 ];
 
-function safeNext(next: string | null, prefix: string): string {
+export function safeNext(next: string | null, prefix: string): string {
   return next && next.startsWith(prefix) && !next.startsWith("//") ? next : prefix;
 }
 
@@ -70,6 +71,8 @@ export default function Home() {
   }
 
   return (
+    <div className="shell">
+    <GovBar />
     <div className="home">
       <header className="home-hero">
         <div className="brand brand-lg">
@@ -186,6 +189,8 @@ export default function Home() {
         Sign-in here is a development stand-in. Production uses EmaraTax / UAE PASS for suppliers and FTA single sign-on for
         officers. All data is synthetic.
       </p>
+    </div>
+    <GovFooter />
     </div>
   );
 }
