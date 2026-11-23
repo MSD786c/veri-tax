@@ -83,7 +83,7 @@ CATALOGUE: tuple[Entry, ...] = (
          r"driver'?s? room", r"maid'?s? room"),
     # --- Eligible -------------------------------------------------------------------------
     _e("Building materials that make up the structure", r"brick", r"block ?work", r"cement", r"concrete", r"steel",
-       r"rebar", r"reinforcement", r"\btiles?\b", r"tiling", r"timber", r"aggregate", r"gypsum", r"marble",
+       r"rebar", r"reinforcement", r"\btiles?\b", r"tiling", r"timber", r"aggregate", r"\bsand\b", r"balustrad", r"handrail", r"staircase", r"gypsum", r"marble",
        r"roof", r"waterproof", r"insulation", r"foundation", r"excavation", r"structure", r"screed"),
     _e("Built-in kitchen, sinks, work surfaces and fitted cupboards", r"built[- ]in kitchen", r"fitted kitchen",
        r"kitchen cabinet", r"kitchen sink", r"work ?surface", r"worktop", r"fitted cupboard"),
@@ -105,7 +105,7 @@ CATALOGUE: tuple[Entry, ...] = (
     _e("Solar panels", r"solar"),
     _e("Window frames, awnings and glazing", r"window", r"glazing", r"awning", r"alumini?um"),
     _e("Doors", r"\bdoors?\b"),
-    _e("Wiring embedded in the structure", r"wiring", r"electrical", r"cabl"),
+    _e("Wiring embedded in the structure", r"wiring", r"electrical", r"cabl", r"earthing", r"lightning protection"),
     Entry("Services of builders", Verdict.ELIGIBLE,
           (r"construction", r"contracting", r"builder", r"labou?r", r"civil work", r"mep\b", r"installation",
            r"masonry", r"supply"), generic=True),

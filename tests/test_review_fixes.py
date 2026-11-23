@@ -136,3 +136,9 @@ def test_trn_second_look_and_near_miss_recipient(monkeypatch):
     assert out == {"TI-08": rules.U, "NR-06": rules.NA}  # misreading, not a third party -> no NR-06 FAIL
     inv.recipient_name = "Gulf Contracting LLC"
     assert dict((r, v) for r, v, _ in rules._recipient_checks(inv, app))["TI-08"] == rules.F
+
+
+def test_catalogue_gaps_from_invoice_eval():
+    from app import eligibility
+    for text in ("Glass balustrade to staircase and balconies", "Earthing and lightning protection system", "Washed sand"):
+        assert eligibility.classify(text).verdict == eligibility.Verdict.ELIGIBLE, text
