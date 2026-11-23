@@ -9,6 +9,8 @@ import { fdate, flat, qs, rel, type Params } from "@/lib/format";
 
 export const metadata = { title: "Dashboard · Federal Tax Authority" };
 
+const clip = (t: string, n: number) => (t.length > n ? `${t.slice(0, n - 1).trimEnd()}…` : t);
+
 export default async function Dashboard({ searchParams }: { searchParams: Promise<Params> }) {
   const f = flat(await searchParams);
   const r = await guard(async () => ({ all: await loadAll(), an: await getAnalytics(f) }));
@@ -26,7 +28,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
   const queue = [
     ...open.map((a) => ({ kind: "app" as const, key: `a${a.id}`, title: a.applicant_name, meta: `${a.claim_type.replace(/_/g, " ").toLowerCase().replace(/^./, (c) => c.toUpperCase())} · ${a.maskan_ref}`, at: a.submitted_at, href: `/applications?open=${a.id}`, badge: <Badge kind={a.tone}>{a.label}</Badge> })),
-    ...referred.map((i) => ({ kind: "inv" as const, key: `i${i.id}`, title: i.supplier_name, meta: `${i.invoice_no} · ${(i.rating_reasons[0] ?? "Needs your decision").slice(0, 70)}`, at: i.invoice_date, href: `/verifications?open=${i.id}`, badge: <Badge kind="referred">Referred</Badge> })),
+    ...referred.map((i) => ({ kind: "inv" as const, key: `i${i.id}`, title: i.supplier_name, meta: `${i.invoice_no} · ${clip(i.rating_reasons[0] ?? "Needs your decision", 64)}`, at: i.invoice_date, href: `/verifications?open=${i.id}`, badge: <Badge kind="referred">Referred</Badge> })),
   ].sort((a, b) => a.at.localeCompare(b.at)).slice(0, 7);
   const recent = [...invoices].sort((a, b) => b.invoice_date.localeCompare(a.invoice_date)).slice(0, 3);
   const hour = new Date().getHours();

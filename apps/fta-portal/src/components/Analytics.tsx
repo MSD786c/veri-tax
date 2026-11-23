@@ -10,11 +10,11 @@ export const STATUS_COLORS: Record<string, string> = {
 const nice = (k: string) => k.charAt(0) + k.slice(1).toLowerCase().replace(/_/g, " ");
 
 /** Emirate + date-range filter. A plain GET form, so every chart below it follows the URL. */
-export function AnalyticsFilters({ an, f, path }: { an: Analytics; f: Record<string, string>; path: string }) {
+export function AnalyticsFilters({ an, f, path, compact = false }: { an: Analytics; f: Record<string, string>; path: string; compact?: boolean }) {
   const emirate = f.emirate || "all";
   const active = emirate !== "all" || f.from || f.to;
   return (
-    <form className="an-filters" method="get" action={path} aria-label="Chart filters">
+    <form className={`an-filters${compact ? " compact" : ""}`} method="get" action={path} aria-label="Chart filters">
       <label className="select"><Icon n="pin" s={16} /><span className="sr">Emirate</span>
         <select name="emirate" aria-label="Emirate" defaultValue={emirate}>
           <option value="all">All emirates</option>
