@@ -13,6 +13,15 @@ from app.seed import COMPLETION, COMPLETION_QUARTER, SUPPLIERS  # noqa: E402
 
 SUP = {"X-Supplier-TRN": "100333333300003"}
 OFF = {"X-Officer-Id": "officer-1"}
+
+
+def _officer_invoice(c, invoice_id: int) -> dict:
+    """The invoice as an FTA officer sees it (with rating); suppliers never get these fields."""
+    for a in c.get("/fta/applications", headers=OFF).json():
+        for row in c.get(f"/fta/applications/{a['id']}", headers=OFF).json()["invoices"]:
+            if row["invoice"]["id"] == invoice_id:
+                return row["invoice"]
+    raise AssertionError(f"invoice {invoice_id} not found")
 CONFIRM = {"issued": True, "particulars_confirmed": True, "consideration_status": "RECEIVED",
            "vat_return_period": COMPLETION_QUARTER, "declared_by": "finance@dre.example", "declaration": True}
 
@@ -76,11 +85,12 @@ def test_full_flow():
         assert c.get("/supplier/requests", headers={"X-Supplier-TRN": "999"}).status_code == 401
         pending = c.get("/supplier/requests?status=PENDING", headers=SUP).json()
         assert pending and all(p["invoice"]["supplier_trn"] == SUP["X-Supplier-TRN"] for p in pending)
-        assert all(p["invoice"]["rating"] is None for p in pending)  # no recommendation before the supplier answers
+        assert all("rating" not in p["invoice"] and "fix_guidance" not in p["invoice"] for p in pending)  # FTA-internal
         for p in pending:
             r = c.post(f"/supplier/requests/{p['request']['id']}/respond", headers=SUP, json=CONFIRM)
             assert r.status_code == 200, r.text
-            assert r.json()["invoice"]["status"] == "VERIFIED" and r.json()["invoice"]["rating"] == "STRONG"
+            assert r.json()["invoice"]["status"] == "VERIFIED" and "rating" not in r.json()["invoice"]
+            assert _officer_invoice(c, r.json()["invoice"]["id"])["rating"] == "STRONG"
         # Responding twice is refused
         assert c.post(f"/supplier/requests/{pending[0]['request']['id']}/respond", headers=SUP, json={
             "issued": True, "declared_by": "x", "declaration": True}).status_code == 409

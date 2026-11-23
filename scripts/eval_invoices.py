@@ -33,7 +33,11 @@ _tmp = tempfile.mkdtemp()
 os.environ.update(DATABASE_URL=f"sqlite:///{_tmp}/eval.db", SEED="0", DATA_DIR=f"{_tmp}/data")
 sys.path.insert(0, str(ROOT))
 
+import logging  # noqa: E402
+
 from sqlmodel import Session, select  # noqa: E402
+
+logging.basicConfig(level=logging.WARNING, format="%(asctime)s %(name)s %(message)s", stream=sys.stdout)
 
 from app import db, documents, pipeline, rules  # noqa: E402
 from app.agent import get_agent  # noqa: E402

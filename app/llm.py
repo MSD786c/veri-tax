@@ -7,6 +7,7 @@ ponytail: one global lock = ~2 extractions/min. A higher Groq tier or a token-bu
 """
 import base64
 import json
+import logging
 import os
 import re
 import threading
@@ -22,6 +23,7 @@ TIMEOUT = float(os.getenv("LLM_TIMEOUT", "120"))
 MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "700"))  # must stay under the tier's output-tokens-per-minute
 MAX_ATTEMPTS = 4
 _lock = threading.Lock()
+log = logging.getLogger("veritax.llm")
 
 
 class LLMError(RuntimeError):
@@ -80,7 +82,9 @@ def _post(body: dict) -> dict:
             continue
         if r.status_code in (429, 500, 502, 503) and attempt < MAX_ATTEMPTS - 1:
             last = f"LLM HTTP {r.status_code}: {r.text[:300]}"
-            time.sleep(_retry_after(r))
+            wait = _retry_after(r)
+            log.warning("LLM %s, retry %d/%d in %.0fs: %s", r.status_code, attempt + 1, MAX_ATTEMPTS - 1, wait, r.text[:160])
+            time.sleep(wait)
             continue
         if r.status_code != 200:
             raise LLMError(f"LLM HTTP {r.status_code}: {r.text[:300]}")

@@ -29,13 +29,18 @@ def current_supplier(x_supplier_trn: str = Header(), session: Session = Depends(
     return supplier
 
 
+# The FTA's own assessment of an invoice never goes to the supplier (only to officers via /fta).
+FTA_INTERNAL = {"rating", "rating_reasons", "fix_guidance", "suggested_eligible_vat", "eligible_vat_amount",
+                "officer_decision", "document_hash"}
+
+
 def _request_view(session: Session, req: ConfirmationRequest) -> dict:
     inv = session.get(Invoice, req.invoice_id)
     app = session.get(Application, inv.application_id)
     resp = session.exec(select(SupplierResponse).where(SupplierResponse.request_id == req.id)).first()
     return {
         "request": req,
-        "invoice": inv,
+        "invoice": inv.model_dump(exclude=FTA_INTERNAL),
         # Supplier sees only what it needs to confirm, not the applicant's Emirates ID.
         "application": {"maskan_ref": app.maskan_ref, "applicant_name": app.applicant_name, "plot_no": app.plot_no, "emirate": app.emirate},
         "response": resp,

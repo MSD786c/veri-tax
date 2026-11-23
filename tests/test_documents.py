@@ -119,8 +119,8 @@ def test_upload_link_extracts_links_and_reverifies(client, monkeypatch):
     r = client.post(f"/supplier/requests/{req_id}/respond", headers={"X-Supplier-TRN": TRN}, json={
         "issued": True, "particulars_confirmed": True, "consideration_status": "RECEIVED",
         "vat_return_period": "2026-Q3", "declared_by": "finance@doctest.example", "declaration": True})
-    inv = r.json()["invoice"]
-    assert inv["status"] == "VERIFIED" and inv["rating"] == "STRONG", inv
+    assert r.json()["invoice"]["status"] == "VERIFIED" and "rating" not in r.json()["invoice"]
+    assert find(client, "MSK-DOC-1")["invoice"]["rating"] == "STRONG"
 
     # Document disagrees with Maskan (total) -> EX-01 FAIL -> rating FAIL -> FLAGGED, supplier request cancelled
     client.post(f"{U}/documents", files=[("files", ("doc2.png", png(2), "image/png"))])

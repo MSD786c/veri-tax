@@ -88,7 +88,10 @@ def test_bulk_respond_is_all_or_nothing(c, ingested):
 
     r = c.post("/supplier/requests/bulk-respond", headers=SUP, json={"items": [{**CONFIRM, "request_id": i} for i in ids]})
     assert r.status_code == 200, r.text
-    assert [(v["invoice"]["status"], v["invoice"]["rating"]) for v in r.json()] == [("VERIFIED", "STRONG")] * 2
+    assert [v["invoice"]["status"] for v in r.json()] == ["VERIFIED"] * 2
+    assert all("rating" not in v["invoice"] for v in r.json())  # FTA-internal, never sent to suppliers
+    from tests.test_flow import _officer_invoice
+    assert [_officer_invoice(c, v["invoice"]["id"])["rating"] for v in r.json()] == ["STRONG"] * 2
     assert c.get("/supplier/requests?status=PENDING", headers=SUP).json() == []
 
 
