@@ -1,7 +1,7 @@
 """Core data model. Mirrors the README "Data model" section.
 
-ponytail: Applicant is folded into Application and ExtractedInvoice is skipped until
-OCR (roadmap phase 1) lands — add them as tables when they carry real data.
+ponytail: Applicant is folded into Application. Schema changes only ADD tables so existing
+local SQLite files keep working; if you change a column, delete veritax.db (no migrations yet).
 """
 from datetime import date, datetime, timezone
 from enum import StrEnum
@@ -57,6 +57,14 @@ class RequestStatus(StrEnum):
     PENDING = "PENDING"
     RESPONDED = "RESPONDED"
     EXPIRED = "EXPIRED"
+    CANCELLED = "CANCELLED"  # invoice rated FAIL after the request went out (e.g. a linked document disagrees)
+
+
+class DocumentStatus(StrEnum):
+    UPLOADED = "UPLOADED"
+    EXTRACTING = "EXTRACTING"
+    EXTRACTED = "EXTRACTED"
+    FAILED = "FAILED"
 
 
 class ConsiderationStatus(StrEnum):
@@ -230,4 +238,42 @@ class AuditEvent(SQLModel, table=True):
     action: str
     entity: str
     detail: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    at: datetime = Field(default_factory=now)
+
+
+class Document(SQLModel, table=True):
+    """An original invoice file. Invoices link to it via Invoice.document_hash == Document.sha256."""
+    id: int | None = Field(default=None, primary_key=True)
+    sha256: str = Field(index=True, unique=True)
+    filename: str
+    content_type: str
+    size: int
+    path: str
+    source: str = "maskan-portal"  # maskan-portal | maskan (attached to one invoice)
+    label: str = ""
+    status: DocumentStatus = DocumentStatus.UPLOADED
+    error: str | None = None
+    uploaded_at: datetime = Field(default_factory=now)
+
+
+class ExtractedInvoice(SQLModel, table=True):
+    """Vision-model reading of a Document. fields = {name: {"value": ..., "confidence": 0..1}}."""
+    id: int | None = Field(default=None, primary_key=True)
+    document_id: int = Field(foreign_key="document.id", unique=True)
+    document_type: str
+    fields: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    model: str
+    prompt_version: str
+    created_at: datetime = Field(default_factory=now)
+
+
+class AgentRun(SQLModel, table=True):
+    """Every LLM recommendation (compliance, reconciliation). Advisory only; officers decide."""
+    id: int | None = Field(default=None, primary_key=True)
+    kind: str  # compliance | reconciliation
+    entity: str = Field(index=True)  # invoice:<id> | application:<id>
+    model: str
+    prompt_version: str
+    output: dict[str, Any] = Field(default_factory=dict, sa_column=Column(JSON))
+    error: str | None = None
     at: datetime = Field(default_factory=now)

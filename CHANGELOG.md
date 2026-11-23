@@ -8,6 +8,20 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- **Original documents, Maskan portal and the Groq agent (Suhayl, 23 Nov):**
+  - `app/agent.py` now has `GroqAgent`, selected by `AGENT_PROVIDER=groq`. `app/llm.py` is the Groq client: `qwen/qwen3.8-27b` for vision and text, a token cap per call, one call at a time and `429` back-off, which fits the on-demand limit of 1,000 output tokens per minute.
+  - Document store and vision extraction (`app/documents.py`): PDF pages render to JPEG at a capped size, files are checked by magic bytes, and jobs are claimed atomically and recovered after a restart.
+  - Maskan portal at `/maskan/portal/<token>`, the main entry for pulling invoices in: upload, live tracking, retry.
+  - `POST /maskan/invoices/{id}/document` attaches the original to one invoice.
+  - Auto-linking by a confidently read TRN and invoice number fills missing Article 59 particulars, then re-runs the rules and the rating through `pipeline.reverify`, which uses the same outcomes as `ingest` and `reconcile`.
+  - New rule `EX-01`: Maskan data compared with the original document. `TI-01` also fails on a document that reads as a quotation, proforma or receipt.
+  - `NR-05`: an earlier claim of the invoice gives `FAIL`; only later claims give `UNCERTAIN`, so re-running the rules never fails the first claimant. Invoice numbers are normalised ("GSC 77" = "GSC-77"), and same-application repeats count.
+  - `SC-03`: a retention answer on a non-retention claim is `UNCERTAIN`.
+  - Compliance and reconciliation agents (advisory, stored as `AgentRun`): `POST /fta/invoices/{id}/compliance`, `POST /fta/applications/{id}/summary`.
+  - New endpoints: `GET /fta/documents`, `GET /health/llm`, `GET /rules`. Application detail now includes `document`, `extraction` and `agent_runs`.
+  - Request status `CANCELLED`, with re-issue and a fresh time limit. Schema version 3.
+  - `fixtures/invoices/` plus a generator. The seed date is pinned to 2026-09-24. Tests mock the LLM and each module gets a fresh database.
+
 - **Rating and officer control (Claude for Mwr, 23 Nov, ruleset `2026.11-1`):**
   - Every invoice is rated `STRONG`, `WEAK` or `FAIL` with reasons (`app/assessment.py`). New invoice fields: `rating`, `rating_reasons`, `fix_guidance`, `officer_decision`, `suggested_eligible_vat`.
   - `POST /fta/invoices/{id}/decision`: the officer approves or rejects one invoice. Each decision is stored with the agent's rating and shown as a precedent on later invoices with the same findings.

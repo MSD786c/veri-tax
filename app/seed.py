@@ -44,7 +44,8 @@ T1, T2, T3, T4, T5, T6, T7, T8 = SUPPLIERS
 DEREGISTERED = T8
 # Test logins for the supplier portal: use any TRN above as X-Supplier-TRN.
 
-COMPLETION = date.today() - timedelta(days=60)
+# Pinned so fixtures/invoices/*.png keep matching the seed (EX-01). NR-04 fails after 2027-09-24.
+COMPLETION = date(2026, 9, 24)
 
 
 def _inv(trn: str, no: str, days_before: int, taxable: float, plot: str, applicant: str, desc: str, **kw) -> IngestInvoice:

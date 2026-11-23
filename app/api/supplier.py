@@ -3,13 +3,14 @@
 ponytail: identity is the X-Supplier-TRN header. Replace with EmaraTax / UAE PASS token
 validation before anything real touches this.
 """
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 from sqlmodel import Session, select
 
-from app import pipeline
+from app import agents, pipeline
 from app.db import audit, get_session
 from app.models import (
     Application,
+    ApplicationStatus,
     ConfirmationRequest,
     Invoice,
     RequestStatus,
@@ -67,7 +68,7 @@ def get_request(request_id: int, supplier: Supplier = Depends(current_supplier),
 
 
 @router.post("/requests/{request_id}/respond")
-def respond(request_id: int, body: SupplierResponseIn, supplier: Supplier = Depends(current_supplier), session: Session = Depends(get_session)):
+def respond(request_id: int, body: SupplierResponseIn, background: BackgroundTasks, supplier: Supplier = Depends(current_supplier), session: Session = Depends(get_session)):
     req = _own_request(request_id, supplier, session)
     if req.status != RequestStatus.PENDING:
         raise HTTPException(409, f"request is {req.status}")
@@ -75,6 +76,9 @@ def respond(request_id: int, body: SupplierResponseIn, supplier: Supplier = Depe
     session.add(resp)
     session.flush()
     audit(session, f"supplier:{supplier.trn}", "respond", f"request:{req.id}", declared_by=body.declared_by)
-    pipeline.reconcile(session, req, resp)
+    inv = pipeline.reconcile(session, req, resp)
     session.commit()
+    app = session.get(Application, inv.application_id)
+    if app.status == ApplicationStatus.READY_FOR_DECISION:
+        background.add_task(agents.summary_background, app.id)  # decision brief for the officer
     return _request_view(session, req)
