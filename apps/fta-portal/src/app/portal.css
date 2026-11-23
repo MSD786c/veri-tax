@@ -365,3 +365,13 @@ table.fields { width: 100%; border-collapse: separate; border-spacing: 0 4px; fo
   .login-split .login-copy > p { font-size: 1.2rem; }
   .login-box { width: min(460px, 100%); }
 }
+
+/* rule explanation: small "i" with a tooltip on hover and keyboard focus */
+.rule-info { position: relative; display: inline-grid; place-items: center; width: 16px; height: 16px; margin-inline-start: 6px; border-radius: 50%; border: 1px solid rgba(15, 31, 61, .35); color: var(--navy); font: 600 10px/1 var(--display, Georgia, serif); font-style: normal; cursor: help; vertical-align: 1px; }
+.rule-info:hover, .rule-info:focus-visible { background: var(--navy); color: #fff; outline: none; }
+.rule-info::after { content: attr(data-tip); position: absolute; z-index: 60; inset-block-end: calc(100% + 8px); inset-inline-start: 50%; transform: translateX(-50%); width: max-content; max-width: 280px; padding: 9px 12px; border-radius: 14px; background: var(--navy); color: #fff; font: 500 12.5px/1.4 Inter, system-ui, sans-serif; letter-spacing: 0; text-transform: none; white-space: normal; text-align: start; box-shadow: 0 18px 30px -18px rgba(15, 31, 61, .6); opacity: 0; pointer-events: none; transition: opacity .15s; }
+.rule-info:hover::after, .rule-info:focus-visible::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .rule-info::after { transition: none; } }
+/* keep the tooltip inside drawers: open inward from the icon instead of centring on it */
+.rule-info::after { inset-inline-start: -10px; transform: none; max-width: min(260px, 70vw); }
+li:nth-child(even) > .rid > .rule-info::after { inset-inline-start: auto; inset-inline-end: -10px; }

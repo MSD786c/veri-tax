@@ -3,6 +3,7 @@ import { askComplianceAction, decisionBriefAction } from "@/app/actions";
 import { fdt, money, nice } from "@/lib/format";
 import type { AgentRun, BriefOutput, ComplianceOutput, DocumentMeta, Extraction } from "@/lib/types";
 import { Badge, Icon } from "./ui";
+import { RuleInfo } from "@/components/RuleInfo";
 
 const FIELD: Record<string, string> = {
   supplier_trn: "Supplier TRN", invoice_no: "Invoice number", plot_no: "Plot number", vat_rate: "VAT rate", vat_amount: "VAT amount",
@@ -79,7 +80,7 @@ export function ComplianceAdvice({ invoiceId, runs }: { invoiceId: number; runs:
       {o ? (
         <>
           {o.eligible_goods !== undefined && <p>Goods eligible for the refund: <b>{o.eligible_goods ? "Yes" : "No"}</b></p>}
-          {!!o.recommendations?.length && <ul className="advice-list">{o.recommendations.map((r, k) => <li key={k}><span className="mono">{r.rule_id}</span><Badge kind={recTone(r.recommendation)}>{nice(r.recommendation)}</Badge><span>{r.reason}</span></li>)}</ul>}
+          {!!o.recommendations?.length && <ul className="advice-list">{o.recommendations.map((r, k) => <li key={k}><span className="mono">{r.rule_id}<RuleInfo id={r.rule_id} /></span><Badge kind={recTone(r.recommendation)}>{nice(r.recommendation)}</Badge><span>{r.reason}</span></li>)}</ul>}
           {o.notes && <p className="muted">{o.notes}</p>}
         </>
       ) : !run?.error && <p className="muted small">The agent has not reviewed this invoice yet. Its view is a second opinion; the rule checks and your decision stand.</p>}

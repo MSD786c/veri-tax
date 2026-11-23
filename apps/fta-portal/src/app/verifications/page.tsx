@@ -6,6 +6,7 @@ import { guard } from "@/components/states";
 import { Badge, Empty, Icon, PageHead, Pager, RatingBadge, SearchBox, Seg, Timeline } from "@/components/ui";
 import { loadAll } from "@/lib/data";
 import { fdate, fdt, flat, match, money, nice, paginate, qs, type Params } from "@/lib/format";
+import { RuleInfo } from "@/components/RuleInfo";
 
 export const metadata = { title: "Verifications · Federal Tax Authority" };
 
@@ -82,7 +83,7 @@ export default async function Verifications({ searchParams }: { searchParams: Pr
               <DocumentPanel doc={v.row.document} extraction={v.row.extraction} />
               <h3 className="sec">Rule checks</h3>
               <ul className="rules">
-                {v.row.rule_results.map((x) => <li key={x.rule_id}><span className="rid mono">{x.rule_id}</span><Badge kind={x.result === "PASS" ? "approved" : x.result === "FAIL" ? "rejected" : x.result === "UNCERTAIN" ? "referred" : "neutral"}>{nice(x.result)}</Badge></li>)}
+                {v.row.rule_results.map((x) => <li key={x.rule_id}><span className="rid mono">{x.rule_id}<RuleInfo id={x.rule_id} /></span><Badge kind={x.result === "PASS" ? "approved" : x.result === "FAIL" ? "rejected" : x.result === "UNCERTAIN" ? "referred" : "neutral"}>{nice(x.result)}</Badge></li>)}
               </ul>
               {v.row.supplier_response ? (
                 <><h3 className="sec">Supplier confirmation</h3>
