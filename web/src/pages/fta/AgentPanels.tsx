@@ -1,7 +1,7 @@
 // Original documents and the advisory agents (app/documents.py, app/agents.py). Agents recommend;
 // officers decide. When no agent is configured the API answers 503 and these panels say so plainly.
 import { useState } from "react";
-import { ApiError, download, post } from "../../api/client.ts";
+import { ApiError, openFile, post } from "../../api/client.ts";
 import type { AgentRun, InvoiceDetail } from "../../api/types.ts";
 import { Banner, Card, Chip } from "../../components/ui.tsx";
 import { aed, fmtDateTime, humanize } from "../../lib/format.ts";
@@ -59,14 +59,14 @@ export function OriginalDocument({ detail }: { detail: InvoiceDetail }) {
         <button
           type="button"
           className="btn btn-secondary btn-sm"
-          onClick={() => download(`/fta/documents/${doc.id}/file`, doc.filename).catch((e) => setError((e as Error).message))}
+          onClick={() => openFile(`/fta/documents/${doc.id}/file`).catch((e) => setError((e as Error).message))}
         >
           Open original
         </button>
       </div>
       {error && <p className="error-text">{error}</p>}
       {extraction && (
-        <details className="extraction">
+        <details className="extraction" open>
           <summary>
             What the model read ({humanize(extraction.document_type)}, {fields.length} fields)
           </summary>
@@ -83,7 +83,7 @@ export function OriginalDocument({ detail }: { detail: InvoiceDetail }) {
                 <tr key={k}>
                   <td>{humanize(k)}</td>
                   <td>{fieldValue(f!.value)}</td>
-                  <td className="num">{f!.confidence !== undefined ? `${Math.round(f!.confidence * 100)}%` : "—"}</td>
+                  <td className="num" style={f!.confidence !== undefined && f!.confidence < 0.7 ? { background: "#fff3cd", fontWeight: 600 } : undefined}>{f!.confidence !== undefined ? `${Math.round(f!.confidence * 100)}%` : "—"}</td>
                 </tr>
               ))}
             </tbody>
@@ -102,7 +102,7 @@ export function ComplianceReview({ detail, onRan }: { detail: InvoiceDetail; onR
   return (
     <div className="agent-block">
       <div className="agent-head">
-        <h3>Compliance agent</h3>
+        <h3>Compliance agent <span className="muted small">Advisory — the officer decides</span></h3>
         <span className="muted small">{run ? `${run.model} · ${fmtDateTime(run.at)}` : "No second opinion yet"}</span>
         <button type="button" className="btn btn-ghost btn-sm" disabled={call.busy} onClick={call.run}>
           {call.busy ? "Asking…" : run ? "Ask again" : "Ask for a second opinion"}
@@ -144,7 +144,7 @@ export function DecisionBrief({ appId, runs, onRan }: { appId: number; runs: Age
   return (
     <Card
       title="Decision brief"
-      subtitle={run ? `Reconciliation agent · ${run.model} · ${fmtDateTime(run.at)}. Advisory only.` : "Written by the reconciliation agent when the application is ready. Advisory only."}
+      subtitle={run ? `Reconciliation agent · ${run.model} · ${fmtDateTime(run.at)}. Advisory — the officer decides.` : "Advisory — the officer decides."}
       actions={
         <button type="button" className="btn btn-ghost btn-sm" disabled={call.busy} onClick={call.run}>
           {call.busy ? "Writing…" : run ? "Regenerate" : "Generate brief"}

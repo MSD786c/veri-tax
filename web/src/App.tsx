@@ -1,8 +1,9 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { RequireRole } from "./auth.tsx";
 import { Shell } from "./components/Layout.tsx";
 import Home from "./pages/Home.tsx";
 import ApplicationDetail from "./pages/fta/ApplicationDetail.tsx";
+import Documents from "./pages/fta/Documents.tsx";
 import Applications from "./pages/fta/Applications.tsx";
 import Overview from "./pages/fta/Overview.tsx";
 import Rejections from "./pages/fta/Rejections.tsx";
@@ -26,13 +27,20 @@ const FTA_NAV = [
   { to: "/fta", label: "Overview", end: true },
   { to: "/fta/applications", label: "Applications" },
   { to: "/fta/suppliers", label: "Suppliers" },
+  { to: "/fta/documents", label: "Documents" },
   { to: "/fta/rejections", label: "Rejections" },
 ];
+
+// FTA-only dev server (npm run fta): bare "/" goes straight to the FTA dashboard; sign-in redirects keep their query.
+function Landing() {
+  const { search } = useLocation();
+  return import.meta.env.VITE_FTA_ONLY && !search ? <Navigate to="/fta" replace /> : <Home />;
+}
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
+      <Route path="/" element={<Landing />} />
       <Route
         path="/supplier"
         element={
@@ -58,6 +66,7 @@ export default function App() {
         <Route path="applications/:id" element={<ApplicationDetail />} />
         <Route path="suppliers" element={<Suppliers />} />
         <Route path="suppliers/:trn" element={<SupplierDetail />} />
+        <Route path="documents" element={<Documents />} />
         <Route path="rejections" element={<Rejections />} />
       </Route>
       <Route path="/maskan" element={<Shell area="Maskan simulator" nav={MASKAN_NAV} />}>

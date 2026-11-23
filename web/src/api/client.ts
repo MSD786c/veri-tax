@@ -82,6 +82,14 @@ export async function download(path: string, filename: string): Promise<void> {
   URL.revokeObjectURL(url);
 }
 
+/** Fetch a file with auth headers and open it in a new tab via an object URL. */
+export async function openFile(path: string): Promise<void> {
+  const blob = await (await request(path)).blob();
+  const url = URL.createObjectURL(blob);
+  if (!window.open(url, "_blank")) throw new Error("Pop-up blocked: allow pop-ups to open the original.");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
 export function query(params: Record<string, string | number | null | undefined>): string {
   const q = new URLSearchParams();
   for (const [k, v] of Object.entries(params)) if (v !== null && v !== undefined && v !== "") q.set(k, String(v));
