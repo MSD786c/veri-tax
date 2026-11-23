@@ -5,4 +5,7 @@ __pycache__/
 .env
 .pytest_cache/
 .DS_Store
+node_modules/
+web/dist/
+*.tsbuildinfo
 data/

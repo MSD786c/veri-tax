@@ -4,7 +4,7 @@
 
 veri-tax sits between the applicant (a UAE national claiming a VAT refund on building a new residence), the suppliers who issued the tax invoices, and the Federal Tax Authority (FTA). It pulls supplier invoices from Maskan, checks them automatically against the UAE VAT refund rules, asks each supplier to confirm its invoices through an EmaraTax-facing portal, reconciles the answers, and shows the result to FTA officers on a dashboard.
 
-> **Status:** v0.1 baseline. The verification body API (FastAPI) runs end to end on synthetic data: ingest → rules → supplier confirmation → reconciliation → officer decision. The two user-facing frontends live in **[veri-tax-portals](https://github.com/MSD786c/veri-tax-portals)**. See [Getting started](#getting-started), [CHANGELOG.md](CHANGELOG.md) and the [roadmap](#roadmap).
+> **Status:** v0.1 baseline. The verification body API (FastAPI) and the **veri-tax portal** (`web/`, React) run end to end on synthetic data: ingest → rules → supplier confirmation → reconciliation → officer decision. The portal holds both user-facing frontends (the EmaraTax supplier portal and the FTA officer dashboard) plus a Maskan simulator. See [Getting started](#getting-started), [CHANGELOG.md](CHANGELOG.md) and the [roadmap](#roadmap).
 
 ## Getting started
 
@@ -30,6 +30,26 @@ uv run uvicorn app.main:app --reload --port 8000
 - Tests: `uv run pytest`. Tests mock the LLM, and each test module gets a freshly seeded database.
 - **Evaluation on real invoices.** `uv run python scripts/eval_invoices.py` runs the 60 synthetic PDFs in `invoice test/` through the agent and the whole pipeline, with the PDF as the only input. It reports rating accuracy, whether the expected rule fired, and field-level extraction accuracy. Model readings are cached per prompt version in `data/eval/cache/`, so re-scoring after a rule change costs no tokens.
 
+### The portal (`web/`)
+
+Requires Node 22+. Build it once and FastAPI serves it at http://localhost:8000/portal/ (and `/` redirects there):
+
+```bash
+cd web && npm ci && npm run build
+```
+
+For frontend work, run the Vite dev server instead. It serves the portal on http://localhost:3000/portal/ with hot reload and proxies the API to `:8000` (override with `VERITAX_API`):
+
+```bash
+cd web && npm run dev
+```
+
+- Sign in on the home page with a demo supplier (the seeded TRNs) or the demo officer. Sign-in is a stand-in for EmaraTax / UAE PASS and FTA SSO: it only sets the mock headers above.
+- **Supplier portal** (`/portal/supplier`): queue of confirmation requests under the supplier's TRN; the four questions plus the declaration per invoice; bulk confirm for invoices issued and paid as submitted; CSV template download and upload, checked row by row in the browser and saved all-or-nothing.
+- **FTA dashboard** (`/portal/fta`): overview (refund totals, new applications, applications by status, agent ratings and officer overrides, top rule failures, supplier response rate and time); applications with filters held in the URL, rating counts and CSV export; application detail with each invoice's rating, reasons, fix guidance, supplier trust lane and precedents, the original document with what the vision model read, the compliance agent's second opinion, the reconciliation agent's decision brief, a per-invoice approve or reject (recorded as an override when it goes against the rating), rule results and evidence, the submitted-vs-confirmed comparison, application flags, a recommended outcome, the application decision and the audit trail; supplier search and detail with trust lane and registry status; rejections and flags by rating, rule, status, supplier and emirate.
+- **Maskan simulator** (`/portal/maskan`): submit a test application with full Article 59 particulars, permit date and contract value, and watch it go through the pipeline; **Applicant status** (`/portal/maskan/status`) shows what Maskan tells the applicant (`GET /maskan/applications/{ref}/status`).
+- Portal checks: `npm test` (unit tests for CSV, VAT period and formatting helpers) and `npm run build` (type check + bundle).
+
 | Path | What |
 |------|------|
 | `app/main.py` | FastAPI app, CORS, router wiring |
@@ -47,7 +67,12 @@ uv run uvicorn app.main:app --reload --port 8000
 | `app/api/maskan.py` | `POST /maskan/applications` (Maskan ingestion), `POST /maskan/invoices/{id}/document` (attach the original), `GET /maskan/applications/{ref}/status` (applicant view) |
 | `app/api/supplier.py` | `/supplier/*` (EmaraTax supplier portal) |
 | `app/api/fta.py` | `/fta/*` (FTA officer dashboard) |
+| `app/api/meta.py` | `GET /meta/rules`: the rule catalog the portal uses to label rule IDs |
 | `app/seed.py` | Synthetic fixtures |
+| `web/src/pages/supplier/` | Supplier portal: queue, confirmation form, CSV upload |
+| `web/src/pages/fta/` | FTA dashboard: overview, applications, application detail, suppliers, rejections |
+| `web/src/pages/maskan/` | Maskan simulator and the applicant status view |
+| `web/src/lib/` | API-independent helpers (CSV, VAT periods, formatting, status vocabulary) |
 
 Working on the repo: see [CONTRIBUTING.md](CONTRIBUTING.md) for branches (`Suhayl`, `Haaziq`, `Aaron`) and the PR flow.
 
@@ -351,7 +376,7 @@ Core entities, in outline:
 
 ## Planned repository layout
 
-> **Current layout:** this repo is the verification body (`app/`, flat FastAPI package). The supplier portal and FTA dashboard are in [veri-tax-portals](https://github.com/MSD786c/veri-tax-portals) (`apps/emaratax-portal`, `apps/fta-dashboard`). The tree below is the longer-term target as services split out.
+> **Current layout:** this repo is the verification body (`app/`, flat FastAPI package) plus one web portal (`web/`) that holds both the supplier portal and the FTA dashboard behind role-based routes. The tree below is the longer-term target as services split out.
 
 ```
 veri-tax/

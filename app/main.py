@@ -1,17 +1,23 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from sqlmodel import Session
+from fastapi.responses import FileResponse, RedirectResponse
 
 from app import agents, db, documents, llm
-from app.api import fta, maskan, maskan_portal, supplier
+from app.api import fta, maskan, maskan_portal, meta, supplier
 from app.assessment import TEXT
 from app.rules import RULESET_VERSION
 
 log = logging.getLogger("uvicorn.error")
+
+# Built portal (web/ -> `npm run build`). Served at /portal so its routes never clash with /fta, /supplier.
+PORTAL_DIST = Path(os.getenv("PORTAL_DIST", Path(__file__).resolve().parent.parent / "web" / "dist")).resolve()
+
+
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     db.init_db()
@@ -38,6 +44,7 @@ app.include_router(maskan.router)
 app.include_router(supplier.router)
 app.include_router(fta.router)
 app.include_router(maskan_portal.router)
+app.include_router(meta.router)
 
 
 @app.get("/health", tags=["meta"])
@@ -61,3 +68,21 @@ def health_llm():
 @app.get("/rules", tags=["meta"])
 def list_rules():
     return {"ruleset_version": RULESET_VERSION, "rules": {k: v[0] for k, v in TEXT.items()}}
+
+
+@app.get("/", include_in_schema=False)
+def root():
+    return RedirectResponse("/portal/" if (PORTAL_DIST / "index.html").is_file() else "/docs")
+
+
+@app.get("/portal", include_in_schema=False)
+@app.get("/portal/{path:path}", include_in_schema=False)
+def portal(path: str = ""):
+    """Static files from the built portal; any other path gets index.html (client-side routing)."""
+    index = PORTAL_DIST / "index.html"
+    if not index.is_file():
+        raise HTTPException(404, "portal not built: run `npm ci && npm run build` in web/")
+    target = (PORTAL_DIST / path).resolve()
+    if path and target.is_relative_to(PORTAL_DIST) and target.is_file():
+        return FileResponse(target)
+    return FileResponse(index)

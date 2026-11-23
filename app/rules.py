@@ -39,6 +39,38 @@ MAX_PLAUSIBLE_INVOICE_AED = 20_000_000  # CS-03: above this a single villa invoi
 CONFIDENCE_THRESHOLD = 0.7  # an extracted field below this is "not read", never trusted
 NON_INVOICE_TYPES = {"QUOTATION", "PROFORMA", "RECEIPT"}
 
+# Human-readable rule catalog (README "Verification rules"), served at GET /meta/rules so the
+# portals can label rule IDs. `implemented` marks the rules this ruleset actually runs.
+RULE_CATALOG: dict[str, dict] = {
+    "TI-01": {"group": "Tax invoice validity", "title": "Document is a tax invoice", "description": "Titled \"Tax Invoice\", not a quotation, proforma or receipt.", "implemented": True},
+    "TI-02": {"group": "Tax invoice validity", "title": "Supplier name, address and TRN shown", "description": "The invoice shows the supplier's name, address and TRN.", "implemented": True},
+    "TI-03": {"group": "Tax invoice validity", "title": "Supplier TRN valid and active", "description": "15 digits starting 100, found in the FTA registry and active on the invoice date.", "implemented": True},
+    "TI-04": {"group": "Tax invoice validity", "title": "Invoice number and date shown", "description": "The invoice shows its number and a date of issue that is not in the future.", "implemented": True},
+    "TI-05": {"group": "Tax invoice validity", "title": "Goods or services described", "description": "The invoice describes the goods or services supplied.", "implemented": True},
+    "TI-06": {"group": "Tax invoice validity", "title": "Amounts shown in AED", "description": "Taxable amount, VAT rate, VAT amount and total are shown in AED.", "implemented": True},
+    "TI-07": {"group": "Tax invoice validity", "title": "Arithmetic adds up", "description": "Taxable × 5% = VAT and taxable + VAT = total, within AED 0.05.", "implemented": True},
+    "TI-08": {"group": "Tax invoice validity", "title": "Recipient is the applicant", "description": "Addressed to the applicant, or states it is for the applicant's use with the plot number.", "implemented": True},
+    "TI-09": {"group": "Tax invoice validity", "title": "Full tax invoice", "description": "A full tax invoice (Article 59(1)); simplified tax invoices are not accepted for this refund.", "implemented": True},
+    "EX-01": {"group": "Original document", "title": "Matches the original document", "description": "The Maskan data matches the original invoice read from the uploaded document (N/A until one is linked).", "implemented": True},
+    "NR-01": {"group": "Refund eligibility", "title": "Plot matches application", "description": "The plot number or address on the invoice matches the application.", "implemented": True},
+    "NR-02": {"group": "Refund eligibility", "title": "Eligible goods or services", "description": "Each line checked against the VATGRH1 Appendix 1 catalogue; unclear items go to a person.", "implemented": True},
+    "NR-03": {"group": "Refund eligibility", "title": "Within construction period", "description": "Dated after the building permit and before completion (except retention claims).", "implemented": True},
+    "NR-04": {"group": "Refund eligibility", "title": "Claimed within 12 months", "description": "Claim lodged within 12 months of the residence's completion date.", "implemented": True},
+    "NR-05": {"group": "Refund eligibility", "title": "Not claimed elsewhere", "description": "A repeat claim of an invoice already claimed elsewhere fails; the earlier claim is flagged for review.", "implemented": True},
+    "NR-06": {"group": "Refund eligibility", "title": "Intermediary not recovering VAT", "description": "Where an intermediary is the recipient, it confirms it is not recovering input VAT.", "implemented": True},
+    "NR-07": {"group": "Refund eligibility", "title": "Retention invoice rules", "description": "Retention invoices only in a retention claim, with proof of payment.", "implemented": False},
+    "CS-01": {"group": "Common-sense checks", "title": "Invoices within contract value", "description": "All invoices together stay within 110% of the construction contract (application flag).", "implemented": True},
+    "CS-02": {"group": "Common-sense checks", "title": "Invoice within contract value", "description": "A single invoice is not larger than the whole construction contract.", "implemented": True},
+    "CS-03": {"group": "Common-sense checks", "title": "Plausible amount", "description": "The invoice total is above zero and not implausibly large for one villa.", "implemented": True},
+    "CS-04": {"group": "Common-sense checks", "title": "No same-day twin", "description": "No other invoice from the same supplier with the same date and amount.", "implemented": True},
+    "SC-01": {"group": "Supplier confirmation", "title": "Supplier issued the invoice", "description": "The supplier confirms it issued the invoice.", "implemented": True},
+    "SC-02": {"group": "Supplier confirmation", "title": "Particulars match", "description": "Confirmed number, date, amounts and VAT match the submitted data.", "implemented": True},
+    "SC-03": {"group": "Supplier confirmation", "title": "Consideration received or retention", "description": "Consideration received, or retention with amount and release date.", "implemented": True},
+    "SC-04": {"group": "Supplier confirmation", "title": "VAT return period named", "description": "The supplier names the VAT return period it declared the output VAT in.", "implemented": True},
+    "SC-05": {"group": "Supplier confirmation", "title": "Period consistent with invoice", "description": "The declared period does not end before the invoice date.", "implemented": True},
+    "SC-06": {"group": "Supplier confirmation", "title": "Return filed", "description": "The declared period's VAT return has been filed (needs FTA data access).", "implemented": False},
+}
+
 Check = tuple[str, RuleOutcome, dict]
 P, F, U, NA = RuleOutcome.PASS, RuleOutcome.FAIL, RuleOutcome.UNCERTAIN, RuleOutcome.NOT_APPLICABLE
 

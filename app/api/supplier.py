@@ -17,7 +17,7 @@ from app.models import (
     Supplier,
     SupplierResponse,
 )
-from app.schemas import SupplierResponseIn
+from app.schemas import BulkResponseIn, SupplierResponseIn
 
 router = APIRouter(prefix="/supplier", tags=["supplier portal (EmaraTax)"])
 
@@ -67,18 +67,50 @@ def get_request(request_id: int, supplier: Supplier = Depends(current_supplier),
     return _request_view(session, _own_request(request_id, supplier, session))
 
 
+def _apply_response(session: Session, supplier: Supplier, req: ConfirmationRequest, body: SupplierResponseIn) -> Invoice:
+    resp = SupplierResponse(request_id=req.id, **body.model_dump(exclude={"declaration", "request_id"}))
+    session.add(resp)
+    session.flush()
+    audit(session, f"supplier:{supplier.trn}", "respond", f"request:{req.id}", declared_by=body.declared_by)
+    return pipeline.reconcile(session, req, resp)
+
+
+def _brief_ready_applications(session: Session, background: BackgroundTasks, app_ids: set[int]) -> None:
+    """Queue the officer's decision brief for every application this response made ready."""
+    for app_id in sorted(app_ids):
+        if session.get(Application, app_id).status == ApplicationStatus.READY_FOR_DECISION:
+            background.add_task(agents.summary_background, app_id)
+
+
 @router.post("/requests/{request_id}/respond")
 def respond(request_id: int, body: SupplierResponseIn, background: BackgroundTasks, supplier: Supplier = Depends(current_supplier), session: Session = Depends(get_session)):
     req = _own_request(request_id, supplier, session)
     if req.status != RequestStatus.PENDING:
         raise HTTPException(409, f"request is {req.status}")
-    resp = SupplierResponse(request_id=req.id, **body.model_dump(exclude={"declaration"}))
-    session.add(resp)
-    session.flush()
-    audit(session, f"supplier:{supplier.trn}", "respond", f"request:{req.id}", declared_by=body.declared_by)
-    inv = pipeline.reconcile(session, req, resp)
+    inv = _apply_response(session, supplier, req, body)
     session.commit()
-    app = session.get(Application, inv.application_id)
-    if app.status == ApplicationStatus.READY_FOR_DECISION:
-        background.add_task(agents.summary_background, app.id)  # decision brief for the officer
+    _brief_ready_applications(session, background, {inv.application_id})  # decision brief for the officer
     return _request_view(session, req)
+
+
+@router.post("/requests/bulk-respond")
+def bulk_respond(body: BulkResponseIn, background: BackgroundTasks, supplier: Supplier = Depends(current_supplier), session: Session = Depends(get_session)):
+    """Respond to many requests at once (bulk confirm, CSV upload). All-or-nothing: any bad row saves nothing."""
+    errors, todo, seen = [], [], set()
+    for item in body.items:
+        req = session.get(ConfirmationRequest, item.request_id)
+        if item.request_id in seen:
+            errors.append({"request_id": item.request_id, "error": "listed more than once"})
+        elif not req or req.supplier_trn != supplier.trn:
+            errors.append({"request_id": item.request_id, "error": "request not found"})
+        elif req.status != RequestStatus.PENDING:
+            errors.append({"request_id": item.request_id, "error": f"request is {req.status}"})
+        else:
+            todo.append((req, item))
+        seen.add(item.request_id)
+    if errors:
+        raise HTTPException(409, {"message": "no responses were saved", "errors": errors})
+    app_ids = {_apply_response(session, supplier, req, item).application_id for req, item in todo}
+    session.commit()
+    _brief_ready_applications(session, background, app_ids)
+    return [_request_view(session, req) for req, _ in todo]
