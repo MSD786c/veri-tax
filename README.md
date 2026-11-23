@@ -11,7 +11,7 @@ veri-tax sits between the applicant (a UAE national claiming a VAT refund on bui
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-cp .env.example .env        # optional; defaults work for local dev
+cp .env.example .env        # then set GROQ_API_KEY in .env (never commit it)
 uv sync
 uv run uvicorn app.main:app --reload --port 8000
 ```
@@ -19,7 +19,15 @@ uv run uvicorn app.main:app --reload --port 8000
 - Interactive API docs: http://localhost:8000/docs
 - On first start the database (SQLite, `veritax.db`) is seeded with 3 synthetic applications, 8 suppliers and 14 invoices covering every rating (`app/seed.py`). Delete `veritax.db` to reseed. A local file from an older schema is rebuilt automatically.
 - Mock auth: supplier endpoints take an `X-Supplier-TRN` header (e.g. `100111111100003`); FTA endpoints take an `X-Officer-Id` header; the applicant status endpoint takes `X-Emirates-Id`.
-- Tests: `uv run pytest`
+- **Agent (Groq).** `AGENT_PROVIDER=groq` plus `GROQ_API_KEY` switch on the agent in `app/agent.py`: vision extraction of original invoices, second opinions and decision briefs. `LLM_MODEL` / `VISION_MODEL` default to `qwen/qwen3.8-27b`, which reads images. `GET /health/llm` shows whether the key works and the models are available. With `AGENT_PROVIDER` empty, everything else still runs.
+- **Groq rate limits.** The on-demand tier allows 1,000 output and 8,000 total tokens per minute for this model (measured 2026-11-23). One extraction uses about 2,000 prompt and up to `LLM_MAX_TOKENS` (700) output tokens. Calls therefore run one at a time and wait out `429`s, which works out to about 2 extractions a minute.
+- **Maskan portal (invoice intake).** This is the main entry for pulling original invoices in. On startup the log prints `Maskan portal: http://localhost:8000/maskan/portal/<token>`.
+  - Upload PDF, JPEG, PNG or WebP files (up to 15 MB) and watch each one being read, matched and re-verified live.
+  - The token is generated once into `data/maskan_portal_token`, or set it with `MASKAN_PORTAL_TOKEN`.
+  - A document links to a Maskan invoice only when the model read its TRN and invoice number with confidence ≥ 0.7, and only to applications not yet decided.
+  - Linking fills Article 59 particulars that Maskan did not send (address, recipient, line items, invoice type), but never overwrites them. It then re-runs the rules and the rating.
+- **Sample invoices.** `fixtures/invoices/` holds one image per seeded invoice, plus a 2-page PDF and a quotation. Regenerate them with `uv run python scripts/make_fixture_invoices.py`. The seed date is pinned to 2026-09-24 so they keep matching.
+- Tests: `uv run pytest`. Tests mock the LLM, and each test module gets a freshly seeded database.
 
 | Path | What |
 |------|------|
@@ -30,8 +38,12 @@ uv run uvicorn app.main:app --reload --port 8000
 | `app/eligibility.py` | Eligible / not eligible / review catalogue from VATGRH1 Appendix 1 (rule `NR-02`) |
 | `app/assessment.py` | The rating (STRONG, WEAK, FAIL), reasons, fix guidance, supplier trust lane, precedents |
 | `app/pipeline.py` | Ingest → rules → confirmation requests → reconcile → rating → application rollup |
-| `app/agent.py` | Interface for the reasoning agent (OCR, second opinion). Not wired to a model yet |
-| `app/api/maskan.py` | `POST /maskan/applications` (Maskan ingestion), `GET /maskan/applications/{ref}/status` (applicant view) |
+| `app/agent.py` | The reasoning agent interface; `GroqAgent` implements it (`AGENT_PROVIDER=groq`) |
+| `app/llm.py` | Groq (OpenAI-compatible) client: token cap, one call at a time, 429 back-off |
+| `app/documents.py` | Document store, PDF/image to JPEG pages, vision extraction job |
+| `app/agents.py` | Compliance second opinion and reconciliation decision brief (advisory, stored as `AgentRun`) |
+| `app/api/maskan_portal.py` + `app/static/maskan_portal.html` | `/maskan/portal/<token>/*` (Maskan portal: invoice intake and tracking) |
+| `app/api/maskan.py` | `POST /maskan/applications` (Maskan ingestion), `POST /maskan/invoices/{id}/document` (attach the original), `GET /maskan/applications/{ref}/status` (applicant view) |
 | `app/api/supplier.py` | `/supplier/*` (EmaraTax supplier portal) |
 | `app/api/fta.py` | `/fta/*` (FTA officer dashboard) |
 | `app/seed.py` | Synthetic fixtures |
@@ -177,6 +189,7 @@ Rules are grouped and versioned so the engine can show which rule set a decision
 | `TI-06` | It shows the taxable amount, the VAT rate and VAT amount, and the total, in AED. |
 | `TI-07` | The arithmetic adds up: taxable amount × rate = VAT amount, and taxable amount + VAT = total, within a rounding tolerance. |
 | `TI-08` | The recipient is the applicant. If the invoice is addressed to a contractor, consultant, agent or related party, it states that it is for the applicant's use and shows the plot or address. |
+| `EX-01` | The data Maskan submitted (TRN, invoice number, date, taxable amount, VAT, total) matches the original document as read by the vision agent. A mismatch fails. A value the agent could not read confidently is `UNCERTAIN`, never a mismatch. With no document linked the result is `NOT_APPLICABLE`. With `SC-02` (the supplier) this makes the three-way comparison. `TI-01` also fails when the original document reads as a quotation, proforma or receipt. |
 | `TI-09` | It is a **full** tax invoice (Executive Regulation Article 59(1)). A **simplified** tax invoice (Article 59(2), five particulars) fails: the scheme does not accept it (VATGRH1 section 5.1). If the full particulars were not all captured, the result is `UNCERTAIN`, never a guess. |
 
 ### B. Refund eligibility (New Residence)
@@ -308,6 +321,8 @@ INGESTED → EXTRACTED → AUTO_VERIFIED ─┐
                                                                                            ▼
                                                                     VERIFIED | FLAGGED | REJECTED
 ```
+
+**Confirmation request:** `PENDING → RESPONDED | EXPIRED | CANCELLED`. A request is `CANCELLED` when a document linked later makes the invoice FAIL. It is re-issued with a fresh time limit if a later document clears it.
 
 **Application:** `RECEIVED → IN_VERIFICATION → AWAITING_SUPPLIERS → READY_FOR_DECISION → APPROVED | PARTIALLY_APPROVED | REJECTED`
 
