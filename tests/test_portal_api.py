@@ -65,7 +65,7 @@ def test_rule_catalog_covers_every_rule_the_engine_emits(c):
     assert body["rules"]["TI-09"]["implemented"] is True
     assert body["rules"]["SC-06"]["implemented"] is False
     root = Path(main.__file__).parent
-    emitted = set(re.findall(r'"((?:TI|NR|SC|CS)-\d\d)', (root / "rules.py").read_text().split("RULE_CATALOG")[0]
+    emitted = set(re.findall(r'"((?:TI|NR|SC|CS|EX)-\d\d)', (root / "rules.py").read_text().split("RULE_CATALOG")[0]
                              + (root / "rules.py").read_text().split("\nCheck = ")[1] + (root / "pipeline.py").read_text()))
     assert emitted <= set(RULE_CATALOG), f"rules missing from the catalog: {emitted - set(RULE_CATALOG)}"
 

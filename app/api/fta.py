@@ -9,10 +9,11 @@ from collections import Counter
 from datetime import date, datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from sqlmodel import Session, col, or_, select
 
-from app import pipeline
+from app import agents, pipeline
+from app.api.maskan_portal import document_view
 from app.assessment import precedents, trust_tier
 from app.db import audit, get_session
 from app.models import (
@@ -21,6 +22,7 @@ from app.models import (
     AuditEvent,
     ConfirmationRequest,
     Decision,
+    Document,
     Invoice,
     InvoiceDecision,
     InvoiceStatus,
@@ -160,6 +162,9 @@ def get_application(app_id: int, _: str = Depends(officer), session: Session = D
             "precedents": precedents(session, inv),
             "officer_decision": session.exec(select(InvoiceDecision).where(InvoiceDecision.invoice_id == inv.id)
                                              .order_by(col(InvoiceDecision.decided_at).desc())).first(),
+            "document": session.exec(select(Document).where(Document.sha256 == inv.document_hash)).first() if inv.document_hash else None,
+            "extraction": pipeline.extraction_for(session, inv),
+            "agent_runs": agents.runs_for(session, f"invoice:{inv.id}"),
         })
     entities = ([f"application:{app_id}"] + [f"invoice:{i['invoice'].id}" for i in invoices]
                 + [f"request:{i['confirmation_request'].id}" for i in invoices if i["confirmation_request"]])
@@ -168,6 +173,7 @@ def get_application(app_id: int, _: str = Depends(officer), session: Session = D
         "invoices": invoices,
         "decision": session.exec(select(OfficerDecision).where(OfficerDecision.application_id == app_id)).first(),
         "audit": session.exec(select(AuditEvent).where(col(AuditEvent.entity).in_(entities)).order_by(AuditEvent.at)).all(),
+        "agent_runs": agents.runs_for(session, f"application:{app_id}")
     }
 
 
@@ -318,3 +324,42 @@ def export_csv(status: ApplicationStatus | None = None, emirate: str | None = No
                     for r in rows)
     return StreamingResponse(iter([buf.getvalue()]), media_type="text/csv",
                              headers={"Content-Disposition": "attachment; filename=applications.csv"})
+
+
+@router.get("/documents")
+def list_documents(_: str = Depends(officer), session: Session = Depends(get_session)):
+    """Every original document (upload link and Maskan), with its extraction and linked invoices."""
+    return [document_view(session, d) for d in session.exec(select(Document).order_by(col(Document.uploaded_at).desc())).all()]
+
+
+@router.get("/documents/{doc_id}/file")
+def document_file(doc_id: int, _: str = Depends(officer), session: Session = Depends(get_session)):
+    doc = session.get(Document, doc_id)
+    if not doc:
+        raise HTTPException(404, "document not found")
+    return FileResponse(doc.path, media_type=doc.content_type, filename=doc.filename)
+
+
+def _need_agent():
+    if not agents.enabled():
+        raise HTTPException(503, "No agent configured: set AGENT_PROVIDER=groq and GROQ_API_KEY")
+
+
+@router.post("/invoices/{invoice_id}/compliance")
+def run_compliance(invoice_id: int, _: str = Depends(officer), session: Session = Depends(get_session)):
+    """Ask the compliance agent for a second opinion now (synchronous). Advisory only."""
+    _need_agent()
+    inv = session.get(Invoice, invoice_id)
+    if not inv:
+        raise HTTPException(404, "invoice not found")
+    return agents.compliance_review(session, inv)
+
+
+@router.post("/applications/{app_id}/summary")
+def run_summary(app_id: int, _: str = Depends(officer), session: Session = Depends(get_session)):
+    """Generate the reconciliation agent's decision brief now (synchronous). Advisory only."""
+    _need_agent()
+    app = session.get(Application, app_id)
+    if not app:
+        raise HTTPException(404, "application not found")
+    return agents.reconciliation_summary(session, app)

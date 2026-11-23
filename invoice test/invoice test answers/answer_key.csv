@@ -1,0 +1,61 @@
+﻿file,folder,expected_rating,rules,what_is_wrong,supplier,invoice_no,applicant,total_aed
+invoice_001.pdf,Bad invoices,FAIL,NR-05,"Duplicate: same supplier and invoice number as a Good invoice (GSC-3482), claimed by another applicant",Gulf Steel & Cement Trading,GSC-3482,Mariam Al Nuaimi,32035.5
+invoice_002.pdf,Bad invoices,FAIL,NR-02,Furniture: not eligible,Emirates Home Furnishing LLC,EHF-3130,Ahmed Al Mansoori,26922.0
+invoice_003.pdf,Bad invoices,FAIL,TI-09,"Simplified tax invoice: no customer name or address, VAT-inclusive prices",Gulf Steel & Cement Trading,R129518,Khalid Al Shamsi,343.88
+invoice_004.pdf,Bad invoices,FAIL,TI-01,"Document is titled ""Quotation"", not ""Tax Invoice""",Marina Aluminium & Glass LLC,MAG-3448,Saeed Al Mazrouei,64139.25
+invoice_005.pdf,Bad invoices,FAIL,NR-06,"Issued to the contractor for the applicant's use, but no confirmation that the contractor is not recovering the VAT",Desert Rose Electrical Works,DRE-3852,Mariam Al Nuaimi,31953.08
+invoice_006.pdf,Bad invoices,FAIL,TI-04,Invoice number is missing,Marina Aluminium & Glass LLC,,Fatima Al Ketbi,69725.25
+invoice_007.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Gulf Steel & Cement Trading,GSC-3495,Fatima Al Ketbi,36284.85
+invoice_008.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Al Noor Building Contracting LLC,ANB-4250,Mariam Al Nuaimi,71835.75
+invoice_009.pdf,Bad invoices,WEAK,"NR-02, NR-03",Landscaping invoiced after the completion date (work after completion is not refundable),Falcon Pools & Landscaping LLC,FPL-1818,Mariam Al Nuaimi,22900.5
+invoice_010.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Al Noor Building Contracting LLC,ANB-4219,Fatima Al Ketbi,89893.65
+invoice_011.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Al Noor Building Contracting LLC,ANB-4267,Saeed Al Mazrouei,168043.05
+invoice_012.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Marina Aluminium & Glass LLC,MAG-3413,Noura Al Zaabi,82666.5
+invoice_013.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Al Noor Building Contracting LLC,ANB-4240,Khalid Al Shamsi,111002.85
+invoice_014.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Falcon Pools & Landscaping LLC,FPL-1809,Khalid Al Shamsi,144243.75
+invoice_015.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Gulf Steel & Cement Trading,GSC-3506,Khalid Al Shamsi,43422.75
+invoice_016.pdf,Bad invoices,FAIL,TI-08,"Issued to the contractor, with no statement that it is for the applicant's use",Gulf Steel & Cement Trading,GSC-3539,Fatima Al Ketbi,66430.88
+invoice_017.pdf,Bad invoices,FAIL,TI-07,VAT amount understated: lower than 5% of the taxable amount,Bayt Al Rukham Marble & Tiles LLC,BRM-2687,Khalid Al Shamsi,124334.6
+invoice_018.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Desert Rose Electrical Works,DRE-3808,Saeed Al Mazrouei,32455.5
+invoice_019.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Gulf Steel & Cement Trading,GSC-3462,Noura Al Zaabi,48389.78
+invoice_020.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Falcon Pools & Landscaping LLC,FPL-1774,Ahmed Al Mansoori,68911.5
+invoice_021.pdf,Bad invoices,FAIL,TI-03,Supplier TRN does not start with 100 (wrong format),Naseem Air Conditioning LLC,NAC-2762,Ahmed Al Mansoori,79369.5
+invoice_022.pdf,Bad invoices,WEAK,TI-02,Supplier address is missing,Rimal Engineering Consultancy,REC-3342,Khalid Al Shamsi,79521.75
+invoice_023.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Al Noor Building Contracting LLC,ANB-4197,Ahmed Al Mansoori,95667.6
+invoice_024.pdf,Bad invoices,FAIL,TI-01,"Document is titled ""Proforma Invoice"", not ""Tax Invoice""",Naseem Air Conditioning LLC,NAC-2740,Noura Al Zaabi,89235.3
+invoice_025.pdf,Bad invoices,FAIL,TI-09,"Simplified tax invoice: no customer name or address, VAT-inclusive prices",Bayt Al Rukham Marble & Tiles LLC,R106833,Fatima Al Ketbi,1402.8
+invoice_026.pdf,Bad invoices,WEAK,NR-02,"CCTV cameras: listed as not eligible, though integrated security systems are eligible",Oasis Security Systems LLC,OSS-1850,Noura Al Zaabi,22774.5
+invoice_027.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Bayt Al Rukham Marble & Tiles LLC,BRM-2666,Mariam Al Nuaimi,117670.35
+invoice_028.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Rimal Engineering Consultancy,REC-3333,Ahmed Al Mansoori,86898.0
+invoice_029.pdf,Bad invoices,WEAK,NR-02,Mixed: floor tiling (eligible) with loose carpets and a sofa (not eligible),Bayt Al Rukham Marble & Tiles LLC,BRM-2723,Saeed Al Mazrouei,105427.35
+invoice_030.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Desert Rose Electrical Works,DRE-3805,Mariam Al Nuaimi,36969.98
+invoice_031.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Rimal Engineering Consultancy,REC-3320,Noura Al Zaabi,98736.75
+invoice_032.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Marina Aluminium & Glass LLC,MAG-3445,Fatima Al Ketbi,97539.75
+invoice_033.pdf,Bad invoices,WEAK,NR-01,No plot number or site address on the invoice,Naseem Air Conditioning LLC,NAC-2773,Noura Al Zaabi,95201.93
+invoice_034.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Oasis Security Systems LLC,OSS-1826,Mariam Al Nuaimi,61519.5
+invoice_035.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Jabal Sanitary & Plumbing Trading LLC,JSP-1496,Saeed Al Mazrouei,6163.5
+invoice_036.pdf,Bad invoices,FAIL,"TI-02, TI-03",Supplier TRN is missing from the invoice,Jabal Sanitary & Plumbing Trading LLC,JSP-1523,Saeed Al Mazrouei,37080.75
+invoice_037.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Oasis Security Systems LLC,OSS-1839,Saeed Al Mazrouei,40330.5
+invoice_038.pdf,Bad invoices,WEAK,NR-02,Mixed: fitted kitchen work (eligible) with appliances (not eligible),Emirates Home Furnishing LLC,EHF-3174,Mariam Al Nuaimi,26911.5
+invoice_039.pdf,Bad invoices,FAIL,NR-01,Plot number on the invoice differs from the application,Al Noor Building Contracting LLC,ANB-4296,Saeed Al Mazrouei,157102.58
+invoice_040.pdf,Bad invoices,FAIL,NR-02,Furniture and curtains: not eligible,Emirates Home Furnishing LLC,EHF-3137,Fatima Al Ketbi,20784.75
+invoice_041.pdf,Bad invoices,FAIL,NR-05,"Duplicate: same supplier and invoice number as a Good invoice (ANB-4197), claimed by another applicant",Al Noor Building Contracting LLC,ANB-4197,Mariam Al Nuaimi,95667.6
+invoice_042.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Falcon Pools & Landscaping LLC,FPL-1787,Fatima Al Ketbi,74366.25
+invoice_043.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Desert Rose Electrical Works,DRE-3828,Noura Al Zaabi,62632.5
+invoice_044.pdf,Bad invoices,FAIL,TI-09,"Simplified tax invoice: no customer name or address, VAT-inclusive prices",Jabal Sanitary & Plumbing Trading LLC,R865159,Ahmed Al Mansoori,14190.75
+invoice_045.pdf,Bad invoices,FAIL,TI-03,Supplier TRN has 14 digits instead of 15,Marina Aluminium & Glass LLC,MAG-3450,Noura Al Zaabi,54138.0
+invoice_046.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Gulf Steel & Cement Trading,GSC-3482,Ahmed Al Mansoori,32035.5
+invoice_047.pdf,Bad invoices,WEAK,NR-02,"Intelligent lighting system: listed as not eligible, though light fittings are eligible",Desert Rose Electrical Works,DRE-3875,Ahmed Al Mansoori,37737.0
+invoice_048.pdf,Bad invoices,FAIL,TI-07,VAT amount is not 5% of the taxable amount (charged about 6.25%),Gulf Steel & Cement Trading,GSC-3530,Ahmed Al Mansoori,26239.5
+invoice_049.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Jabal Sanitary & Plumbing Trading LLC,JSP-1483,Khalid Al Shamsi,40020.75
+invoice_050.pdf,Bad invoices,FAIL,TI-01,"Document is titled ""Proforma Invoice"", not ""Tax Invoice""",Al Noor Building Contracting LLC,ANB-4269,Mariam Al Nuaimi,106900.5
+invoice_051.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Marina Aluminium & Glass LLC,MAG-3436,Ahmed Al Mansoori,19099.5
+invoice_052.pdf,Bad invoices,FAIL,NR-02,Electrical appliances: not eligible,Emirates Home Furnishing LLC,EHF-3159,Khalid Al Shamsi,18327.75
+invoice_053.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Naseem Air Conditioning LLC,NAC-2697,Saeed Al Mazrouei,34186.95
+invoice_054.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Jabal Sanitary & Plumbing Trading LLC,JSP-1489,Mariam Al Nuaimi,16416.75
+invoice_055.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Bayt Al Rukham Marble & Tiles LLC,BRM-2665,Khalid Al Shamsi,48008.1
+invoice_056.pdf,Bad invoices,FAIL,TI-08,Issued to a different person from the applicant,Bayt Al Rukham Marble & Tiles LLC,BRM-2709,Khalid Al Shamsi,107596.12
+invoice_057.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Naseem Air Conditioning LLC,NAC-2717,Noura Al Zaabi,97960.8
+invoice_058.pdf,Good invoices,STRONG,,"None: compliant full tax invoice, eligible items",Bayt Al Rukham Marble & Tiles LLC,BRM-2652,Fatima Al Ketbi,134970.15
+invoice_059.pdf,Bad invoices,FAIL,"TI-02, TI-03",Supplier TRN is missing from the invoice,Al Noor Building Contracting LLC,ANB-4292,Mariam Al Nuaimi,82451.25
+invoice_060.pdf,Bad invoices,FAIL,TI-07,Total including VAT does not equal taxable amount plus VAT,Desert Rose Electrical Works,DRE-3838,Fatima Al Ketbi,30212.25

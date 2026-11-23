@@ -41,6 +41,7 @@ const REQUEST: Record<RequestStatus, StatusInfo> = {
   PENDING: { label: "Pending", tone: "info" },
   RESPONDED: { label: "Responded", tone: "good" },
   EXPIRED: { label: "Expired", tone: "serious" },
+  CANCELLED: { label: "Cancelled", tone: "neutral", hint: "Withdrawn after the invoice was rated fail; re-issued if it recovers" },
 };
 
 const RULE: Record<RuleOutcome, StatusInfo> = {

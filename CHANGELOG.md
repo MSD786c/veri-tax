@@ -12,15 +12,29 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   - Supplier portal (EmaraTax): confirmation queue with due dates, the four questions plus the declaration per invoice (corrections kept field by field, retention split check, SC-05 period warning), bulk confirm, and CSV template download and upload with row-by-row checks.
   - FTA dashboard: overview (with agent ratings and officer overrides), applications with URL-held filters, rating counts and CSV export, application detail (per-invoice rating, reasons, fix guidance, trust lane, precedents and approve/reject; rule evidence; submitted-vs-confirmed comparison; application flags; recommended outcome; application decision; audit trail), supplier search and detail with trust lane and registry status, rejections and flags.
   - Maskan simulator that sends full Article 59 particulars, and an applicant status view backed by `GET /maskan/applications/{ref}/status`.
+  - Application detail shows the original document (download and extracted fields with confidence), `EX-01`, the compliance agent's second opinion and the reconciliation agent's decision brief; without an agent configured, those buttons say so.
   - Mock sign-in for the demo suppliers and officer, light and dark themes, phone layouts.
 - API additions for the portal:
-  - `GET /meta/rules`: the rule catalog (title, description, implemented) for every `TI-*`, `NR-*`, `CS-*` and `SC-*` rule; a test fails if the engine emits a rule the catalog lacks.
+  - `GET /meta/rules`: the rule catalog (title, description, implemented) for every `TI-*`, `EX-*`, `NR-*`, `CS-*` and `SC-*` rule; a test fails if the engine emits a rule the catalog lacks.
   - `POST /supplier/requests/bulk-respond`: several responses in one call, saved all-or-nothing.
   - `/fta/overview` adds new applications (today, 7 and 30 days), invoices by status, approved refunds, pending requests and average response time.
   - `/fta/applications` and the CSV export filter by search text, supplier, failed rule, submission dates and VAT amount; each row lists its failed rules.
   - `/fta/rejections` filters by rating, rule, status, supplier and emirate and includes the application reference; failed rules use each rule's latest result.
   - `/fta/suppliers/{trn}` lists each invoice with its application, failed rules and declared VAT period.
 - CI builds and tests the portal.
+- **Original documents, Maskan portal and the Groq agent (Suhayl, 23 Nov):**
+  - `app/agent.py` now has `GroqAgent`, selected by `AGENT_PROVIDER=groq`. `app/llm.py` is the Groq client: `qwen/qwen3.8-27b` for vision and text, a token cap per call, one call at a time and `429` back-off, which fits the on-demand limit of 1,000 output tokens per minute.
+  - Document store and vision extraction (`app/documents.py`): PDF pages render to JPEG at a capped size, files are checked by magic bytes, and jobs are claimed atomically and recovered after a restart.
+  - Maskan portal at `/maskan/portal/<token>`, the main entry for pulling invoices in: upload, live tracking, retry.
+  - `POST /maskan/invoices/{id}/document` attaches the original to one invoice.
+  - Auto-linking by a confidently read TRN and invoice number fills missing Article 59 particulars, then re-runs the rules and the rating through `pipeline.reverify`, which uses the same outcomes as `ingest` and `reconcile`.
+  - New rule `EX-01`: Maskan data compared with the original document. `TI-01` also fails on a document that reads as a quotation, proforma or receipt.
+  - `NR-05`: an earlier claim of the invoice gives `FAIL`; only later claims give `UNCERTAIN`, so re-running the rules never fails the first claimant. Invoice numbers are normalised ("GSC 77" = "GSC-77"), and same-application repeats count.
+  - `SC-03`: a retention answer on a non-retention claim is `UNCERTAIN`.
+  - Compliance and reconciliation agents (advisory, stored as `AgentRun`): `POST /fta/invoices/{id}/compliance`, `POST /fta/applications/{id}/summary`.
+  - New endpoints: `GET /fta/documents`, `GET /health/llm`, `GET /rules`. Application detail now includes `document`, `extraction` and `agent_runs`.
+  - Request status `CANCELLED`, with re-issue and a fresh time limit. Schema version 3.
+  - `fixtures/invoices/` plus a generator. The seed date is pinned to 2026-09-24. Tests mock the LLM and each module gets a fresh database.
 - **Rating and officer control (Claude for Mwr, 23 Nov, ruleset `2026.11-1`):**
   - Every invoice is rated `STRONG`, `WEAK` or `FAIL` with reasons (`app/assessment.py`). New invoice fields: `rating`, `rating_reasons`, `fix_guidance`, `officer_decision`, `suggested_eligible_vat`.
   - `POST /fta/invoices/{id}/decision`: the officer approves or rejects one invoice. Each decision is stored with the agent's rating and shown as a precedent on later invoices with the same findings.

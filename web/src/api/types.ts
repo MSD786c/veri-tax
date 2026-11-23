@@ -26,7 +26,7 @@ export type ApplicationStatus =
 
 export type ClaimType = "NEW_RESIDENCE" | "RETENTION" | "ADDITION";
 export type RuleOutcome = "PASS" | "FAIL" | "UNCERTAIN" | "NOT_APPLICABLE";
-export type RequestStatus = "PENDING" | "RESPONDED" | "EXPIRED";
+export type RequestStatus = "PENDING" | "RESPONDED" | "EXPIRED" | "CANCELLED";
 export type ConsiderationStatus = "RECEIVED" | "PARTIAL_OR_RETENTION";
 export type Decision = "APPROVED" | "PARTIALLY_APPROVED" | "REJECTED";
 /** The agent's recommendation on one invoice (app/assessment.py). Officers decide. */
@@ -171,6 +171,48 @@ export interface InvoiceDecision {
   decided_at: string;
 }
 
+/** An original invoice file (app/documents.py), read by the vision model when an agent is configured. */
+export interface InvoiceDocument {
+  id: number;
+  sha256: string;
+  filename: string;
+  content_type: string;
+  size: number;
+  source: string;
+  label: string;
+  status: "UPLOADED" | "EXTRACTING" | "EXTRACTED" | "FAILED";
+  error: string | null;
+  uploaded_at: string;
+}
+
+export interface Extraction {
+  document_type: string;
+  fields: Record<string, { value: unknown; confidence?: number } | null>;
+  model?: string;
+}
+
+/** An advisory LLM run. Output shape depends on `kind` (app/agents.py); officers decide. */
+export interface AgentRun {
+  id: number;
+  kind: "compliance" | "reconciliation" | string;
+  entity: string;
+  model: string;
+  prompt_version: string;
+  output: {
+    recommendations?: { rule_id: string; recommendation: string; reason: string }[];
+    eligible_goods?: boolean | null;
+    notes?: string;
+    recommended_decision?: string;
+    recommended_amount?: number;
+    summary?: string;
+    reasons?: string[];
+    risks?: string[];
+    follow_up?: string[];
+  };
+  error: string | null;
+  at: string;
+}
+
 export interface AuditEvent {
   id: number;
   actor: string;
@@ -254,6 +296,9 @@ export interface InvoiceDetail {
   /** Earlier officer decisions on invoices with the same findings. */
   precedents: InvoiceDecision[];
   officer_decision: InvoiceDecision | null;
+  document: InvoiceDocument | null;
+  extraction: Extraction | null;
+  agent_runs: AgentRun[];
 }
 
 export interface ApplicationDetail {
@@ -261,6 +306,7 @@ export interface ApplicationDetail {
   invoices: InvoiceDetail[];
   decision: OfficerDecision | null;
   audit: AuditEvent[];
+  agent_runs: AgentRun[];
 }
 
 export interface SupplierStats extends Supplier {

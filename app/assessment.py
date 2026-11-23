@@ -54,6 +54,8 @@ TEXT: dict[str, tuple[str, str | None]] = {
     "CS-02": ("Single invoice is larger than the construction contract", "Send the construction contract and any variation orders."),
     "CS-03": ("Invoice amount is not plausible", "Check the invoice amount with the supplier."),
     "CS-04": ("Another invoice from the same supplier has the same date and amount", "Confirm that these are two separate supplies, not one invoice entered twice."),
+    "EX-01": ("Submitted invoice data differs from the original document, or the document could not be read",
+              "Upload a clear copy of the original tax invoice; the details entered must match it."),
     "SC-01": ("Supplier says it did not issue this invoice", "Contact the supplier: it has not confirmed this invoice."),
     "SC-02": ("Supplier reported different particulars from the invoice submitted", "Ask the supplier for the correct invoice and upload it again."),
     "SC-03": ("Supplier has not confirmed that payment was received", None),

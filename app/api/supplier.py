@@ -3,13 +3,14 @@
 ponytail: identity is the X-Supplier-TRN header. Replace with EmaraTax / UAE PASS token
 validation before anything real touches this.
 """
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException
 from sqlmodel import Session, select
 
-from app import pipeline
+from app import agents, pipeline
 from app.db import audit, get_session
 from app.models import (
     Application,
+    ApplicationStatus,
     ConfirmationRequest,
     Invoice,
     RequestStatus,
@@ -66,26 +67,34 @@ def get_request(request_id: int, supplier: Supplier = Depends(current_supplier),
     return _request_view(session, _own_request(request_id, supplier, session))
 
 
-def _apply_response(session: Session, supplier: Supplier, req: ConfirmationRequest, body: SupplierResponseIn) -> None:
+def _apply_response(session: Session, supplier: Supplier, req: ConfirmationRequest, body: SupplierResponseIn) -> Invoice:
     resp = SupplierResponse(request_id=req.id, **body.model_dump(exclude={"declaration", "request_id"}))
     session.add(resp)
     session.flush()
     audit(session, f"supplier:{supplier.trn}", "respond", f"request:{req.id}", declared_by=body.declared_by)
-    pipeline.reconcile(session, req, resp)
+    return pipeline.reconcile(session, req, resp)
+
+
+def _brief_ready_applications(session: Session, background: BackgroundTasks, app_ids: set[int]) -> None:
+    """Queue the officer's decision brief for every application this response made ready."""
+    for app_id in sorted(app_ids):
+        if session.get(Application, app_id).status == ApplicationStatus.READY_FOR_DECISION:
+            background.add_task(agents.summary_background, app_id)
 
 
 @router.post("/requests/{request_id}/respond")
-def respond(request_id: int, body: SupplierResponseIn, supplier: Supplier = Depends(current_supplier), session: Session = Depends(get_session)):
+def respond(request_id: int, body: SupplierResponseIn, background: BackgroundTasks, supplier: Supplier = Depends(current_supplier), session: Session = Depends(get_session)):
     req = _own_request(request_id, supplier, session)
     if req.status != RequestStatus.PENDING:
         raise HTTPException(409, f"request is {req.status}")
-    _apply_response(session, supplier, req, body)
+    inv = _apply_response(session, supplier, req, body)
     session.commit()
+    _brief_ready_applications(session, background, {inv.application_id})  # decision brief for the officer
     return _request_view(session, req)
 
 
 @router.post("/requests/bulk-respond")
-def bulk_respond(body: BulkResponseIn, supplier: Supplier = Depends(current_supplier), session: Session = Depends(get_session)):
+def bulk_respond(body: BulkResponseIn, background: BackgroundTasks, supplier: Supplier = Depends(current_supplier), session: Session = Depends(get_session)):
     """Respond to many requests at once (bulk confirm, CSV upload). All-or-nothing: any bad row saves nothing."""
     errors, todo, seen = [], [], set()
     for item in body.items:
@@ -101,7 +110,7 @@ def bulk_respond(body: BulkResponseIn, supplier: Supplier = Depends(current_supp
         seen.add(item.request_id)
     if errors:
         raise HTTPException(409, {"message": "no responses were saved", "errors": errors})
-    for req, item in todo:
-        _apply_response(session, supplier, req, item)
+    app_ids = {_apply_response(session, supplier, req, item).application_id for req, item in todo}
     session.commit()
+    _brief_ready_applications(session, background, app_ids)
     return [_request_view(session, req) for req, _ in todo]

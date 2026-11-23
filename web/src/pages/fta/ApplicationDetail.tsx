@@ -14,9 +14,11 @@ import { aed, fmtDate, fmtDateTime, humanize, num, parseUtc, plural } from "../.
 import { useRules } from "../../lib/rules.tsx";
 import { statusInfo } from "../../lib/status.ts";
 import { useApi } from "../../lib/useApi.ts";
+import { ComplianceReview, DecisionBrief, OriginalDocument } from "./AgentPanels.tsx";
 
 const GROUPS: [string, string][] = [
   ["TI-", "Tax invoice validity"],
+  ["EX-", "Original document"],
   ["NR-", "Refund eligibility"],
   ["CS-", "Common-sense checks"],
   ["SC-", "Supplier confirmation"],
@@ -77,6 +79,7 @@ export default function ApplicationDetail() {
       </div>
 
       <DecisionPanel detail={data} claimed={claimed} eligible={eligible} awaiting={awaiting} undecided={undecided} decision={decision} onDecided={reload} />
+      {(a.status === "READY_FOR_DECISION" || data.agent_runs.length > 0) && <DecisionBrief appId={a.id} runs={data.agent_runs} onRan={reload} />}
 
       <h2 className="section-title">Invoices</h2>
       {invoices.map((inv) => (
@@ -352,7 +355,7 @@ function Comparison({ detail }: { detail: InvoiceDetail }) {
           })}
         </tbody>
       </table>
-      <p className="muted small table-note">An OCR column joins this comparison once document extraction is live.</p>
+      <p className="muted small table-note">The original document is compared with the Maskan data by rule EX-01.</p>
     </TableWrap>
   );
 }
@@ -516,6 +519,7 @@ function InvoiceCard({ detail, locked, onDecided }: { detail: InvoiceDetail; loc
       </summary>
       <div className="invoice-body">
         <Assessment detail={detail} />
+        <ComplianceReview detail={detail} onRan={onDecided} />
         {od ? (
           <div className="officer-record">
             <h3>Officer decision</h3>
@@ -539,6 +543,8 @@ function InvoiceCard({ detail, locked, onDecided }: { detail: InvoiceDetail; loc
             <RuleTable results={detail.rule_results} />
           </div>
           <div>
+            <h3>Original document</h3>
+            <OriginalDocument detail={detail} />
             <h3>Submitted vs confirmed</h3>
             <Comparison detail={detail} />
             <h3>Supplier response</h3>

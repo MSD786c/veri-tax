@@ -1,6 +1,7 @@
 """Deterministic, versioned rule engine (README "Verification rules").
 
-Implemented: TI-01..TI-09, NR-01..NR-06, CS-02..CS-04 and SC-01..SC-05.
+Implemented: TI-01..TI-09, EX-01, NR-01..NR-06, CS-02..CS-04 and SC-01..SC-05.
+EX-01 compares the Maskan data with the original document read by the vision model (app/documents.py).
 TODO (needs FTA return data): NR-07, SC-06.
 Each rule returns (rule_id, result, evidence); RULESET_VERSION is stored on every result.
 
@@ -8,7 +9,8 @@ Sources: VAT Executive Regulation Article 59 (tax invoice particulars) and Artic
 (new residences refund), and FTA VAT Guide VATGRH1, June 2026.
 """
 import re
-from datetime import date
+from datetime import date, datetime
+from typing import Any
 
 from sqlmodel import Session, select
 
@@ -33,6 +35,8 @@ TRN_RE = re.compile(r"^100\d{12}$")  # UAE TRNs are 15 digits starting with 100
 PERIOD_RE = re.compile(r"^(\d{4}-Q[1-4]|[A-Z][a-z]{2}-\d{4})$")  # 2026-Q2 or Apr-2026
 TAX_INVOICE_TITLES = {"tax invoice", "فاتورة ضريبية"}
 MAX_PLAUSIBLE_INVOICE_AED = 20_000_000  # CS-03: above this a single villa invoice needs a person
+CONFIDENCE_THRESHOLD = 0.7  # an extracted field below this is "not read", never trusted
+NON_INVOICE_TYPES = {"QUOTATION", "PROFORMA", "RECEIPT"}
 
 # Human-readable rule catalog (README "Verification rules"), served at GET /meta/rules so the
 # portals can label rule IDs. `implemented` marks the rules this ruleset actually runs.
@@ -46,11 +50,12 @@ RULE_CATALOG: dict[str, dict] = {
     "TI-07": {"group": "Tax invoice validity", "title": "Arithmetic adds up", "description": "Taxable × 5% = VAT and taxable + VAT = total, within AED 0.05.", "implemented": True},
     "TI-08": {"group": "Tax invoice validity", "title": "Recipient is the applicant", "description": "Addressed to the applicant, or states it is for the applicant's use with the plot number.", "implemented": True},
     "TI-09": {"group": "Tax invoice validity", "title": "Full tax invoice", "description": "A full tax invoice (Article 59(1)); simplified tax invoices are not accepted for this refund.", "implemented": True},
+    "EX-01": {"group": "Original document", "title": "Matches the original document", "description": "The Maskan data matches the original invoice read from the uploaded document (N/A until one is linked).", "implemented": True},
     "NR-01": {"group": "Refund eligibility", "title": "Plot matches application", "description": "The plot number or address on the invoice matches the application.", "implemented": True},
     "NR-02": {"group": "Refund eligibility", "title": "Eligible goods or services", "description": "Each line checked against the VATGRH1 Appendix 1 catalogue; unclear items go to a person.", "implemented": True},
     "NR-03": {"group": "Refund eligibility", "title": "Within construction period", "description": "Dated after the building permit and before completion (except retention claims).", "implemented": True},
     "NR-04": {"group": "Refund eligibility", "title": "Claimed within 12 months", "description": "Claim lodged within 12 months of the residence's completion date.", "implemented": True},
-    "NR-05": {"group": "Refund eligibility", "title": "Not claimed elsewhere", "description": "The invoice is not claimed in another application; both claims are flagged if it is.", "implemented": True},
+    "NR-05": {"group": "Refund eligibility", "title": "Not claimed elsewhere", "description": "A repeat claim of an invoice already claimed elsewhere fails; the earlier claim is flagged for review.", "implemented": True},
     "NR-06": {"group": "Refund eligibility", "title": "Intermediary not recovering VAT", "description": "Where an intermediary is the recipient, it confirms it is not recovering input VAT.", "implemented": True},
     "NR-07": {"group": "Refund eligibility", "title": "Retention invoice rules", "description": "Retention invoices only in a retention claim, with proof of payment.", "implemented": False},
     "CS-01": {"group": "Common-sense checks", "title": "Invoices within contract value", "description": "All invoices together stay within 110% of the construction contract (application flag).", "implemented": True},
@@ -155,23 +160,27 @@ def _recipient_checks(inv: Invoice, app: Application) -> list[Check]:
 
 
 def find_duplicates(session: Session, inv: Invoice) -> list[Invoice]:
-    """Same supplier TRN and invoice number claimed in a different application."""
-    return list(session.exec(
-        select(Invoice).where(
-            Invoice.supplier_trn == inv.supplier_trn,
-            Invoice.invoice_no == inv.invoice_no,
-            Invoice.application_id != inv.application_id,
-        )
-    ).all())
+    """Other claims of the same supplier invoice (same TRN, same normalised invoice number), in any application.
+
+    ponytail: scans the supplier's invoices; index a normalised invoice number at scale.
+    """
+    return [o for o in session.exec(select(Invoice).where(Invoice.supplier_trn == inv.supplier_trn, Invoice.id != inv.id)).all()
+            if same_ref(o.invoice_no, inv.invoice_no)]
 
 
-def check_invoice(session: Session, inv: Invoice, app: Application, today: date | None = None) -> list[Check]:
+def check_invoice(session: Session, inv: Invoice, app: Application, today: date | None = None,
+                  ext: dict | None = None) -> list[Check]:
+    """`ext` is the vision-model reading of the original document, when one is linked."""
     today = today or date.today()
     supplier = session.get(Supplier, inv.supplier_trn)
     out: list[Check] = []
 
     # --- A. Tax invoice validity (Article 59) ---------------------------------------------
-    out.append(("TI-01", P if inv.title.strip().lower() in TAX_INVOICE_TITLES else F, {"title": inv.title}))
+    doc_type = (ext or {}).get("document_type")
+    if doc_type in NON_INVOICE_TYPES:  # the original document is positively a quotation/proforma/receipt
+        out.append(("TI-01", F, {"title": inv.title, "document_type": doc_type, "reason": f"Original document reads as a {doc_type.lower()}"}))
+    else:
+        out.append(("TI-01", P if inv.title.strip().lower() in TAX_INVOICE_TITLES else F, {"title": inv.title}))
     if not (supplier and supplier.legal_name and inv.supplier_trn):
         out.append(("TI-02", F, {"reason": "Supplier name or TRN missing"}))
     elif not inv.supplier_address:
@@ -192,6 +201,7 @@ def check_invoice(session: Session, inv: Invoice, app: Application, today: date 
     out.append(("TI-07", P if arith_ok else F, {"expected_vat": expected_vat, "vat": inv.vat_amount, "total": inv.total}))
     out.extend(_recipient_checks(inv, app))
     out.append(_invoice_type_check(inv, supplier))
+    out.append(_ex01(inv, ext))
 
     # --- B. Refund eligibility (Article 66, VATGRH1) --------------------------------------
     if not inv.plot_no:
@@ -217,8 +227,15 @@ def check_invoice(session: Session, inv: Invoice, app: Application, today: date 
     days = (today - app.completion_date).days
     out.append(("NR-04", P if days <= 365 else F, {"days_since_completion": days}))
 
+    # Earlier claim of the same invoice -> FAIL. Only LATER claims -> UNCERTAIN (this may be the genuine
+    # claim; see pipeline._flag_earlier_duplicates). So re-running the rules never fails the first claimant.
     dups = find_duplicates(session, inv)
-    out.append(("NR-05", F if dups else P, {"also_claimed_in_applications": sorted({d.application_id for d in dups})}))
+    earlier = [d for d in dups if d.id < inv.id]
+    nr05 = F if earlier else U if dups else P
+    ev = {"also_claimed_in_applications": sorted({d.application_id for d in dups})}
+    if nr05 == U:
+        ev["reason"] = "The same supplier invoice was later claimed in another application"
+    out.append(("NR-05", nr05, ev))
 
     # --- Common-sense checks on the values ------------------------------------------------
     if app.contract_value and inv.total > app.contract_value:
@@ -241,7 +258,7 @@ def check_invoice(session: Session, inv: Invoice, app: Application, today: date 
     return out
 
 
-def check_supplier_response(inv: Invoice, resp: SupplierResponse) -> list[Check]:
+def check_supplier_response(inv: Invoice, resp: SupplierResponse, claim_type: ClaimType = ClaimType.NEW_RESIDENCE) -> list[Check]:
     out: list[Check] = [("SC-01", P if resp.issued else F, {"issued": resp.issued})]
     if not resp.issued:
         return out
@@ -251,7 +268,11 @@ def check_supplier_response(inv: Invoice, resp: SupplierResponse) -> list[Check]
         out.append(("SC-03", P, {"status": resp.consideration_status, "received_date": str(resp.received_date)}))
     elif resp.consideration_status == ConsiderationStatus.PARTIAL_OR_RETENTION:
         ok = resp.retention_amount is not None and resp.retention_release_date is not None
-        out.append(("SC-03", P if ok else U, {"retention_amount": resp.retention_amount}))
+        if claim_type != ClaimType.RETENTION:  # retention is only accepted in a retention claim (README NR-07)
+            out.append(("SC-03", U, {"retention_amount": resp.retention_amount,
+                                     "reason": "Supplier reports retention, but this is not a retention claim"}))
+        else:
+            out.append(("SC-03", P if ok else U, {"retention_amount": resp.retention_amount}))
     else:
         out.append(("SC-03", F, {"reason": "consideration status missing"}))
 
@@ -274,3 +295,80 @@ def _period_consistent(period: str, invoice_date: date) -> RuleOutcome:
             return F
         return P if (int(m[2]), months.index(m[1]) + 1) >= (invoice_date.year, invoice_date.month) else F
     return U
+
+
+# --- EX-01: Maskan data vs the original document (vision extraction) ----------------------
+_ARABIC = str.maketrans("٠١٢٣٤٥٦٧٨٩٬٫", "0123456789,.")
+DATE_FORMATS = ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%d %b %Y", "%d %B %Y")
+
+
+def field(ext: dict | None, name: str) -> tuple[Any, float]:
+    """(value, confidence) of an extracted field; (None, 0) when absent."""
+    f = ((ext or {}).get("fields") or {}).get(name) or {}
+    v = f.get("value")
+    return (None if v in ("", None) else v), float(f.get("confidence") or 0)
+
+
+def trusted(ext: dict | None, name: str) -> Any:
+    """An extracted value only when read with confidence; otherwise None ("not read")."""
+    v, c = field(ext, name)
+    return v if c >= CONFIDENCE_THRESHOLD else None
+
+
+def to_number(v: Any) -> float | None:
+    if isinstance(v, (int, float)):
+        return float(v)
+    s = re.sub(r"AED|DHS|د\.إ|[,\s]", "", str(v).translate(_ARABIC).upper())
+    try:
+        return float(s)
+    except ValueError:
+        return None
+
+
+def to_date(v: Any) -> date | None:
+    s = str(v).translate(_ARABIC).strip()
+    for fmt in DATE_FORMATS:
+        try:
+            return datetime.strptime(s, fmt).date()
+        except ValueError:
+            pass
+    return None
+
+
+def same_ref(a: Any, b: Any) -> bool:
+    """Invoice numbers / TRNs compared without spaces, dashes or slashes ("GSC 77" == "GSC-77")."""
+    norm = lambda v: re.sub(r"[\s\-_/]", "", str(v).translate(_ARABIC)).upper()  # noqa: E731
+    return norm(a) == norm(b)
+
+
+def same(a: Any, b: Any) -> bool | None:
+    """True/False when comparable; None when `a` can't be parsed (treated as not read, never a mismatch)."""
+    if isinstance(b, (int, float)):
+        n = to_number(a)
+        return None if n is None else abs(n - b) <= ROUNDING_TOLERANCE
+    if isinstance(b, date):
+        d = to_date(a)
+        return None if d is None else d == b
+    return same_ref(a, b)
+
+
+def _ex01(inv: Invoice, ext: dict | None) -> Check:
+    """Three-way comparison, leg 1: Maskan data vs the document. Leg 2 (the supplier) is SC-02."""
+    if not ext:
+        return "EX-01", NA, {"reason": "No original document linked yet"}
+    expected = {"supplier_trn": inv.supplier_trn, "invoice_no": inv.invoice_no, "invoice_date": inv.invoice_date,
+                "taxable_amount": inv.taxable_amount, "vat_amount": inv.vat_amount, "total": inv.total}
+    mismatches, unread = {}, []
+    for k, want in expected.items():
+        got = trusted(ext, k)
+        match = None if got is None else same(got, want)
+        if match is None:
+            unread.append(k)
+        elif not match:
+            mismatches[k] = {"maskan": str(want), "document": got}
+    if mismatches:
+        return "EX-01", F, {"mismatches": mismatches, "unread": unread,
+                            "reason": "Submitted data differs from the original document: " + ", ".join(mismatches)}
+    if unread:
+        return "EX-01", U, {"unread": unread, "reason": "Could not read from the document: " + ", ".join(unread)}
+    return "EX-01", P, {"document": "matches"}

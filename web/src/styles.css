@@ -1446,6 +1446,38 @@ input[type="radio"] {
   margin: 12px 0 0;
 }
 
+.doc-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.doc-head,
+.agent-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.agent-head h3 {
+  margin: 0;
+}
+.agent-head .btn,
+.doc-head .btn {
+  margin-left: auto;
+}
+.agent-block {
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+.extraction > summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--accent-ink);
+  margin-bottom: 6px;
+}
+
 /* ---------- home ---------- */
 .home {
   max-width: 1120px;

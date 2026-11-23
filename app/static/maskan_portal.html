@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:,">
+<title>Maskan Invoice Portal</title>
+<style>
+  :root { --gold:#B68A35; --gold-soft:#f6efe1; --ink:#232528; --muted:#6b6f76; --line:#e3e1dc; --bg:#f4f3f1; --card:#fff;
+          --ok:#1f7a4d; --ok-bg:#e5f4ec; --bad:#a8322c; --bad-bg:#fbe9e7; --warn:#8a6100; --warn-bg:#fdf3d8; }
+  * { box-sizing:border-box }
+  body { margin:0; font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif; color:var(--ink); background:var(--bg) }
+  header { background:#fff; border-bottom:3px solid var(--gold); padding:14px 24px; display:flex; align-items:baseline; gap:12px; flex-wrap:wrap }
+  header b { color:var(--gold); font-size:20px } header span { color:var(--muted) }
+  main { max-width:1100px; margin:24px auto; padding:0 16px; display:grid; grid-template-columns:minmax(0,1fr); gap:20px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:20px }
+  h2 { margin:0 0 4px; font-size:16px } p.sub { margin:0 0 16px; color:var(--muted) }
+  #drop { border:2px dashed var(--line); border-radius:8px; padding:28px; text-align:center; color:var(--muted); cursor:pointer; transition:.15s }
+  #drop.over, #drop:hover { border-color:var(--gold); background:var(--gold-soft); color:var(--ink) }
+  .row { display:flex; gap:10px; margin-top:12px; flex-wrap:wrap }
+  input[type=text] { flex:1; min-width:200px; padding:9px 12px; border:1px solid var(--line); border-radius:6px; font:inherit }
+  button { padding:9px 16px; border:0; border-radius:6px; background:var(--gold); color:#fff; font:inherit; font-weight:600; cursor:pointer }
+  button:disabled { opacity:.5; cursor:default } button.ghost { background:none; color:var(--gold); padding:4px 8px }
+  #msg { margin-top:10px; color:var(--muted); min-height:1.5em }
+  table { width:100%; border-collapse:collapse } .scroll { overflow-x:auto }
+  th { text-align:start; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); padding:8px; border-bottom:1px solid var(--line); white-space:nowrap }
+  td { padding:10px 8px; border-bottom:1px solid var(--line); vertical-align:top }
+  tr.main { cursor:pointer } tr.main:hover td { background:#faf9f7 }
+  .pill { display:inline-block; padding:1px 8px; border-radius:99px; font-size:11px; font-weight:700; white-space:nowrap }
+  .EXTRACTED,.VERIFIED,.TAX_INVOICE { background:var(--ok-bg); color:var(--ok) }
+  .FAILED,.AUTO_REJECTED,.DISPUTED,.QUOTATION,.PROFORMA,.RECEIPT,.OTHER { background:var(--bad-bg); color:var(--bad) }
+  .UPLOADED,.EXTRACTING,.AWAITING_SUPPLIER,.FLAGGED { background:var(--warn-bg); color:var(--warn) }
+  .detail td { background:#faf9f7 } .fields { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:6px 16px }
+  .f small { color:var(--muted); display:block } .low { color:var(--bad) }
+  .conf { font-size:11px; color:var(--muted) } .err { color:var(--bad) } a { color:var(--gold) }
+  footer { text-align:center; color:var(--muted); font-size:12px; padding:16px }
+</style>
+</head>
+<body>
+<header><b>Maskan Portal</b><span>veri-tax invoice intake &middot; private link, do not share outside the team</span></header>
+<main>
+  <section class="card">
+    <h2>Upload invoices</h2>
+    <p class="sub">PDF, JPEG, PNG or WebP, up to 15&nbsp;MB each. Each file is read by the vision model and matched to Maskan invoices by supplier TRN and invoice number.</p>
+    <div id="drop" tabindex="0" role="button" aria-label="Choose files to upload">Drop invoice files here, or click to choose</div>
+    <input id="file" type="file" multiple accept="application/pdf,image/jpeg,image/png,image/webp" hidden>
+    <div class="row">
+      <input id="label" type="text" placeholder="Optional note, e.g. 'Al Noor batch 1' or 'Arabic sample'">
+      <button id="go" disabled>Upload</button>
+    </div>
+    <div id="msg" aria-live="polite"></div>
+  </section>
+  <section class="card">
+    <h2>Uploaded invoices</h2>
+    <p class="sub">Click a row to see every extracted field with its confidence. Refreshes automatically.</p>
+    <div class="scroll"><table>
+      <thead><tr><th>File</th><th>Status</th><th>Type</th><th>Supplier</th><th>TRN</th><th>Invoice no</th><th>Date</th><th>VAT</th><th>Total</th><th>Matched to</th><th></th></tr></thead>
+      <tbody id="rows"><tr><td colspan="11">Loading&hellip;</td></tr></tbody>
+    </table></div>
+  </section>
+</main>
+<footer>Hackathon prototype &ndash; not an official FTA service. Synthetic data only.</footer>
+<script>
+const base = location.pathname.replace(/\/$/, "");
+const $ = id => document.getElementById(id);
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+let chosen = [], open = new Set();
+
+$("drop").onclick = () => $("file").click();
+$("drop").onkeydown = e => (e.key === "Enter" || e.key === " ") && $("file").click();
+$("file").onchange = e => pick([...e.target.files]);
+["dragover","dragenter"].forEach(t => $("drop").addEventListener(t, e => { e.preventDefault(); $("drop").classList.add("over"); }));
+["dragleave","drop"].forEach(t => $("drop").addEventListener(t, e => { e.preventDefault(); $("drop").classList.remove("over"); }));
+$("drop").addEventListener("drop", e => pick([...e.dataTransfer.files]));
+
+function pick(files) {
+  chosen = files;
+  $("drop").textContent = files.length ? files.map(f => f.name).join(", ") : "Drop invoice files here, or click to choose";
+  $("go").disabled = !files.length;
+}
+
+$("go").onclick = async () => {
+  const fd = new FormData();
+  chosen.forEach(f => fd.append("files", f));
+  fd.append("label", $("label").value);
+  $("go").disabled = true; $("msg").textContent = "Uploading…";
+  try {
+    const r = await fetch(base + "/documents", { method: "POST", body: fd });
+    const out = await r.json();
+    if (!r.ok) throw new Error(out.detail || r.statusText);
+    $("msg").textContent = out.map(o => o.error ? `${o.filename}: ${o.error}` : `${o.filename}: ${o.duplicate ? "already uploaded" : "uploaded, extracting…"}`).join(" · ");
+    pick([]); $("file").value = ""; load();
+  } catch (e) { $("msg").innerHTML = `<span class="err">${esc(e.message)}</span>`; $("go").disabled = false; }
+};
+
+const val = (x, k) => x?.fields?.[k]?.value;
+const fmt = v => v == null || v === "" ? "–" : (typeof v === "number" ? v.toLocaleString("en-AE", {minimumFractionDigits: 2}) : esc(v));
+
+function render(items) {
+  if (!items.length) { $("rows").innerHTML = `<tr><td colspan="11">No invoices uploaded yet.</td></tr>`; return; }
+  $("rows").innerHTML = items.map(({document: d, extraction: x, linked_invoices: links}) => {
+    const main = `<tr class="main" data-id="${d.id}">
+      <td><a href="${base}/documents/${d.id}/file" target="_blank" onclick="event.stopPropagation()">${esc(d.filename)}</a>${d.label ? `<br><small class="conf">${esc(d.label)}</small>` : ""}</td>
+      <td><span class="pill ${d.status}">${d.status}</span>${d.error ? `<br><small class="err">${esc(d.error.slice(0,120))}</small>` : ""}</td>
+      <td>${x ? `<span class="pill ${x.document_type}">${x.document_type.replace("_"," ")}</span>` : "–"}</td>
+      <td>${fmt(val(x,"supplier_name"))}</td><td>${fmt(val(x,"supplier_trn"))}</td><td>${fmt(val(x,"invoice_no"))}</td>
+      <td>${fmt(val(x,"invoice_date"))}</td><td>${fmt(val(x,"vat_amount"))}</td><td>${fmt(val(x,"total"))}</td>
+      <td>${links.length ? links.map(l => `${esc(l.maskan_ref)} / ${esc(l.invoice_no)} <span class="pill ${l.status}">${l.status.replaceAll("_"," ")}</span>`).join("<br>") : "–"}</td>
+      <td>${d.status === "FAILED" ? `<button class="ghost" onclick="event.stopPropagation(); retry(${d.id})">Retry</button>` : ""}</td></tr>`;
+    const detail = open.has(d.id) && x ? `<tr class="detail"><td colspan="11"><div class="fields">${
+      Object.entries(x.fields).map(([k, f]) => `<div class="f"><small>${esc(k.replaceAll("_"," "))}</small>${fmt(f.value)} <span class="conf ${f.confidence < 0.7 ? "low" : ""}">${Math.round(f.confidence*100)}%</span></div>`).join("")
+    }</div><p class="conf">Model ${esc(x.model)} &middot; prompt ${esc(x.prompt_version)} &middot; sha256 ${esc(d.sha256.slice(0,16))}…</p></td></tr>` : "";
+    return main + detail;
+  }).join("");
+  document.querySelectorAll("tr.main").forEach(tr => tr.onclick = () => {
+    const id = +tr.dataset.id; open.has(id) ? open.delete(id) : open.add(id); render(items);
+  });
+}
+
+async function retry(id) { await fetch(`${base}/documents/${id}/retry`, { method: "POST" }); load(); }
+async function load() {
+  try { const r = await fetch(base + "/documents"); if (r.ok) render(await r.json()); } catch {}
+}
+load(); setInterval(load, 3000);
+</script>
+</body>
+</html>

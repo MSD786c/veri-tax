@@ -5,12 +5,12 @@ ponytail: the applicant is identified by the X-Emirates-Id header. Replace with 
 """
 import hmac
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Header, HTTPException, UploadFile
 from sqlmodel import Session, select
 
-from app import pipeline
+from app import agents, documents, pipeline
 from app.db import get_session
-from app.models import Application, Invoice, InvoiceStatus
+from app.models import Application, DocumentStatus, Invoice, InvoiceStatus
 from app.schemas import IngestApplication
 
 router = APIRouter(prefix="/maskan", tags=["maskan (ingestion + applicant status)"])
@@ -26,10 +26,35 @@ APPLICANT_STATUS = {
 
 
 @router.post("/applications", response_model=Application, status_code=201)
-def ingest_application(payload: IngestApplication, session: Session = Depends(get_session)):
+def ingest_application(payload: IngestApplication, background: BackgroundTasks, session: Session = Depends(get_session)):
     if session.exec(select(Application).where(Application.maskan_ref == payload.maskan_ref)).first():
         raise HTTPException(409, f"application {payload.maskan_ref} already ingested")
-    return pipeline.ingest(session, payload)
+    app = pipeline.ingest(session, payload)
+    background.add_task(agents.compliance_for_application_background, app.id)
+    return app
+
+
+@router.post("/invoices/{invoice_id}/document", status_code=201)
+async def attach_document(invoice_id: int, background: BackgroundTasks, file: UploadFile = File(...),
+                          session: Session = Depends(get_session)):
+    """Attach the original invoice file; extraction + re-verification run in the background."""
+    inv = session.get(Invoice, invoice_id)
+    if not inv:
+        raise HTTPException(404, "invoice not found")
+    try:
+        doc, created = documents.store(session, await file.read(documents.MAX_BYTES + 1), file.filename or "invoice",
+                                       file.content_type or "", "maskan")
+    except ValueError as e:
+        raise HTTPException(422, str(e)) from e
+    inv.document_hash = doc.sha256
+    session.commit()
+    if created or doc.status == DocumentStatus.FAILED:
+        background.add_task(documents.extract, doc.id)
+    elif doc.status == DocumentStatus.EXTRACTED:  # same file seen before: re-verify now
+        pipeline.reverify(session, inv, actor="maskan")
+        session.commit()
+    # UPLOADED/EXTRACTING: the running extraction links every invoice with this hash when it finishes
+    return {"invoice_id": inv.id, "document_id": doc.id, "document_status": doc.status}
 
 
 @router.get("/applications/{maskan_ref}/status")
