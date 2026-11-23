@@ -164,3 +164,37 @@ export function Funnel({ parts }: { parts: [string, number, string][] }): ReactN
     </ul>
   );
 }
+
+/** Two bars per month (claimed in navy, verified in gold), rounded like the rest of the system. */
+export function GroupedBars({ monthly, h = 250 }: { monthly: { month: string; claimed: number; verified: number; invoices: number }[]; h?: number }) {
+  if (!monthly.length) return <ChartEmpty text="No invoices in this range" />;
+  const W = 640, L = 44, R = 8, T = 14, B = 34;
+  const top = niceMax(Math.max(...monthly.map((m) => Math.max(m.claimed, m.verified))));
+  const slot = (W - L - R) / monthly.length;
+  const bw = Math.min(20, slot * 0.28);
+  const y = (v: number) => T + (h - T - B) * (1 - v / top);
+  const col = (cx: number, v: number, fill: string) => {
+    const bh = v ? Math.max(3, y(0) - y(v)) : 0;
+    return <rect className="col" x={cx - bw / 2} y={y(0) - bh} width={bw} height={bh} rx={bw / 2} fill={fill} />;
+  };
+  return (
+    <svg className="chart" viewBox={`0 0 ${W} ${h}`} role="img" aria-label="VAT claimed and verified by month">
+      {[0, 1, 2, 3].map((k) => {
+        const v = (top * k) / 3;
+        return <g key={k}><line className="grid" x1={L} x2={W - R} y1={y(v)} y2={y(v)} /><text className="ax" x={L - 8} y={y(v) + 4} textAnchor="end">{short(v)}</text></g>;
+      })}
+      {monthly.map((m, i) => {
+        const cx = L + slot * (i + 0.5);
+        return (
+          <g key={m.month} className="bar-g">
+            <rect className="bar-hit" x={cx - slot / 2} y={T} width={slot} height={h - T - B} />
+            {col(cx - bw * 0.7, m.claimed, NAVY)}
+            {col(cx + bw * 0.7, m.verified, GOLD)}
+            <title>{`${monthLabel(m.month)}: claimed ${money(m.claimed)} · verified ${money(m.verified)} · ${m.invoices} invoices`}</title>
+            <text className="ax" x={cx} y={h - 12} textAnchor="middle">{monthLabel(m.month)}</text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
