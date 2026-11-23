@@ -71,7 +71,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </div>
         </section>
 
-        <section className="tile t-work dark">
+        <section className="tile t-work peach">
           <header className="tile-h"><h2>Your work</h2><span className="tile-sub">{doneToday} decision{doneToday === 1 ? "" : "s"} today</span></header>
           <div className="wk-grid">
             <Link className="big-tile blue" href="/applications">
@@ -89,9 +89,9 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           </div>
         </section>
 
-        <section className="tile t-ratings dark">
+        <section className="tile t-ratings white">
           <header className="tile-h"><h2>Invoice ratings</h2><span className="tile-sub">{an.totals.invoices} in range</span></header>
-          <div className="on-dark">
+          <div className="on-light">
             <Donut parts={[["Strong", rt.STRONG, GREEN], ["Weak", rt.WEAK, AMBER], ["Fail", rt.FAIL, RED], ["Pending", rt.PENDING, GREY]]} />
           </div>
         </section>
@@ -111,7 +111,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
           ) : <Empty icon="check" title="All caught up" text="Nothing needs your decision right now." />}
         </section>
 
-        <section className="tile t-verify dark">
+        <section className="tile t-verify lilac">
           <header className="tile-h"><h2>Verify an invoice</h2></header>
           <p className="tile-text">Enter the TRN, invoice number and amount for an instant decision.</p>
           <form action="/verify" method="get" className="qv-form">
