@@ -17,6 +17,7 @@ import httpx
 
 BASE_URL = os.getenv("LLM_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/")
 GEMINI = "generativelanguage.googleapis.com" in BASE_URL  # Gemini's OpenAI-compatible endpoint
+LOCAL = "://localhost" in BASE_URL or "://127.0.0.1" in BASE_URL  # on-prem server (Ollama): no key, nothing leaves the host
 API_KEY = os.getenv("GEMINI_API_KEY" if GEMINI else "GROQ_API_KEY", "")
 MODEL = os.getenv("LLM_MODEL", "qwen/qwen3.8-27b")
 VISION_MODEL = os.getenv("VISION_MODEL", MODEL)
@@ -32,7 +33,7 @@ class LLMError(RuntimeError):
 
 
 def enabled() -> bool:
-    return bool(API_KEY) or "://localhost" in BASE_URL or "://127.0.0.1" in BASE_URL  # local servers (Ollama) need no key
+    return bool(API_KEY) or LOCAL
 
 
 def status() -> dict:
@@ -57,8 +58,9 @@ def parse_json(text: str) -> dict:
         raise LLMError(f"invalid JSON from model: {e}") from e
 
 
-def chat_json(system: str, user: str | list, model: str | None = None) -> dict:
-    """One chat completion that must return a JSON object. `user` may be OpenAI content parts (text + images)."""
+def chat_json(system: str, user: str | list, model: str | None = None, schema: dict | None = None) -> dict:
+    """One chat completion that must return a JSON object. `user` may be OpenAI content parts (text + images).
+    `schema`: on a local server the output is grammar-constrained to it (small models otherwise drop nested shapes)."""
     if not enabled():
         raise LLMError("LLM not configured: set GROQ_API_KEY in .env")
     body = {
@@ -67,7 +69,9 @@ def chat_json(system: str, user: str | list, model: str | None = None) -> dict:
         "max_completion_tokens": MAX_TOKENS,
         "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
     }
-    if GEMINI:  # JSON mode: without it Gemini sometimes emits invalid \u escapes in Arabic text
+    if LOCAL and schema:
+        body["response_format"] = {"type": "json_schema", "json_schema": {"name": "output", "schema": schema}}
+    elif GEMINI or LOCAL:  # JSON mode: without it Gemini emits invalid \u escapes in Arabic text; small local models drift into prose
         body["response_format"] = {"type": "json_object"}
     # Every failure leaves as LLMError so callers have one thing to catch.
     with _lock:
