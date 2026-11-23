@@ -4,7 +4,14 @@ from typing import Any
 
 from pydantic import BaseModel, Field, model_validator
 
-from app.models import ClaimType, ConsiderationStatus, Decision
+from app.models import ClaimType, ConsiderationStatus, Decision, InvoiceDecisionValue, InvoiceType
+
+
+class LineItem(BaseModel):
+    description: str
+    quantity: float | None = None
+    unit_price: float | None = None
+    amount: float | None = Field(None, description="Net amount of the line in AED, before VAT")
 
 
 class IngestInvoice(BaseModel):
@@ -20,6 +27,15 @@ class IngestInvoice(BaseModel):
     plot_no: str = ""
     description: str = ""
     document_uri: str | None = None
+    # Article 59 particulars from extraction. Leave a field out if it was not read; never guess it.
+    invoice_type: InvoiceType | None = Field(None, description="FULL or SIMPLIFIED, as read from the document")
+    supplier_address: str = ""
+    recipient_name: str = ""
+    recipient_address: str = ""
+    supply_date: date | None = None
+    line_items: list[LineItem] = []
+    for_applicant_statement: bool = False
+    intermediary_no_recovery_confirmed: bool = False
 
 
 class IngestApplication(BaseModel):
@@ -29,6 +45,8 @@ class IngestApplication(BaseModel):
     plot_no: str
     emirate: str
     completion_date: date
+    permit_date: date | None = None
+    contract_value: float | None = Field(None, ge=0, description="Construction contract value in AED, incl. VAT")
     claim_type: ClaimType = ClaimType.NEW_RESIDENCE
     invoices: list[IngestInvoice] = Field(min_length=1)
 
@@ -57,3 +75,9 @@ class DecisionIn(BaseModel):
     decision: Decision
     approved_amount: float = Field(ge=0)
     comments: str = ""
+
+
+class InvoiceDecisionIn(BaseModel):
+    decision: InvoiceDecisionValue
+    approved_vat_amount: float | None = Field(None, ge=0, description="Defaults to the eligible VAT on the invoice")
+    comment: str = ""
