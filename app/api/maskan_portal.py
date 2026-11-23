@@ -16,7 +16,8 @@ from sqlmodel import Session, col, select
 
 from app import documents
 from app.db import get_session
-from app.models import Application, Document, ExtractedInvoice, Invoice
+from app import rules
+from app.models import Application, Document, DocumentStatus, ExtractedInvoice, Invoice, Supplier
 
 router = APIRouter(prefix="/maskan/portal/{token}", tags=["maskan portal (invoice intake)"])
 SOURCE = "maskan-portal"
@@ -36,12 +37,23 @@ def _own(doc_id: int, session: Session, token: str) -> Document:
     return doc
 
 
+def _registered(session: Session, trn) -> bool:
+    """Vendor is in the FTA registry data (TI-03). An invoice with no TRN can't be from a registered vendor."""
+    s = session.get(Supplier, str(trn)) if trn else None
+    return bool(s and s.registry_verified)
+
+
 def document_view(session: Session, doc: Document) -> dict:
     ext = session.exec(select(ExtractedInvoice).where(ExtractedInvoice.document_id == doc.id)).first()
     invs = session.exec(select(Invoice).where(Invoice.document_hash == doc.sha256)).all()
+    trns = [i.supplier_trn for i in invs] or ([rules.trusted(ext.model_dump(), "supplier_trn")] if ext else [])
+    flag = None
+    if doc.status == DocumentStatus.EXTRACTED and not all(_registered(session, t) for t in trns or [None]):
+        flag = "Not a registered vendor"
     return {
         "document": doc.model_dump(exclude={"path"}),
         "extraction": ext,
+        "flag": flag,  # shown on the Maskan portal; the officer sees the case in the FTA portal
         "linked_invoices": [{"invoice_id": i.id, "invoice_no": i.invoice_no, "status": i.status,
                              "maskan_ref": session.get(Application, i.application_id).maskan_ref} for i in invs],
     }

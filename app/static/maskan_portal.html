@@ -251,14 +251,14 @@ function stats(items) {
 function render(items) {
   stats(items);
   if (!items.length) { $("rows").innerHTML = `<tr><td colspan="9" class="empty">No invoices uploaded yet. Files you upload above appear here.</td></tr>`; return; }
-  $("rows").innerHTML = items.map(({document: d, extraction: x, linked_invoices: links}) => {
+  $("rows").innerHTML = items.map(({document: d, extraction: x, linked_invoices: links, flag}) => {
     const main = `<tr class="main${open.has(d.id) ? " is-open" : ""}" data-id="${d.id}">
       <td class="file"><a href="${base}/documents/${d.id}/file" target="_blank" onclick="event.stopPropagation()">${esc(d.filename).replace(/([_.-])/g, "$1<wbr>")}</a>${d.label ? `<small>${esc(d.label)}</small>` : ""}</td>
       <td class="stc"><span class="pill st ${d.status}">${d.status.replaceAll("_"," ")}</span>${d.error ? `<small class="err" title="${esc(d.error)}">${esc(/\b429\b/.test(d.error) ? "Service busy. Retry in a minute." : d.error.slice(0,120))}</small>` : ""}</td>
       <td>${x ? `<span class="pill ${x.document_type}">${x.document_type.replace("_"," ")}</span>` : "–"}</td>
       <td class="sup">${fmt(val(x,"supplier_name"))}${val(x,"supplier_trn") ? `<small class="nw">TRN ${fmt(val(x,"supplier_trn"))}</small>` : ""}</td>
       <td class="nw">${fmt(val(x,"invoice_no"))}${val(x,"invoice_date") ? `<small>${fmt(val(x,"invoice_date"))}</small>` : ""}</td><td class="num">${fmt(val(x,"vat_amount"))}</td><td class="num">${fmt(val(x,"total"))}</td>
-      <td>${links.length ? links.map(l => `<div class="link-row"><span>${esc(l.maskan_ref)} / ${esc(l.invoice_no)}</span><span class="pill ${l.status}">${l.status.replaceAll("_"," ")}</span></div>`).join("") : "–"}</td>
+      <td>${flag ? `<div class="link-row"><span class="pill FAILED">Flagged · ${esc(flag)}</span></div>` : ""}${links.length ? links.map(l => `<div class="link-row"><span>${esc(l.maskan_ref)} / ${esc(l.invoice_no)}</span><span class="pill ${l.status}">${l.status.replaceAll("_"," ")}</span></div>`).join("") : (flag ? "" : "–")}</td>
       <td>${d.status === "FAILED" ? `<button class="btn ghost" onclick="event.stopPropagation(); retry(${d.id})">Retry</button>` : ""}</td></tr>`;
     const detail = open.has(d.id) && x ? `<tr class="detail"><td colspan="9"><div class="inner"><div class="fields">${
       Object.entries(x.fields).map(([k, f]) => `<div class="f"><small>${esc(k.replaceAll("_"," "))}</small><div><span>${fmt(f.value)}</span><span class="conf ${f.confidence < 0.7 ? "low" : ""}">${Math.round(f.confidence*100)}%</span></div></div>`).join("")
