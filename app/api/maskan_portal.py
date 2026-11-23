@@ -16,7 +16,7 @@ from sqlmodel import Session, col, select
 
 from app import documents
 from app.db import get_session
-from app import rules
+from app import eligibility, rules
 from app.models import Application, Document, DocumentStatus, ExtractedInvoice, Invoice, Supplier
 
 router = APIRouter(prefix="/maskan/portal/{token}", tags=["maskan portal (invoice intake)"])
@@ -43,17 +43,34 @@ def _registered(session: Session, trn) -> bool:
     return bool(s and s.registry_verified)
 
 
+def _not_eligible(ext: ExtractedInvoice) -> str | None:
+    """NR-02 on what was read, at upload time: the same Appendix 1 catalogue the rule engine uses."""
+    f = ext.fields or {}
+    val = lambda k: (f.get(k) or {}).get("value")  # noqa: E731
+    lines = [li for li in (val("line_items") or []) if isinstance(li, dict) and li.get("description")]
+    texts = [str(li["description"]) for li in lines] or [str(val("description") or "")]
+    bad = [c for c in (eligibility.classify(t) for t in texts if t.strip()) if c.verdict == eligibility.Verdict.NOT_ELIGIBLE]
+    if not bad:
+        return None
+    if any("furniture" in c.reason.lower() for c in bad):
+        return "Not eligible · Furniture is not included in the refund programme (VATGRH1 Appendix 1)"
+    return f"Not eligible · {bad[0].reason}"
+
+
 def document_view(session: Session, doc: Document) -> dict:
     ext = session.exec(select(ExtractedInvoice).where(ExtractedInvoice.document_id == doc.id)).first()
     invs = session.exec(select(Invoice).where(Invoice.document_hash == doc.sha256)).all()
     trns = [i.supplier_trn for i in invs] or ([rules.trusted(ext.model_dump(), "supplier_trn")] if ext else [])
-    flag = None
+    flags = []
     if doc.status == DocumentStatus.EXTRACTED and not all(_registered(session, t) for t in trns or [None]):
-        flag = "Not a registered vendor"
+        flags.append("Not a registered vendor")
+    if ext and doc.status == DocumentStatus.EXTRACTED and (why := _not_eligible(ext)):
+        flags.append(why)
     return {
         "document": doc.model_dump(exclude={"path"}),
         "extraction": ext,
-        "flag": flag,  # shown on the Maskan portal; the officer sees the case in the FTA portal
+        "flags": flags,  # shown on the Maskan portal at upload time, before any Maskan claim is matched
+        "flag": flags[0] if flags else None,
         "linked_invoices": [{"invoice_id": i.id, "invoice_no": i.invoice_no, "status": i.status,
                              "maskan_ref": session.get(Application, i.application_id).maskan_ref} for i in invs],
     }
