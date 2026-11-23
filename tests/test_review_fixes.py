@@ -106,3 +106,33 @@ def test_llm_waits_out_rate_limit_then_succeeds(monkeypatch):
     monkeypatch.setattr(llm.time, "sleep", slept.append)
     assert llm.chat_json("s", "u") == {"ok": 1}
     assert slept == [7.0] and calls == [llm.MAX_TOKENS, llm.MAX_TOKENS]
+
+
+def test_self_check_trn_length_and_line_item_consistency():
+    """From the 60-invoice eval: a 16-digit TRN read at confidence 1.0, and bare line-item lists."""
+    _, f = documents._clean({"fields": {
+        "supplier_trn": {"value": "1004444444400003", "confidence": 1.0},
+        "taxable_amount": {"value": "30,510.00", "confidence": 0.95},
+        "line_items": [{"description": "Cement", "quantity": 245, "unit_price": 17, "amount": 4165},
+                       {"description": "Steel", "quantity": 11, "unit_price": 2395, "amount": 26345}]}})
+    assert f["supplier_trn"]["confidence"] <= 0.3  # impossible TRN is never trusted
+    assert f["line_items"]["confidence"] == 0.9  # lines sum to the taxable amount
+    _, g = documents._clean({"fields": {"taxable_amount": {"value": 99, "confidence": 0.95},
+                                        "line_items": {"value": [{"description": "x", "amount": 5}], "confidence": 1.0}}})
+    assert g["line_items"]["confidence"] == 0.5  # lines don't add up: not trusted
+
+
+def test_trn_second_look_and_near_miss_recipient(monkeypatch):
+    from app import llm
+    raw = {"fields": {"supplier_trn": {"value": "1005555555500003", "confidence": 1.0}}}
+    monkeypatch.setattr(llm, "chat_json", lambda s, u, model=None: {"trn_digits": "1 0 0 5 5 5 5 5 5 5 0 0 0 0 3"})
+    assert documents.fix_trn([b"img"], raw)["fields"]["supplier_trn"]["value"] == "100555555500003"
+    from app.models import Application
+    app = Application(maskan_ref="x", applicant_name="Khalid Al Shamsi", emirates_id_hash="h", plot_no="p", emirate="e",
+                      completion_date=date(2026, 9, 24))
+    inv = Invoice(application_id=1, supplier_trn="t", invoice_no="n", invoice_date=date(2026, 1, 1), taxable_amount=1,
+                  vat_amount=0.05, total=1.05, recipient_name="Khalid Al Shamssi")
+    out = dict((r, v) for r, v, _ in rules._recipient_checks(inv, app))
+    assert out == {"TI-08": rules.U, "NR-06": rules.NA}  # misreading, not a third party -> no NR-06 FAIL
+    inv.recipient_name = "Gulf Contracting LLC"
+    assert dict((r, v) for r, v, _ in rules._recipient_checks(inv, app))["TI-08"] == rules.F

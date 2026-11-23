@@ -20,6 +20,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
   - Compliance and reconciliation agents (advisory, stored as `AgentRun`): `POST /fta/invoices/{id}/compliance`, `POST /fta/applications/{id}/summary`.
   - New endpoints: `GET /fta/documents`, `GET /health/llm`, `GET /rules`. Application detail now includes `document`, `extraction` and `agent_runs`.
   - Request status `CANCELLED`, with re-issue and a fresh time limit. Schema version 3.
+  - `scripts/eval_invoices.py`: end-to-end evaluation on the 60-invoice answer key. Extraction self-checks added from its findings: a TRN that isn't 15 digits is never trusted, and line items are trusted only when they add up to the taxable amount.
   - `fixtures/invoices/` plus a generator. The seed date is pinned to 2026-09-24. Tests mock the LLM and each module gets a fresh database.
 
 - **Rating and officer control (Claude for Mwr, 23 Nov, ruleset `2026.11-1`):**

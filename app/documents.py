@@ -26,7 +26,7 @@ ALLOWED = {"application/pdf": ".pdf", "image/jpeg": ".jpg", "image/png": ".png",
 MAGIC = {"application/pdf": b"%PDF-", "image/jpeg": b"\xff\xd8\xff", "image/png": b"\x89PNG", "image/webp": b"RIFF"}
 MAX_PIXELS = 40_000_000  # decompression-bomb guard for uploaded images
 MAX_SIDE = 2000  # px sent to the model
-PROMPT_VERSION = "extract-2026.11-3"
+PROMPT_VERSION = "extract-2026.11-4"
 FIELDS = ["title", "invoice_type", "supplier_name", "supplier_address", "supplier_trn", "invoice_no", "invoice_date",
           "supply_date", "recipient_name", "recipient_address", "for_applicant_statement", "plot_no", "description",
           "line_items", "taxable_amount", "vat_rate", "vat_amount", "total", "currency"]
@@ -37,9 +37,9 @@ Return ONLY compact single-line JSON (no markdown, no indentation, no prose):
  "fields": {{<name>: {{"value": <string or number or null>, "confidence": <0..1>}}}}}}
 Field names: {", ".join(FIELDS)}.
 - Copy values exactly as printed; dates as YYYY-MM-DD; amounts as plain numbers without currency or commas.
-- supplier_trn is the 15-digit Tax Registration Number of the issuer.
+- supplier_trn is the 15-digit Tax Registration Number of the issuer. Copy it digit by digit and count: exactly 15 digits.
 - invoice_type: "FULL" (shows recipient, line items with unit price and quantity) or "SIMPLIFIED".
-- line_items: list of {{"description","quantity","unit_price","amount"}} (at most 10), amounts before VAT.
+- line_items: {{"value": [{{"description","quantity","unit_price","amount"}}, ...], "confidence": ...}} (at most 10 lines), amounts before VAT.
 - for_applicant_statement: true only if the invoice says it is for the use of a named individual's residence.
 - description: short summary of the goods/services. plot_no: plot number or residence address if shown.
 - If a field is not on the document use null with confidence 0. Never guess: lower the confidence instead."""
@@ -104,11 +104,35 @@ def page_images(data: bytes, content_type: str) -> list[bytes]:
     return out
 
 
+TRN_SYSTEM = """Read ONLY the supplier's Tax Registration Number (TRN) printed on this invoice.
+Return compact JSON {"trn_digits": "1 0 0 ..."} with every digit separated by one space, exactly as printed,
+or {"trn_digits": ""} if there is none."""
+
+
 def read_invoice(data: bytes, content_type: str) -> dict:
     """Raw vision-model reading of one document (used by app.agent.GroqAgent.extract_invoice)."""
-    parts: list = [{"type": "text", "text": "Extract this invoice."}]
-    parts += [llm.image_part(img) for img in page_images(data, content_type)]
-    return llm.chat_json(EXTRACT_SYSTEM, parts, model=llm.VISION_MODEL)
+    images = page_images(data, content_type)
+    parts: list = [{"type": "text", "text": "Extract this invoice."}] + [llm.image_part(img) for img in images]
+    return fix_trn(images, llm.chat_json(EXTRACT_SYSTEM, parts, model=llm.VISION_MODEL))
+
+
+def fix_trn(images: list[bytes], raw: dict) -> dict:
+    """Second, digit-by-digit look at a TRN that came back with the wrong length.
+
+    Measured on the 60-invoice test set: TRNs with long runs of one digit (100555555500003) were read
+    with one digit too many at confidence 1.0. Asking for the digits space-separated fixes the run length.
+    Only a 15-digit second reading replaces the first; otherwise the impossible TRN stays untrusted.
+    """
+    f = (raw.get("fields") or {}).get("supplier_trn")
+    value = f.get("value") if isinstance(f, dict) else f
+    digits = re.sub(r"\D", "", str(value or ""))
+    if not digits or len(digits) == 15:
+        return raw
+    out = llm.chat_json(TRN_SYSTEM, [{"type": "text", "text": "Read the TRN."}, llm.image_part(images[0])], model=llm.VISION_MODEL)
+    second = re.sub(r"\D", "", str(out.get("trn_digits") or ""))
+    if len(second) == 15:
+        raw["fields"]["supplier_trn"] = {"value": second, "confidence": 0.8, "first_reading": value}
+    return raw
 
 
 def _clean(raw: dict) -> tuple[str, dict]:
@@ -122,8 +146,32 @@ def _clean(raw: dict) -> tuple[str, dict]:
         except (TypeError, ValueError):
             c = 0.0
         fields[name] = {"value": f.get("value"), "confidence": max(0.0, min(1.0, c))}
+    _self_check(fields)
     dtype = re.sub(r"[\s\-]+", "_", str(raw.get("document_type") or "OTHER").strip()).upper()
     return dtype if dtype in {"TAX_INVOICE", "QUOTATION", "PROFORMA", "RECEIPT", "OTHER"} else "OTHER", fields
+
+
+def _self_check(fields: dict) -> None:
+    """Confidence from the document's own consistency, not only the model's say-so (measured on the
+    60-invoice test set: the model reported 1.0 confidence on a 16-digit misread TRN)."""
+    trn = fields["supplier_trn"]
+    if trn["value"] is not None:
+        digits = re.sub(r"[\s\-]", "", str(trn["value"]))
+        trn["value"] = digits
+        if not re.fullmatch(r"\d{15}", digits):
+            trn["confidence"] = min(trn["confidence"], 0.3)  # impossible TRN: treat as not read, never as a hard fact
+    lines = fields["line_items"]
+    if isinstance(lines["value"], list):
+        amounts = [_num(li.get("amount")) for li in lines["value"] if isinstance(li, dict)]
+        taxable = _num(fields["taxable_amount"]["value"])
+        adds_up = bool(amounts) and None not in amounts and taxable is not None and abs(sum(amounts) - taxable) <= 1
+        # ponytail: lines that sum to the taxable amount are trusted; otherwise they stay below the threshold
+        lines["confidence"] = 0.9 if adds_up else min(lines["confidence"], 0.5)
+
+
+def _num(v):
+    from app.rules import to_number
+    return None if v in (None, "") else to_number(v)
 
 
 def extract(document_id: int) -> None:
