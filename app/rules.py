@@ -10,6 +10,7 @@ Sources: VAT Executive Regulation Article 59 (tax invoice particulars) and Artic
 """
 import re
 from datetime import date, datetime
+from difflib import SequenceMatcher
 from typing import Any
 
 from sqlmodel import Session, select
@@ -149,6 +150,12 @@ def _recipient_checks(inv: Invoice, app: Application) -> list[Check]:
         return [("TI-08", U, {"reason": "Recipient name not captured"}), ("NR-06", NA, {})]
     if _norm(inv.recipient_name) == _norm(app.applicant_name):
         return [("TI-08", P, {"recipient": inv.recipient_name}), ("NR-06", NA, {})]
+    if SequenceMatcher(None, _norm(inv.recipient_name), _norm(app.applicant_name)).ratio() >= 0.9:
+        # One or two letters apart ("Shamssi" / "Shamsi"): far more likely a misreading than a third party.
+        # A person checks it; it never goes down the third-party path to an NR-06 FAIL.
+        return [("TI-08", U, {"recipient": inv.recipient_name, "applicant": app.applicant_name,
+                              "reason": "Recipient name differs slightly from the applicant's; check for a misreading"}),
+                ("NR-06", NA, {})]
     evidence = {"recipient": inv.recipient_name, "applicant": app.applicant_name,
                 "for_applicant_statement": inv.for_applicant_statement, "plot_on_invoice": inv.plot_no}
     if not (inv.for_applicant_statement and inv.plot_no):

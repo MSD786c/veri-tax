@@ -28,6 +28,7 @@ uv run uvicorn app.main:app --reload --port 8000
   - Linking fills Article 59 particulars that Maskan did not send (address, recipient, line items, invoice type), but never overwrites them. It then re-runs the rules and the rating.
 - **Sample invoices.** `fixtures/invoices/` holds one image per seeded invoice, plus a 2-page PDF and a quotation. Regenerate them with `uv run python scripts/make_fixture_invoices.py`. The seed date is pinned to 2026-09-24 so they keep matching.
 - Tests: `uv run pytest`. Tests mock the LLM, and each test module gets a freshly seeded database.
+- **Evaluation on real invoices.** `uv run python scripts/eval_invoices.py` runs the 60 synthetic PDFs in `invoice test/` through the agent and the whole pipeline, with the PDF as the only input. It reports rating accuracy, whether the expected rule fired, and field-level extraction accuracy. Model readings are cached per prompt version in `data/eval/cache/`, so re-scoring after a rule change costs no tokens.
 
 ### The portal (`web/`)
 
